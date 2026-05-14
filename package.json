@@ -1,0 +1,37 @@
+{
+  "name": "priyankpatil-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ai-sdk/groq": "^3.0.39",
+    "@tailwindcss/typography": "^0.5.19",
+    "ai": "^6.0.180",
+    "framer-motion": "^11.15.0",
+    "gray-matter": "^4.0.3",
+    "next": "^15.1.3",
+    "next-mdx-remote": "^6.0.0",
+    "next-themes": "^0.4.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "reading-time": "^1.5.0",
+    "recharts": "^3.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.20",
+    "browserslist": "^4.28.2",
+    "eslint": "^8",
+    "eslint-config-next": "^15.1.3",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5"
+  }
+}

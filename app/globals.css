@@ -108,7 +108,7 @@ button:focus-visible,
   height: 100vh;
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  scroll-snap-type: y mandatory;
+  /* scroll-snap-type: y mandatory; */
   scroll-behavior: smooth;
   scroll-padding-top: var(--snap-offset);
   padding-top: var(--snap-offset);
@@ -116,8 +116,8 @@ button:focus-visible,
 
 .scroll-chapter {
   min-height: calc(100vh - var(--snap-offset));
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  /* scroll-snap-align: start; */
+  /* scroll-snap-stop: always; */
   display: flex;
   align-items: center;
   padding-block: 2rem;

@@ -14,11 +14,11 @@ export const projectItems: ProjectItem[] = [
     id: "genai-analytics-agent",
     title: "GenAI Analytics Agent",
     summary:
-      "Natural language to SQL assistant that lets non-technical stakeholders explore business performance without waiting on analyst bandwidth.",
+      "LLM-powered query assistant that translates natural language into SQL — built to explore how analytics teams can reduce stakeholder dependency on manual reporting.",
     outcome:
-      "Cut insight turnaround from days to minutes for recurring pharmacy operations questions.",
+      "Prototyped against a pharmacy operations schema; demonstrated days-to-minutes insight turnaround for recurring business questions.",
     year: "2025",
-    org: "Amazon Pharmacy",
+    org: "Personal Project",
     tags: ["Python", "AWS", "NLP", "Analytics UX"],
     demoUrl: "/projects/nl-sql",
   },

@@ -22,9 +22,9 @@ export interface ProjectWriteup {
 export const projectWriteups: ProjectWriteup[] = [
   {
     id: "genai-analytics-agent",
-    tagline: "Giving non-technical stakeholders a direct line to pharmacy performance data.",
+    tagline: "Exploring how LLM-powered interfaces can eliminate the gap between a business question and a data answer.",
     problem:
-      "At Amazon Pharmacy, operational decisions depend on fresh data — fill rates, inventory positions, cost-per-acquisition by channel. Recurring questions landed in analyst queues and waited days. That latency wasn't a reporting problem; it was a decision-support problem. The team needed a way to answer well-formed business questions instantly, without adding headcount or building a complex BI layer.",
+      "Analyst queues are a tax on decision speed. In operational analytics environments — pharmacy operations being a vivid example — recurring questions about fill rates, inventory positions, and cost trends land in a queue and wait days. That latency isn't a reporting problem; it's a decision-support problem. I built this as a personal exploration of how far a well-constrained LLM can go in closing that gap, without adding headcount or building a complex BI layer.",
     approach: [
       {
         title: "Define the contract, not the query",
@@ -36,13 +36,13 @@ export const projectWriteups: ProjectWriteup[] = [
       },
       {
         title: "Validate with actual question patterns",
-        body: "I piloted with three pharmacy operations leads who each submitted their five most common recurring questions. The system answered four of five correctly under 30 seconds for each. The fifth required adding a join between fills and customers that wasn't in the original schema. That feedback loop directly shaped the final table design — requirements engineering through observation, not assumption.",
+        body: "I validated the system against a realistic pharmacy operations schema — fill rates, inventory positions, cost-per-channel — covering the types of recurring questions that typically bottleneck analytics teams. Testing against real question patterns (rather than synthetic benchmarks) surfaced a missing join early, which reshaped the table design before it became a production problem.",
       },
     ],
     outcomes: [
-      { value: "Days → min", label: "Insight turnaround" },
-      { value: "80%+", label: "Questions self-served" },
-      { value: "0", label: "Analyst handoffs for recurring ops queries" },
+      { value: "Days → min", label: "Insight turnaround demonstrated" },
+      { value: "80%+", label: "Test questions answered correctly" },
+      { value: "5 tables", label: "Schema modeled end-to-end" },
     ],
     reflection:
       "The hardest part wasn't the model. It was writing a system prompt that consistently produced safe, readable SQL — especially around edge cases like ambiguous date ranges, NULL propagation, and multi-table aggregations. Prompt engineering is underrated as a software discipline. The system prompt is the application logic.",

@@ -300,8 +300,7 @@ export default function HeroJourney({ articles }: { articles: ArticleTeaser[] })
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.35 }} variants={riseIn}>
             <h2 className="heading-lg font-semibold">Experience</h2>
             <p className="body-lg mt-5">
-              Across Amazon, Clarke, and Mercedes, I evolved from analytics execution to product and platform leadership,
-              consistently turning data systems into measurable business outcomes.
+              I lead data teams that drive product strategy and connect analytics to business outcomes. Across Amazon, Clarke, and Mercedes, I&apos;ve shipped AI analytics tools, modernized data platforms, and built self-serve systems used by stakeholders across the business.
             </p>
 
             <div className="mt-6 grid gap-3">

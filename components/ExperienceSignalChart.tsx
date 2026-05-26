@@ -27,7 +27,7 @@ const profileByOrg: Record<Org, ImpactProfile> = {
     outcomes: [
       { value: "$1.4M", label: "Annual infra savings", color: "#60a5fa" },
       { value: "40%", label: "Less manual reporting", color: "#22d3ee" },
-      { value: "3+ yrs", label: "Cross-border data coverage", color: "#34d399" },
+      { value: "100+", label: "Analytics projects delivered", color: "#34d399" },
       { value: "GenAI", label: "NL-to-SQL agent shipped", color: "#f59e0b" },
     ],
     capabilities: ["SQL + PySpark", "AWS Pipelines", "Redshift Migration", "QuickSight", "KPI Governance"],

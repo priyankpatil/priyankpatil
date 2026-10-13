@@ -1,5 +1,9 @@
 import { createGroq } from "@ai-sdk/groq";
 import { streamText } from "ai";
+import { MAX_QUESTION_LENGTH } from "@/lib/nl-sql";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
+
+const RATE_LIMIT = { limit: 10, windowSeconds: 60 * 10, prefix: "nl-sql" };
 
 const SCHEMA = `
 orders       (order_id, customer_id, product_id, order_date DATE, status, total_amount DECIMAL, channel)
@@ -23,10 +27,26 @@ Schema:
 ${SCHEMA}`;
 
 export async function POST(req: Request) {
-  const { question } = (await req.json()) as { question: string };
+  const { allowed, resetSeconds } = await rateLimit(clientIp(req), RATE_LIMIT);
+  if (!allowed) {
+    return new Response(
+      `Too many requests. Please try again in ${Math.ceil(resetSeconds / 60)} minute(s).`,
+      { status: 429, headers: { "Retry-After": String(resetSeconds) } }
+    );
+  }
 
-  if (!question?.trim()) {
+  let question: unknown;
+  try {
+    ({ question } = (await req.json()) as { question?: unknown });
+  } catch {
+    return new Response("Invalid JSON body", { status: 400 });
+  }
+
+  if (typeof question !== "string" || !question.trim()) {
     return new Response("Question is required", { status: 400 });
+  }
+  if (question.length > MAX_QUESTION_LENGTH) {
+    return new Response(`Question must be ${MAX_QUESTION_LENGTH} characters or fewer`, { status: 400 });
   }
 
   const apiKey = process.env.GROQ_API_KEY;
@@ -42,19 +62,46 @@ export async function POST(req: Request) {
   const result = streamText({
     model: groq("llama-3.3-70b-versatile"),
     system: SYSTEM,
-    prompt: question,
+    prompt: question.trim(),
+    maxOutputTokens: 1024,
+    abortSignal: req.signal,
   });
 
-  // Stream raw text chunks directly — avoids AI SDK protocol encoding
+  // Stream raw text chunks directly — avoids AI SDK protocol encoding.
+  const textParts = (async function* () {
+    for await (const part of result.fullStream) {
+      if (part.type === "text-delta") yield part.text;
+      else if (part.type === "error") throw part.error;
+    }
+  })();
+
+  // Wait for the first chunk before committing to a 200, so an upstream
+  // failure (bad key, model outage) returns a clear error status instead of
+  // an empty stream.
+  let first: IteratorResult<string>;
+  try {
+    first = await textParts.next();
+  } catch (err) {
+    console.error("nl-sql generation failed:", err);
+    return new Response("The model service is unavailable right now. Please try again shortly.", {
+      status: 502,
+    });
+  }
+
+  // Failures after streaming has started become stream errors, so the client
+  // can tell an interrupted generation apart from a finished one.
   const encoder = new TextEncoder();
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const chunk of result.textStream) {
-          controller.enqueue(encoder.encode(chunk));
+        if (!first.done) controller.enqueue(encoder.encode(first.value));
+        for await (const text of textParts) {
+          controller.enqueue(encoder.encode(text));
         }
-      } finally {
         controller.close();
+      } catch (err) {
+        console.error("nl-sql generation failed mid-stream:", err);
+        controller.error(new Error("Generation failed"));
       }
     },
   });

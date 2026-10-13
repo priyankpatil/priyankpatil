@@ -246,3 +246,18 @@ html.dark .panel {
     background: color-mix(in srgb, var(--bg) 93%, transparent 7%);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within,
+  .page-scroll {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -53,7 +53,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <p className="kicker mt-8 mb-3">{article.tag}</p>
             <h1 className="heading-lg font-semibold">{article.title}</h1>
 
-            <p className="mt-4 text-xs uppercase tracking-[0.16em]" style={{ color: "var(--soft)" }}>
+            <p className="mt-4 text-xs uppercase tracking-[0.16em] text-soft">
               {formatDate(article.date)} · {article.readingTime}
             </p>
           </section>

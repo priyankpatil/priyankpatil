@@ -64,11 +64,7 @@ export default function ExperienceSignalChart() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-[28px] border p-4 md:p-6"
-      style={{
-        borderColor: "var(--border-strong)",
-        background: "linear-gradient(155deg, var(--surface) 0%, color-mix(in srgb, var(--surface) 90%, transparent) 100%)",
-      }}
+      className="relative overflow-hidden rounded-[28px] border p-4 md:p-6 border-border-strong bg-[linear-gradient(155deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_90%,transparent)_100%)]"
     >
       <div
         className="pointer-events-none absolute -top-16 -right-14 h-56 w-56 rounded-full blur-3xl"
@@ -79,10 +75,10 @@ export default function ExperienceSignalChart() {
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="kicker">Impact Story</p>
-            <h3 className="mt-2 text-xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+            <h3 className="mt-2 text-xl font-semibold tracking-tight text-text">
               {current.title}
             </h3>
-            <p className="mt-2 text-sm leading-6" style={{ color: "var(--muted)" }}>
+            <p className="mt-2 text-sm leading-6 text-muted">
               {current.subtitle}
             </p>
           </div>
@@ -123,16 +119,12 @@ export default function ExperienceSignalChart() {
               {current.outcomes.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-2xl border p-3"
-                  style={{
-                    borderColor: "var(--border)",
-                    background: "color-mix(in srgb, var(--surface) 70%, transparent)",
-                  }}
+                  className="rounded-2xl border p-3 border-border bg-[color-mix(in_srgb,var(--surface)_70%,transparent)]"
                 >
                   <p className="text-2xl font-semibold tracking-tight" style={{ color: item.color }}>
                     {item.value}
                   </p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.14em]" style={{ color: "var(--soft)" }}>
+                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-soft">
                     {item.label}
                   </p>
                 </div>
@@ -140,23 +132,14 @@ export default function ExperienceSignalChart() {
             </div>
 
             <div
-              className="rounded-2xl border p-3"
-              style={{
-                borderColor: "var(--border)",
-                background: "color-mix(in srgb, var(--surface) 74%, transparent)",
-              }}
+              className="rounded-2xl border p-3 border-border bg-[color-mix(in_srgb,var(--surface)_74%,transparent)]"
             >
               <p className="kicker mb-2">Capabilities In Motion</p>
               <div className="flex flex-wrap gap-2">
                 {current.capabilities.map((cap) => (
                   <span
                     key={cap}
-                    className="rounded-full border px-2.5 py-1 text-[0.68rem] uppercase tracking-[0.1em]"
-                    style={{
-                      borderColor: "var(--border)",
-                      color: "var(--soft)",
-                      background: "color-mix(in srgb, var(--surface) 78%, transparent)",
-                    }}
+                    className="rounded-full border px-2.5 py-1 text-[0.68rem] uppercase tracking-[0.1em] border-border bg-[color-mix(in_srgb,var(--surface)_78%,transparent)] text-soft"
                   >
                     {cap}
                   </span>

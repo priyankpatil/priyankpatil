@@ -11,13 +11,13 @@ export default function NLSQLPage() {
     <>
       <Navigation />
       <main className="page-pad">
-        <div className="shell flex flex-col gap-8" style={{ minHeight: "calc(100vh - 7.25rem)" }}>
+        <div className="shell flex flex-col gap-8 min-h-[calc(100vh-7.25rem)]">
           <section className="max-w-2xl">
             <p className="kicker mb-3">Project Demo · GenAI Analytics Agent</p>
             <h1 className="heading-lg font-semibold">
               Natural Language
               <br />
-              <span style={{ color: "var(--accent)" }}>to SQL</span>
+              <span className="text-accent">to SQL</span>
             </h1>
             <p className="body-lg mt-4">
               Ask a business question in plain English. Llama 3.3 70B translates it into

@@ -1,25 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import type { SkillPoint } from "@/components/SkillsBarChart";
+
+// Recharts is the heaviest dependency on the home page, so the chart itself is
+// split into its own chunk and loaded after hydration.
+const SkillsBarChart = dynamic(() => import("@/components/SkillsBarChart"), {
+  ssr: false,
+  loading: () => <div className="h-full w-full rounded-xl bg-surface-muted" />,
+});
 
 type Lens = "engineering" | "analytics" | "strategy" | "ai";
-
-interface SkillPoint {
-  skill: string;
-  score: number;
-  color: string;
-  context: string;
-}
 
 const options: Array<{
   key: Lens;
@@ -94,55 +86,15 @@ const skillData: Record<Lens, SkillPoint[]> = {
   ],
 };
 
-function SkillTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: Array<{ payload: SkillPoint }>;
-}) {
-  if (!active || !payload?.length) return null;
-
-  const point = payload[0].payload;
-
-  return (
-    <div
-      className="max-w-[220px] rounded-xl border px-3 py-2 text-xs"
-      style={{
-        borderColor: "var(--border-strong)",
-        background: "var(--surface)",
-        color: "var(--text)",
-      }}
-    >
-      <p className="font-semibold">{point.skill}</p>
-      <p className="mt-1" style={{ color: "var(--muted)" }}>
-        {point.context}
-      </p>
-      <p className="mt-1 text-[0.7rem] uppercase tracking-[0.14em]" style={{ color: "var(--soft)" }}>
-        Proficiency {point.score}/100
-      </p>
-    </div>
-  );
-}
-
 export default function SkillsPulseChart() {
   const [lens, setLens] = useState<Lens>("engineering");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const current = useMemo(() => options.find((item) => item.key === lens)!, [lens]);
   const data = useMemo(() => skillData[lens], [lens]);
 
   return (
     <div
-      className="relative overflow-hidden rounded-[28px] border p-4 md:p-6"
-      style={{
-        borderColor: "var(--border-strong)",
-        background: "linear-gradient(155deg, var(--surface) 0%, color-mix(in srgb, var(--surface) 92%, transparent) 100%)",
-      }}
+      className="relative overflow-hidden rounded-[28px] border p-4 md:p-6 border-border-strong bg-[linear-gradient(155deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_92%,transparent)_100%)]"
     >
       <div
         className="pointer-events-none absolute -top-14 -right-14 h-52 w-52 rounded-full blur-3xl"
@@ -153,10 +105,10 @@ export default function SkillsPulseChart() {
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="kicker">Skills pulse</p>
-            <h3 className="mt-2 text-xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+            <h3 className="mt-2 text-xl font-semibold tracking-tight text-text">
               {current.title}
             </h3>
-            <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
+            <p className="mt-2 text-sm text-muted">
               {current.subtitle}
             </p>
           </div>
@@ -185,42 +137,14 @@ export default function SkillsPulseChart() {
         </div>
 
         <div className="h-[236px] w-full md:h-[248px]">
-          {mounted ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} layout="vertical" margin={{ top: 6, right: 16, left: 8, bottom: 4 }} barCategoryGap={14}>
-                <CartesianGrid stroke="var(--border)" strokeDasharray="2 6" horizontal={false} />
-                <XAxis type="number" domain={[0, 100]} hide />
-                <YAxis
-                  type="category"
-                  dataKey="skill"
-                  width={132}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fill: "var(--soft)", fontSize: 11 }}
-                />
-                <Tooltip cursor={{ fill: "color-mix(in srgb, var(--surface-muted) 75%, transparent)" }} content={<SkillTooltip />} />
-                <Bar dataKey="score" radius={[10, 10, 10, 10]} animationDuration={650}>
-                  {data.map((entry) => (
-                    <Cell key={entry.skill} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-full w-full rounded-xl" style={{ background: "var(--surface-muted)" }} />
-          )}
+          <SkillsBarChart data={data} />
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {current.chips.map((chip) => (
             <span
               key={chip}
-              className="rounded-full border px-2.5 py-1 text-[0.68rem] font-medium tracking-[0.08em] uppercase"
-              style={{
-                borderColor: "var(--border)",
-                color: "var(--soft)",
-                background: "color-mix(in srgb, var(--surface) 74%, transparent)",
-              }}
+              className="rounded-full border px-2.5 py-1 text-[0.68rem] font-medium tracking-[0.08em] uppercase border-border bg-[color-mix(in_srgb,var(--surface)_74%,transparent)] text-soft"
             >
               {chip}
             </span>

@@ -15,6 +15,11 @@ const homeSections = [
   { id: "contact", label: "Contact" },
 ];
 
+function scrollToSection(id: string) {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.getElementById(id)?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+}
+
 export default function Navigation() {
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -73,7 +78,7 @@ export default function Navigation() {
   return (
     <header className="site-header">
       <div className="shell flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="text-sm font-semibold tracking-[0.14em] uppercase" style={{ color: "var(--text)" }}>
+        <Link href="/" className="text-sm font-semibold tracking-[0.14em] uppercase text-text">
           Priyank Patil
         </Link>
 
@@ -85,13 +90,8 @@ export default function Navigation() {
                 <button
                   key={section.id}
                   type="button"
-                  onClick={() => document.getElementById(section.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                  className="rounded-full border px-3 py-1.5 text-xs font-medium"
-                  style={{
-                    borderColor: active ? "var(--accent)" : "var(--border)",
-                    background: active ? "var(--accent-soft)" : "transparent",
-                    color: active ? "var(--text)" : "var(--muted)",
-                  }}
+                  onClick={() => scrollToSection(section.id)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium ${active ? "border-accent bg-accent-soft text-text" : "border-border bg-transparent text-muted"}`}
                 >
                   {section.label}
                 </button>
@@ -101,15 +101,14 @@ export default function Navigation() {
         ) : (
           <Link
             href="/"
-            className="hidden rounded-full border px-3 py-1.5 text-xs font-medium md:inline-flex"
-            style={{ borderColor: "var(--border)", color: "var(--muted)", background: "var(--surface)" }}
+            className="hidden rounded-full border px-3 py-1.5 text-xs font-medium md:inline-flex border-border bg-surface text-muted"
           >
             Back to hero
           </Link>
         )}
 
         <div className="flex items-center gap-2">
-          <span className="hidden text-xs tracking-[0.16em] uppercase md:inline" style={{ color: "var(--soft)" }}>
+          <span className="hidden text-xs tracking-[0.16em] uppercase md:inline text-soft">
             {activeLabel}
           </span>
           <ThemeToggle />
@@ -124,13 +123,8 @@ export default function Navigation() {
               <button
                 key={section.id}
                 type="button"
-                onClick={() => document.getElementById(section.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                className="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium"
-                style={{
-                  borderColor: active ? "var(--accent)" : "var(--border)",
-                  background: active ? "var(--accent-soft)" : "var(--surface)",
-                  color: active ? "var(--text)" : "var(--muted)",
-                }}
+                onClick={() => scrollToSection(section.id)}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium ${active ? "border-accent bg-accent-soft text-text" : "border-border bg-surface text-muted"}`}
               >
                 {section.label}
               </button>

@@ -61,16 +61,16 @@ function Slider({ label, value, min, max, step, format, onChange }: {
   format: (v: number) => string; onChange: (v: number) => void;
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span style={{ fontSize: "0.74rem", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{label}</span>
-        <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-mono)", tabularNums: true } as React.CSSProperties}>{format(value)}</span>
+    <label className="flex flex-col gap-1.5">
+      <div className="flex items-baseline justify-between">
+        <span className="font-sans text-[0.74rem] text-muted">{label}</span>
+        <span className="font-mono text-[0.78rem] font-semibold tabular-nums text-text">{format(value)}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(+e.target.value)}
-        style={{ width: "100%", accentColor: "var(--accent)", cursor: "pointer" }}
+        className="w-full cursor-pointer accent-accent"
       />
-    </div>
+    </label>
   );
 }
 
@@ -98,25 +98,22 @@ export default function CustomerSegmentDemo() {
   const newPoint  = useMemo(() => [project({ recency, frequency, monetary, tenure })], [recency, frequency, monetary, tenure]);
   const grouped   = useMemo(() => SEGMENTS.map(s => customers.filter(c => c.segmentId===s.id).map(c => project(c))), [customers]);
 
-  const card: React.CSSProperties = {
-    border: "1px solid var(--border)", borderRadius: "20px",
-    background: "var(--surface)", boxShadow: "var(--shadow)",
-    padding: "1.25rem",
-  };
+  const card = "rounded-[20px] border border-border bg-surface p-5 shadow-[var(--shadow)]";
+  const cardLabel = "text-[0.62rem] font-bold uppercase tracking-[0.2em] text-soft";
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "1rem", alignItems: "start" }}>
+    <div className="grid grid-cols-[1fr_340px] items-start gap-4">
 
       {/* ── Scatter plot ── */}
-      <div style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <span style={{ color: "var(--soft)", fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+      <div className={card}>
+        <div className="mb-4 flex items-center justify-between">
+          <span className={cardLabel}>
             Customer Distribution · 220 customers
           </span>
-          <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div className="flex gap-3">
             {SEGMENTS.map(s => (
-              <span key={s.id} style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "0.7rem", color: "var(--muted)" }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, display: "inline-block" }} />
+              <span key={s.id} className="flex items-center gap-[5px] text-[0.7rem] text-muted">
+                <span className="inline-block h-2 w-2 rounded-full" style={{ background: s.color }} />
                 {s.name}
               </span>
             ))}
@@ -138,14 +135,14 @@ export default function CustomerSegmentDemo() {
       </div>
 
       {/* ── Right column ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      <div className="flex flex-col gap-3">
 
         {/* Sliders */}
-        <div style={card}>
-          <p style={{ color: "var(--soft)", fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "1rem" }}>
+        <div className={card}>
+          <p className={`${cardLabel} mb-4`}>
             Customer Attributes
           </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="flex flex-col gap-4">
             <Slider label="Recency"   value={recency}   min={0} max={100} step={1}  format={v=>`${v} days ago`} onChange={setRecency} />
             <Slider label="Frequency" value={frequency} min={0} max={30}  step={1}  format={v=>`${v} orders / yr`} onChange={setFrequency} />
             <Slider label="Avg Order" value={monetary}  min={0} max={500} step={5}  format={v=>`$${v}`}         onChange={setMonetary} />
@@ -153,41 +150,44 @@ export default function CustomerSegmentDemo() {
           </div>
         </div>
 
-        {/* Result */}
-        <div style={{ ...card, borderColor: seg.color + "55" }}>
-          <p style={{ color: "var(--soft)", fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+        {/* Result — border tinted with the segment colour */}
+        <div className={card} style={{ borderColor: seg.color + "55" }}>
+          <p className={`${cardLabel} mb-3`}>
             Classification
           </p>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "0.75rem", marginBottom: "0.4rem" }}>
-            <span style={{ fontSize: "1.5rem", fontWeight: 700, color: seg.color, letterSpacing: "-0.02em" }}>{seg.name}</span>
-            <span style={{ fontSize: "0.75rem", color: "var(--soft)" }}>{(result.confidence*100).toFixed(0)}% confidence</span>
+          <div className="mb-[0.4rem] flex items-baseline gap-3">
+            <span className="text-[1.5rem] font-bold tracking-[-0.02em]" style={{ color: seg.color }}>{seg.name}</span>
+            <span className="text-[0.75rem] text-soft">{(result.confidence*100).toFixed(0)}% confidence</span>
           </div>
-          <p style={{ fontSize: "0.82rem", color: "var(--muted)", marginBottom: "0.75rem" }}>{seg.tagline}</p>
+          <p className="mb-3 text-[0.82rem] text-muted">{seg.tagline}</p>
 
           {/* Confidence bars */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "0.75rem" }}>
+          <div className="mb-3 flex flex-col gap-2">
             {SEGMENTS.map((s,i) => {
               const inv = 1/(result.dists[i]+1e-6);
               const invS = result.dists.reduce((a,d)=>a+1/(d+1e-6),0);
               const pct  = (inv/invS)*100;
               return (
-                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <span style={{ fontSize: "0.65rem", width: "7rem", whiteSpace: "nowrap", overflow: "hidden", color: "var(--soft)" }}>{s.name}</span>
-                  <div style={{ flex: 1, height: "4px", borderRadius: "4px", background: "var(--border)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", borderRadius: "4px", background: s.color, width: `${pct}%`, transition: "width 0.4s ease" }} />
+                <div key={s.id} className="flex items-center gap-2">
+                  <span className="w-28 overflow-hidden whitespace-nowrap text-[0.65rem] text-soft">{s.name}</span>
+                  <div className="h-1 flex-1 overflow-hidden rounded bg-border">
+                    <div
+                      className="h-full rounded transition-[width] duration-[400ms] ease-in-out"
+                      style={{ background: s.color, width: `${pct}%` }}
+                    />
                   </div>
-                  <span style={{ fontSize: "0.65rem", width: "2rem", textAlign: "right", color: "var(--soft)", fontVariantNumeric: "tabular-nums" }}>{pct.toFixed(0)}%</span>
+                  <span className="w-8 text-right text-[0.65rem] tabular-nums text-soft">{pct.toFixed(0)}%</span>
                 </div>
               );
             })}
           </div>
 
           {/* Action */}
-          <div style={{ background: "var(--accent-soft)", borderRadius: "10px", padding: "0.6rem 0.8rem", fontSize: "0.78rem", color: "var(--text)", lineHeight: 1.5 }}>
+          <div className="rounded-[10px] bg-accent-soft px-[0.8rem] py-[0.6rem] text-[0.78rem] leading-normal text-text">
             <strong>Action: </strong>{seg.action}
           </div>
 
-          <p style={{ fontSize: "0.62rem", color: "var(--soft)", textAlign: "right", marginTop: "0.5rem" }}>
+          <p className="mt-2 text-right text-[0.62rem] text-soft">
             Nearest-centroid · Client-side · No server call
           </p>
         </div>

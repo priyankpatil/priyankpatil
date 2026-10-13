@@ -154,11 +154,7 @@ export default function ProjectImpactChart() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-[28px] border p-4 md:p-6"
-      style={{
-        borderColor: "var(--border-strong)",
-        background: "linear-gradient(155deg, var(--surface) 0%, color-mix(in srgb, var(--surface) 90%, transparent) 100%)",
-      }}
+      className="relative overflow-hidden rounded-[28px] border p-4 md:p-6 border-border-strong bg-[linear-gradient(155deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_90%,transparent)_100%)]"
     >
       <div
         className="pointer-events-none absolute -top-16 -right-14 h-56 w-56 rounded-full blur-3xl"
@@ -169,10 +165,10 @@ export default function ProjectImpactChart() {
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="kicker">Impact Map</p>
-            <h3 className="mt-2 text-xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+            <h3 className="mt-2 text-xl font-semibold tracking-tight text-text">
               {current.title}
             </h3>
-            <p className="mt-2 text-sm leading-6" style={{ color: "var(--muted)" }}>
+            <p className="mt-2 text-sm leading-6 text-muted">
               {current.subtitle}
             </p>
           </div>
@@ -213,19 +209,15 @@ export default function ProjectImpactChart() {
               {current.signals.map((signal) => (
                 <div
                   key={signal.label}
-                  className="rounded-2xl border p-3"
-                  style={{
-                    borderColor: "var(--border)",
-                    background: "color-mix(in srgb, var(--surface) 72%, transparent)",
-                  }}
+                  className="rounded-2xl border p-3 border-border bg-[color-mix(in_srgb,var(--surface)_72%,transparent)]"
                 >
                   <p className="text-xl font-semibold tracking-tight" style={{ color: signal.color }}>
                     {signal.value}
                   </p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.14em]" style={{ color: "var(--soft)" }}>
+                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-soft">
                     {signal.label}
                   </p>
-                  <p className="mt-2 text-xs leading-5" style={{ color: "var(--muted)" }}>
+                  <p className="mt-2 text-xs leading-5 text-muted">
                     {signal.detail}
                   </p>
                 </div>
@@ -233,27 +225,18 @@ export default function ProjectImpactChart() {
             </div>
 
             <div
-              className="rounded-2xl border p-3"
-              style={{
-                borderColor: "var(--border)",
-                background: "color-mix(in srgb, var(--surface) 76%, transparent)",
-              }}
+              className="rounded-2xl border p-3 border-border bg-[color-mix(in_srgb,var(--surface)_76%,transparent)]"
             >
               <p className="kicker mb-2">How It Shipped</p>
               <div className="grid gap-2">
                 {current.delivery.map((line, index) => (
                   <div key={line} className="flex items-start gap-2">
                     <span
-                      className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.62rem] font-semibold"
-                      style={{
-                        color: "var(--text)",
-                        border: "1px solid var(--border)",
-                        background: "color-mix(in srgb, var(--surface) 68%, transparent)",
-                      }}
+                      className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.62rem] font-semibold border border-border bg-[color-mix(in_srgb,var(--surface)_68%,transparent)] text-text"
                     >
                       {index + 1}
                     </span>
-                    <p className="text-xs leading-5" style={{ color: "var(--muted)" }}>
+                    <p className="text-xs leading-5 text-muted">
                       {line}
                     </p>
                   </div>
@@ -263,12 +246,7 @@ export default function ProjectImpactChart() {
                 {current.stack.map((tech) => (
                   <span
                     key={tech}
-                    className="rounded-full border px-2.5 py-1 text-[0.68rem] uppercase tracking-[0.1em]"
-                    style={{
-                      borderColor: "var(--border)",
-                      color: "var(--soft)",
-                      background: "color-mix(in srgb, var(--surface) 78%, transparent)",
-                    }}
+                    className="rounded-full border px-2.5 py-1 text-[0.68rem] uppercase tracking-[0.1em] border-border bg-[color-mix(in_srgb,var(--surface)_78%,transparent)] text-soft"
                   >
                     {tech}
                   </span>

@@ -22,7 +22,7 @@ export default function ProjectsPage() {
                 Each initiative below combines product framing, data modeling, and technical execution. The chart reflects
                 directional performance signals from repeated delivery patterns.
               </p>
-              <p className="mt-8 text-xs uppercase tracking-[0.2em]" style={{ color: "var(--soft)" }}>
+              <p className="mt-8 text-xs uppercase tracking-[0.2em] text-soft">
                 Click any project to read the full case study
               </p>
             </div>
@@ -32,22 +32,22 @@ export default function ProjectsPage() {
 
         <section className="shell grid gap-4 pb-16">
           {projectItems.map((project, index) => (
-            <Link key={project.id} href={`/projects/${project.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-              <article className="panel p-6 md:p-7" style={{ cursor: "pointer" }}>
+            <Link className="block text-inherit no-underline" key={project.id} href={`/projects/${project.id}`}>
+              <article className="panel p-6 md:p-7 cursor-pointer">
                 <div className="grid gap-4 md:grid-cols-[auto_1fr_auto] md:items-start">
                   <span className="kicker">{String(index + 1).padStart(2, "0")}</span>
 
                   <div>
-                    <p className="text-xs uppercase tracking-[0.16em]" style={{ color: "var(--soft)" }}>
+                    <p className="text-xs uppercase tracking-[0.16em] text-soft">
                       {project.org} · {project.year}
                     </p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-text">
                       {project.title}
                     </h2>
-                    <p className="mt-4 text-sm leading-7" style={{ color: "var(--muted)" }}>
+                    <p className="mt-4 text-sm leading-7 text-muted">
                       {project.summary}
                     </p>
-                    <p className="mt-4 text-sm leading-7 font-medium" style={{ color: "var(--text)" }}>
+                    <p className="mt-4 text-sm leading-7 font-medium text-text">
                       {project.outcome}
                     </p>
                   </div>
@@ -57,8 +57,7 @@ export default function ProjectsPage() {
                       {project.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="rounded-full border px-3 py-1 text-xs"
-                          style={{ borderColor: "var(--border)", color: "var(--muted)", background: "var(--surface-muted)" }}
+                          className="rounded-full border px-3 py-1 text-xs border-border bg-surface-muted text-muted"
                         >
                           {tag}
                         </span>
@@ -77,7 +76,7 @@ export default function ProjectsPage() {
 
           <div className="panel p-6 md:p-8">
             <p className="kicker mb-3">Next</p>
-            <h3 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+            <h3 className="text-2xl font-semibold tracking-tight text-text">
               Want to see how these programs map to role progression?
             </h3>
             <div className="mt-6">

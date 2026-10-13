@@ -26,7 +26,7 @@ export default function WritingPage() {
           <section>
             {articles.length === 0 ? (
               <div className="panel p-6">
-                <p className="text-sm" style={{ color: "var(--muted)" }}>
+                <p className="text-sm text-muted">
                   No published essays yet.
                 </p>
               </div>
@@ -34,16 +34,16 @@ export default function WritingPage() {
               <div className="grid gap-4">
                 {articles.map((article) => (
                   <Link key={article.slug} href={`/writing/${article.slug}`} className="panel block p-6 md:p-7">
-                    <p className="text-xs uppercase tracking-[0.16em]" style={{ color: "var(--soft)" }}>
+                    <p className="text-xs uppercase tracking-[0.16em] text-soft">
                       {article.tag} · {article.readingTime}
                     </p>
-                    <h2 className="mt-3 text-2xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+                    <h2 className="mt-3 text-2xl font-semibold tracking-tight text-text">
                       {article.title}
                     </h2>
-                    <p className="mt-3 text-sm leading-7" style={{ color: "var(--muted)" }}>
+                    <p className="mt-3 text-sm leading-7 text-muted">
                       {article.excerpt}
                     </p>
-                    <p className="mt-4 text-xs" style={{ color: "var(--soft)" }}>
+                    <p className="mt-4 text-xs text-soft">
                       {formatDate(article.date)}
                     </p>
                   </Link>

@@ -12,4 +12,4 @@ export const siteUrl = resolveSiteUrl();
 export const siteName = "Priyank Patil";
 
 export const siteDescription =
-  "Senior Analytics Leader building data products at the intersection of infrastructure, AI, and business strategy.";
+  "Senior product & analytics leader building data products at the intersection of infrastructure, AI, and business strategy.";

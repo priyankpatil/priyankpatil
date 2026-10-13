@@ -5,7 +5,7 @@ This document describes the site as it is built today. It replaces the original
 interactive data visualizations, and this file was updated to match.
 
 ## Brand Intent
-**Positioning:** Senior analytics and strategy leader — at the intersection of data infrastructure, AI, and business strategy.
+**Positioning:** Senior product & analytics leader — at the intersection of data infrastructure, AI, and business strategy.
 **Feel:** Confident, modern, product-grade. Clear hierarchy, generous whitespace, data shown rather than described.
 
 ---

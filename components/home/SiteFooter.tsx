@@ -103,7 +103,7 @@ export default function SiteFooter() {
             <div>
               <h3 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">Contact</h3>
               <p className="mt-5 max-w-md text-lg leading-relaxed text-[rgba(188,205,236,0.84)]">
-                Reach out for analytics leadership, platform strategy, and AI-enabled decision systems.
+                Reach out for product and analytics leadership, platform strategy, and AI-enabled decision systems.
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3">

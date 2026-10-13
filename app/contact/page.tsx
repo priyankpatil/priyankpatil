@@ -2,7 +2,7 @@ import Navigation from "@/components/Navigation";
 
 export const metadata = {
   title: "Contact",
-  description: "Contact Priyank Patil for analytics leadership and data product collaborations.",
+  description: "Contact Priyank Patil for product and analytics leadership and data product collaborations.",
 };
 
 const contactLinks = [

@@ -46,8 +46,8 @@ export default function HeroJourney({ articles }: { articles: ArticleTeaser[] })
               PATIL
             </motion.h1>
             <p className="body-lg mt-7 max-w-2xl">
-              Senior analytics and strategy leader translating complex data ecosystems into clear business direction,
-              durable operating decisions, and measurable enterprise impact.
+              Senior product &amp; analytics leader turning complex data into clear business direction, durable
+              operating decisions, and measurable impact.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
               <Link href="/projects" className="pill-link primary">

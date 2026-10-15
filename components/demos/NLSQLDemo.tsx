@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useMemo } from "react";
+import { MAX_QUESTION_LENGTH } from "@/lib/nl-sql";
 
 // ── Schema ──────────────────────────────────────────────────────────────────
 
@@ -68,13 +69,13 @@ const FN = new Set(["COUNT","SUM","AVG","MAX","MIN","ROUND","COALESCE","DATE_TRU
 function renderSQL(sql: string) {
   return sql.split(/(\s+|[(),;]|'[^']*'|--[^\n]*|\d+(?:\.\d+)?)/).map((tok, i) => {
     if (!tok) return null;
-    if (tok.startsWith("'"))        return <span key={i} style={{ color: "#ce9178" }}>{tok}</span>;
-    if (tok.startsWith("--"))       return <span key={i} style={{ color: "#6a9955", fontStyle: "italic" }}>{tok}</span>;
-    if (/^\d+(\.\d+)?$/.test(tok)) return <span key={i} style={{ color: "#b5cea8" }}>{tok}</span>;
+    if (tok.startsWith("'"))        return <span key={i} className="text-[#ce9178]">{tok}</span>;
+    if (tok.startsWith("--"))       return <span key={i} className="italic text-[#6a9955]">{tok}</span>;
+    if (/^\d+(\.\d+)?$/.test(tok)) return <span key={i} className="text-[#b5cea8]">{tok}</span>;
     const up = tok.toUpperCase();
-    if (FN.has(up))  return <span key={i} style={{ color: "#dcdcaa" }}>{tok}</span>;
-    if (KW.has(up))  return <span key={i} style={{ color: "#569cd6", fontWeight: 600 }}>{tok}</span>;
-    return <span key={i} style={{ color: "#d4d4d4" }}>{tok}</span>;
+    if (FN.has(up))  return <span key={i} className="text-[#dcdcaa]">{tok}</span>;
+    if (KW.has(up))  return <span key={i} className="font-semibold text-[#569cd6]">{tok}</span>;
+    return <span key={i} className="text-[#d4d4d4]">{tok}</span>;
   });
 }
 
@@ -83,20 +84,27 @@ function renderSQL(sql: string) {
 function DataTable({ table }: { table: string }) {
   const rows = SAMPLE_DATA[table] ?? [];
   const cols = Object.keys(rows[0] ?? {});
-  const th: React.CSSProperties = { padding: "6px 12px", textAlign: "left", fontSize: "0.68rem", fontWeight: 600, color: "#858585", borderBottom: "1px solid #3e3e3e", whiteSpace: "nowrap", fontFamily: "var(--font-mono)" };
-  const td: React.CSSProperties = { padding: "6px 12px", fontSize: "0.72rem", color: "#d4d4d4", borderBottom: "1px solid #2d2d2d", whiteSpace: "nowrap", fontFamily: "var(--font-mono)" };
+  const cell = "whitespace-nowrap px-3 py-1.5 font-mono";
   return (
-    <div style={{ overflowX: "auto" }}>
-      <p style={{ color: "#858585", fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600, marginBottom: "0.75rem" }}>
+    <div className="overflow-x-auto">
+      <p className="mb-3 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#858585]">
         {table} — sample data (5 rows)
       </p>
-      <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.75rem" }}>
+      <table className="w-full border-collapse text-[0.75rem]">
         <thead>
-          <tr>{cols.map(c => <th key={c} style={th}>{c}</th>)}</tr>
+          <tr>
+            {cols.map(c => (
+              <th key={c} className={`${cell} border-b border-[#3e3e3e] text-left text-[0.68rem] font-semibold text-[#858585]`}>{c}</th>
+            ))}
+          </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i}>{cols.map(c => <td key={c} style={td}>{row[c]}</td>)}</tr>
+            <tr key={i}>
+              {cols.map(c => (
+                <td key={c} className={`${cell} border-b border-[#2d2d2d] text-[0.72rem] text-[#d4d4d4]`}>{row[c]}</td>
+              ))}
+            </tr>
           ))}
         </tbody>
       </table>
@@ -152,43 +160,39 @@ export default function NLSQLDemo() {
         setSql(acc);
       }
     } catch (e: unknown) {
-      if (e instanceof Error && e.name !== "AbortError") setError(e.message);
+      if (e instanceof Error && e.name !== "AbortError") {
+        setError("Generation was interrupted before the query finished. Please try again.");
+      }
     } finally { setLoading(false); }
   }, [loading]);
 
   const panelContent = previewTable
     ? <DataTable table={previewTable} />
     : error
-      ? <p style={{ color: "#f85149", fontSize: "0.85rem", fontFamily: "var(--font-mono)" }}>{error}</p>
+      ? <p className="font-mono text-[0.85rem] text-[#f85149]">{error}</p>
       : sql
-        ? <pre style={{ margin: 0, fontSize: "0.82rem", lineHeight: 1.75, whiteSpace: "pre-wrap", fontFamily: "var(--font-mono)" }}>
+        ? <pre className="m-0 whitespace-pre-wrap font-mono text-[0.82rem] leading-[1.75]">
             {renderSQL(sql)}
-            {loading && <span style={{ display: "inline-block", width: "2px", height: "1em", background: "#569cd6", marginLeft: "2px", verticalAlign: "text-bottom", animation: "blink 1s step-end infinite" }} />}
+            {loading && <span className="ml-0.5 inline-block h-[1em] w-0.5 animate-blink bg-[#569cd6] align-text-bottom" />}
           </pre>
-        : <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-            <p style={{ color: "#555", fontSize: "0.875rem", fontFamily: "var(--font-mono)" }}>
+        : <div className="flex h-full flex-1 items-center justify-center">
+            <p className="font-mono text-[0.875rem] text-[#555]">
               {loading ? "Generating…" : "// Ask a question below or click a table to preview data"}
             </p>
           </div>;
 
-  const pillBtn: React.CSSProperties = {
-    display: "inline-flex", alignItems: "center", borderRadius: "999px",
-    border: "1px solid var(--border)", background: "transparent",
-    color: "var(--muted)", padding: "0.45rem 0.9rem", fontSize: "0.78rem",
-    fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap",
-    fontFamily: "var(--font-sans)",
-  };
+  const pillBtn =
+    "inline-flex items-center whitespace-nowrap rounded-full px-[0.9rem] py-[0.45rem] font-sans text-[0.78rem] font-medium disabled:opacity-50";
+  const darkBtn = "rounded border border-[#3e3e3e] bg-transparent px-2 py-0.5 text-[0.65rem] text-[#858585]";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <style>{`@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}`}</style>
-
+    <div className="flex flex-col gap-4">
       {/* ── Main panel ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", minHeight: "440px", borderRadius: "20px", border: "1px solid var(--border)", overflow: "hidden", boxShadow: "var(--shadow)", background: "var(--surface)" }}>
+      <div className="grid min-h-[440px] grid-cols-[200px_1fr] overflow-hidden rounded-[20px] border border-border bg-surface shadow-[var(--shadow)]">
 
         {/* Schema sidebar */}
-        <div style={{ borderRight: "1px solid var(--border)", padding: "1rem", overflowY: "auto", display: "flex", flexDirection: "column", gap: "2px" }}>
-          <p style={{ color: "var(--soft)", fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "0.6rem" }}>Schema</p>
+        <div className="flex flex-col gap-0.5 overflow-y-auto border-r border-border p-4">
+          <p className="mb-[0.6rem] text-[0.62rem] font-bold uppercase tracking-[0.2em] text-soft">Schema</p>
 
           {SCHEMA.map(({ table, columns }) => {
             const tHit   = mentioned.has(table);
@@ -196,29 +200,37 @@ export default function NLSQLDemo() {
             const isPrev = previewTable === table;
             return (
               <div key={table}>
-                <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+                <div className="flex items-center gap-0.5">
                   {/* Expand arrow */}
-                  <button type="button" onClick={() => toggle(table)} style={{ display: "flex", alignItems: "center", gap: "5px", flex: 1, padding: "4px 6px", borderRadius: "6px", border: "none", background: tHit ? "var(--accent-soft)" : "transparent", color: tHit ? "var(--text)" : "var(--muted)", cursor: "pointer", textAlign: "left", fontSize: "0.74rem", fontWeight: 500, fontFamily: "var(--font-mono)" }}>
-                    <span style={{ fontSize: "0.55rem", color: "var(--soft)", flexShrink: 0 }}>{isOpen ? "▾" : "▸"}</span>
+                  <button
+                    type="button"
+                    onClick={() => toggle(table)}
+                    className={`flex flex-1 items-center gap-[5px] rounded-md px-1.5 py-1 text-left font-mono text-[0.74rem] font-medium ${tHit ? "bg-accent-soft text-text" : "bg-transparent text-muted"}`}
+                  >
+                    <span className="shrink-0 text-[0.55rem] text-soft">{isOpen ? "▾" : "▸"}</span>
                     {table}
                   </button>
                   {/* Preview button */}
                   <button
                     type="button"
                     title={`Preview ${table}`}
+                    aria-label={`Preview ${table}`}
                     onClick={() => setPreviewTable(isPrev ? null : table)}
-                    style={{ padding: "4px 5px", borderRadius: "5px", border: "none", background: isPrev ? "var(--accent-soft)" : "transparent", color: isPrev ? "var(--accent)" : "var(--soft)", cursor: "pointer", fontSize: "0.7rem", lineHeight: 1 }}
+                    className={`rounded-[5px] px-[5px] py-1 text-[0.7rem] leading-none ${isPrev ? "bg-accent-soft text-accent" : "bg-transparent text-soft"}`}
                   >
                     ⊞
                   </button>
                 </div>
 
                 {isOpen && (
-                  <div style={{ marginLeft: "1rem", display: "flex", flexDirection: "column", gap: "1px", paddingBottom: "4px" }}>
+                  <div className="ml-4 flex flex-col gap-px pb-1">
                     {columns.map(col => {
                       const cHit = mentioned.has(`${table}.${col}`);
                       return (
-                        <span key={col} style={{ display: "block", fontSize: "0.68rem", fontFamily: "var(--font-mono)", padding: "2px 6px", borderRadius: "4px", color: cHit ? "var(--accent)" : "var(--soft)", background: cHit ? "var(--accent-soft)" : "transparent", transition: "all 0.15s" }}>
+                        <span
+                          key={col}
+                          className={`block rounded px-1.5 py-0.5 font-mono text-[0.68rem] transition-all duration-150 ${cHit ? "bg-accent-soft text-accent" : "bg-transparent text-soft"}`}
+                        >
                           {col}
                         </span>
                       );
@@ -231,19 +243,19 @@ export default function NLSQLDemo() {
         </div>
 
         {/* SQL / preview panel — always dark */}
-        <div style={{ background: "#1e1e1e", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem", overflowY: "auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: "#858585", fontSize: "0.62rem", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 600 }}>
+        <div className="flex flex-col gap-3 overflow-y-auto bg-[#1e1e1e] p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-[#858585]">
               {previewTable ? `${previewTable} · sample data` : "Generated SQL"}
             </span>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
+            <div className="flex gap-2">
               {previewTable && (
-                <button type="button" onClick={() => setPreviewTable(null)} style={{ color: "#858585", fontSize: "0.65rem", background: "none", border: "1px solid #3e3e3e", borderRadius: "4px", padding: "2px 8px", cursor: "pointer" }}>
+                <button type="button" onClick={() => setPreviewTable(null)} className={darkBtn}>
                   ← SQL
                 </button>
               )}
               {sql && !previewTable && (
-                <button type="button" onClick={() => navigator.clipboard.writeText(sql)} style={{ color: "#858585", fontSize: "0.65rem", background: "none", border: "1px solid #3e3e3e", borderRadius: "4px", padding: "2px 8px", cursor: "pointer" }}>
+                <button type="button" onClick={() => navigator.clipboard.writeText(sql)} className={darkBtn}>
                   Copy
                 </button>
               )}
@@ -254,33 +266,41 @@ export default function NLSQLDemo() {
       </div>
 
       {/* Sample questions */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+      <div className="flex flex-wrap gap-2">
         {SAMPLE_QUESTIONS.map(q => (
-          <button key={q} type="button" onClick={() => { setQuestion(q); run(q); }} disabled={loading} style={{ ...pillBtn, opacity: loading ? 0.5 : 1 }}>
+          <button
+            key={q}
+            type="button"
+            onClick={() => { setQuestion(q); run(q); }}
+            disabled={loading}
+            className={`${pillBtn} border border-border bg-transparent text-muted`}
+          >
             {q}
           </button>
         ))}
       </div>
 
       {/* Input */}
-      <form onSubmit={e => { e.preventDefault(); run(question); }} style={{ display: "flex", gap: "0.75rem" }}>
+      <form onSubmit={e => { e.preventDefault(); run(question); }} className="flex gap-3">
         <input
           value={question}
           onChange={e => setQuestion(e.target.value)}
           placeholder="Ask a question about the data…"
+          aria-label="Question"
+          maxLength={MAX_QUESTION_LENGTH}
           disabled={loading}
-          style={{ flex: 1, padding: "0.75rem 1rem", borderRadius: "12px", border: "1px solid var(--border)", background: "var(--surface)", color: "var(--text)", fontSize: "0.875rem", outline: "none", fontFamily: "var(--font-sans)" }}
+          className="flex-1 rounded-xl border border-border bg-surface px-4 py-3 font-sans text-[0.875rem] text-text outline-none"
         />
         <button
           type="submit"
           disabled={loading || !question.trim()}
-          style={{ ...pillBtn, background: "var(--accent)", color: "#fff", border: "none", paddingInline: "1.25rem", opacity: loading || !question.trim() ? 0.5 : 1, cursor: loading || !question.trim() ? "not-allowed" : "pointer" }}
+          className={`${pillBtn} border-none bg-accent px-5 text-white disabled:cursor-not-allowed`}
         >
           {loading ? "Generating…" : "Generate SQL"}
         </button>
       </form>
 
-      <p style={{ textAlign: "right", fontSize: "0.65rem", color: "var(--soft)" }}>
+      <p className="text-right text-[0.65rem] text-soft">
         Llama 3.3 70B via Groq · Click ⊞ on any table to preview sample data
       </p>
     </div>

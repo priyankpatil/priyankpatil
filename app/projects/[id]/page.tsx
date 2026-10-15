@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navigation from "@/components/Navigation";
-import ArchDiagram from "@/components/ArchDiagram";
+import { ArchFigure } from "@/components/ArchDiagram";
 import GenAIArticle from "@/components/project-articles/GenAIArticle";
 import { projectItems } from "@/lib/portfolio-data";
 import { projectWriteups } from "@/lib/project-writeups";
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 
   return {
-    title: `${project.title} — Priyank Patil`,
+    title: project.title,
     description: writeup.tagline,
   };
 }
@@ -39,17 +39,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       <main className="page-pad">
         {/* Back link */}
         <div className="shell mb-8">
-          <Link
-            href="/projects"
-            style={{
-              color: "var(--soft)",
-              fontSize: "0.85rem",
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
+          <Link href="/projects" className="inline-flex items-center gap-1.5 text-[0.85rem] text-soft no-underline">
             ← All projects
           </Link>
         </div>
@@ -59,42 +49,17 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           <p className="kicker mb-3">
             {project.org} · {project.year}
           </p>
-          <h1
-            style={{
-              fontSize: "clamp(2rem, 5vw, 3.5rem)",
-              fontWeight: 700,
-              letterSpacing: "-0.03em",
-              color: "var(--text)",
-              margin: "0 0 1rem 0",
-              lineHeight: 1.05,
-            }}
-          >
+          <h1 className="mb-4 text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.05] tracking-[-0.03em] text-text">
             {project.title}
           </h1>
-          <p className="body-lg" style={{ maxWidth: "640px", marginBottom: "1.5rem" }}>
-            {writeup.tagline}
-          </p>
+          <p className="body-lg mb-6 max-w-[640px]">{writeup.tagline}</p>
 
           {/* Tags */}
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "8px",
-              marginBottom: project.demoUrl ? "1.5rem" : "0",
-            }}
-          >
+          <div className={`flex flex-wrap gap-2 ${project.demoUrl ? "mb-6" : ""}`}>
             {project.tags.map((tag) => (
               <span
                 key={tag}
-                style={{
-                  borderRadius: "999px",
-                  border: "1px solid var(--border)",
-                  padding: "4px 12px",
-                  fontSize: "0.75rem",
-                  color: "var(--muted)",
-                  background: "var(--surface-muted)",
-                }}
+                className="rounded-full border border-border bg-surface-muted px-3 py-1 text-[0.75rem] text-muted"
               >
                 {tag}
               </span>
@@ -102,7 +67,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </div>
 
           {project.demoUrl && (
-            <Link href={project.demoUrl} className="pill-link primary" style={{ marginTop: "0.75rem" }}>
+            <Link href={project.demoUrl} className="pill-link primary mt-3">
               Try the live demo →
             </Link>
           )}
@@ -110,7 +75,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
         {/* Divider */}
         <div className="shell mb-16">
-          <div style={{ height: "1px", background: "var(--border)" }} />
+          <div className="h-px bg-border" />
         </div>
 
         {id === "genai-analytics-agent" ? (
@@ -121,72 +86,29 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         ) : (
           <>
             {/* Content grid — two column on desktop */}
-            <div
-              className="shell"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 560px), 1fr))",
-                gap: "4rem 6rem",
-              }}
-            >
+            <div className="shell grid grid-cols-[repeat(auto-fit,minmax(min(100%,560px),1fr))] gap-x-24 gap-y-16">
               {/* Problem */}
               <div>
                 <p className="kicker mb-4">The Problem</p>
-                <p style={{ fontSize: "1rem", lineHeight: 1.8, color: "var(--muted)" }}>{writeup.problem}</p>
+                <p className="text-base leading-[1.8] text-muted">{writeup.problem}</p>
               </div>
 
               {/* Reflection */}
               <div>
                 <p className="kicker mb-4">Reflection</p>
-                <p
-                  style={{
-                    fontSize: "1rem",
-                    lineHeight: 1.8,
-                    color: "var(--muted)",
-                    fontStyle: "italic",
-                  }}
-                >
-                  &ldquo;{writeup.reflection}&rdquo;
-                </p>
+                <p className="text-base italic leading-[1.8] text-muted">&ldquo;{writeup.reflection}&rdquo;</p>
               </div>
             </div>
 
             {/* Approach — full width */}
             <div className="shell mt-16">
               <p className="kicker mb-8">Approach</p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                  gap: "1.5rem",
-                }}
-              >
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
                 {writeup.approach.map((section, i) => (
-                  <div key={i} className="panel" style={{ padding: "1.75rem" }}>
-                    <span className="kicker" style={{ marginBottom: "0.75rem", display: "block" }}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <h3
-                      style={{
-                        fontSize: "1.05rem",
-                        fontWeight: 700,
-                        color: "var(--text)",
-                        margin: "0 0 0.75rem 0",
-                        letterSpacing: "-0.01em",
-                      }}
-                    >
-                      {section.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: "0.9rem",
-                        lineHeight: 1.75,
-                        color: "var(--muted)",
-                        margin: 0,
-                      }}
-                    >
-                      {section.body}
-                    </p>
+                  <div key={i} className="panel p-7">
+                    <span className="kicker mb-3 block">{String(i + 1).padStart(2, "0")}</span>
+                    <h3 className="mb-3 text-[1.05rem] font-bold tracking-[-0.01em] text-text">{section.title}</h3>
+                    <p className="text-[0.9rem] leading-[1.75] text-muted">{section.body}</p>
                   </div>
                 ))}
               </div>
@@ -195,55 +117,19 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             {/* Architecture */}
             <div className="shell mt-16">
               <p className="kicker mb-6">Architecture</p>
-              <div className="panel" style={{ padding: "2rem" }}>
-                <ArchDiagram nodes={writeup.architectureNodes} />
-                <p
-                  style={{
-                    fontSize: "0.78rem",
-                    color: "var(--soft)",
-                    marginTop: "1.25rem",
-                    textAlign: "center",
-                    fontStyle: "italic",
-                  }}
-                >
-                  {writeup.architectureCaption}
-                </p>
-              </div>
+              <ArchFigure nodes={writeup.architectureNodes}>{writeup.architectureCaption}</ArchFigure>
             </div>
 
             {/* Outcomes */}
             <div className="shell mt-16">
               <p className="kicker mb-6">Impact</p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-                  gap: "1rem",
-                }}
-              >
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
                 {writeup.outcomes.map((outcome, i) => (
-                  <div key={i} className="panel" style={{ padding: "1.5rem", textAlign: "center" }}>
-                    <div
-                      style={{
-                        fontSize: "clamp(1.5rem, 3vw, 2rem)",
-                        fontWeight: 800,
-                        color: "var(--accent)",
-                        letterSpacing: "-0.03em",
-                        lineHeight: 1,
-                      }}
-                    >
+                  <div key={i} className="panel p-6 text-center">
+                    <div className="text-[clamp(1.5rem,3vw,2rem)] font-extrabold leading-none tracking-[-0.03em] text-accent">
                       {outcome.value}
                     </div>
-                    <div
-                      style={{
-                        fontSize: "0.78rem",
-                        color: "var(--soft)",
-                        marginTop: "0.5rem",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {outcome.label}
-                    </div>
+                    <div className="mt-2 text-[0.78rem] leading-[1.4] text-soft">{outcome.label}</div>
                   </div>
                 ))}
               </div>
@@ -252,17 +138,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         )}
 
         {/* Footer nav */}
-        <div
-          className="shell mt-16 pt-8"
-          style={{
-            borderTop: "1px solid var(--border)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "1rem",
-          }}
-        >
+        <div className="shell mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-8">
           <Link href="/projects" className="pill-link">
             ← Back to projects
           </Link>

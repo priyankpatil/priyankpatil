@@ -22,7 +22,7 @@ export default function ExperiencePage() {
                 I have worked across product analytics, platform migrations, and operational transformation. The work has
                 evolved, but the principle is constant: improve decision quality through better data foundations.
               </p>
-              <p className="mt-8 text-xs uppercase tracking-[0.2em]" style={{ color: "var(--soft)" }}>
+              <p className="mt-8 text-xs uppercase tracking-[0.2em] text-soft">
                 Scroll for timeline chapters
               </p>
             </div>
@@ -36,18 +36,18 @@ export default function ExperiencePage() {
               <article key={`${item.company}-${item.role}`} className="panel p-6 md:p-7">
                 <div className="grid gap-4 md:grid-cols-[1fr_1fr] md:items-start">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.16em]" style={{ color: "var(--soft)" }}>
+                    <p className="text-xs uppercase tracking-[0.16em] text-soft">
                       {item.period}
                     </p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-text">
                       {item.company}
                     </h2>
-                    <p className="mt-1 text-sm font-medium" style={{ color: "var(--muted)" }}>
+                    <p className="mt-1 text-sm font-medium text-muted">
                       {item.role}
                     </p>
                   </div>
 
-                  <p className="text-sm leading-7" style={{ color: "var(--muted)" }}>
+                  <p className="text-sm leading-7 text-muted">
                     {item.focus}
                   </p>
                 </div>
@@ -63,18 +63,18 @@ export default function ExperiencePage() {
                 <article key={`${item.company}-${item.role}`} className="panel p-6 md:p-7">
                   <div className="grid gap-4 md:grid-cols-[1fr_1fr] md:items-start">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.16em]" style={{ color: "var(--soft)" }}>
+                      <p className="text-xs uppercase tracking-[0.16em] text-soft">
                         {item.period}
                       </p>
-                      <h2 className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+                      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-text">
                         {item.company}
                       </h2>
-                      <p className="mt-1 text-sm font-medium" style={{ color: "var(--muted)" }}>
+                      <p className="mt-1 text-sm font-medium text-muted">
                         {item.role}
                       </p>
                     </div>
 
-                    <p className="text-sm leading-7" style={{ color: "var(--muted)" }}>
+                    <p className="text-sm leading-7 text-muted">
                       {item.focus}
                     </p>
                   </div>
@@ -84,7 +84,7 @@ export default function ExperiencePage() {
 
             <div className="panel p-6 md:p-8">
               <p className="kicker mb-3">Next</p>
-              <h3 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+              <h3 className="text-2xl font-semibold tracking-tight text-text">
                 Continue to writing for detailed reasoning behind these delivery decisions.
               </h3>
               <div className="mt-6 flex gap-3">

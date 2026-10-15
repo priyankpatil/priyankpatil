@@ -2,7 +2,7 @@ import Navigation from "@/components/Navigation";
 
 export const metadata = {
   title: "Contact",
-  description: "Contact Priyank Patil for analytics leadership and data product collaborations.",
+  description: "Contact Priyank Patil for product and analytics leadership and data product collaborations.",
 };
 
 const contactLinks = [
@@ -39,7 +39,7 @@ export default function ContactPage() {
               If you are shaping a new data platform, operational analytics product, or AI-enabled decision workflow, I am
               happy to collaborate.
             </p>
-            <p className="mt-8 text-xs uppercase tracking-[0.2em]" style={{ color: "var(--soft)" }}>
+            <p className="mt-8 text-xs uppercase tracking-[0.2em] text-soft">
               Scroll for contact options
             </p>
           </div>
@@ -57,10 +57,10 @@ export default function ContactPage() {
               >
                 <div className="grid gap-2 md:grid-cols-[130px_1fr_auto] md:items-center">
                   <p className="kicker">{item.label}</p>
-                  <p className="text-lg font-semibold tracking-tight md:text-2xl" style={{ color: "var(--text)" }}>
+                  <p className="text-lg font-semibold tracking-tight md:text-2xl text-text">
                     {item.value}
                   </p>
-                  <p className="text-xs" style={{ color: "var(--soft)" }}>
+                  <p className="text-xs text-soft">
                     {item.note}
                   </p>
                 </div>

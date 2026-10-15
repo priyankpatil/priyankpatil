@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { Providers } from "@/components/Providers";
+import { siteDescription, siteName, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const geist = Geist({
@@ -16,17 +17,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "Priyank Patil",
-    template: "%s | Priyank Patil",
+    default: siteName,
+    template: `%s | ${siteName}`,
   },
-  description:
-    "Senior Analytics Leader building data products at the intersection of infrastructure, AI, and business strategy.",
+  description: siteDescription,
   openGraph: {
-    title: "Priyank Patil",
-    description:
-      "Senior Analytics Leader building data products at the intersection of infrastructure, AI, and business strategy.",
+    title: siteName,
+    description: siteDescription,
+    siteName,
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteName,
+    description: siteDescription,
   },
 };
 
@@ -36,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable}`}>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

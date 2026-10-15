@@ -10,7 +10,7 @@ export function ThemeToggle() {
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {
-    return <div className="h-9 w-9 rounded-full border" style={{ borderColor: "var(--border)" }} />;
+    return <div className="h-9 w-9 rounded-full border border-border" />;
   }
 
   const isDark = resolvedTheme === "dark";
@@ -20,12 +20,7 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="Toggle theme"
-      className="h-9 w-9 rounded-full border text-sm"
-      style={{
-        borderColor: "var(--border)",
-        background: "var(--surface)",
-        color: "var(--text)",
-      }}
+      className="h-9 w-9 rounded-full border text-sm border-border bg-surface text-text"
     >
       {isDark ? "☀" : "◐"}
     </button>

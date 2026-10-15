@@ -101,8 +101,8 @@ export default function SiteFooter() {
         >
           <div className="grid gap-10 lg:grid-cols-[1.2fr_2fr]">
             <div>
-              <h3 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">Contact</h3>
-              <p className="mt-5 max-w-md text-lg leading-relaxed text-[rgba(188,205,236,0.84)]">
+              <h3 className="text-4xl font-semibold tracking-tight text-text md:text-5xl">Contact</h3>
+              <p className="mt-5 max-w-md text-lg leading-relaxed text-muted">
                 Reach out for product and analytics leadership, platform strategy, and AI-enabled decision systems.
               </p>
 
@@ -114,7 +114,7 @@ export default function SiteFooter() {
                     target={item.href.startsWith("http") ? "_blank" : undefined}
                     rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
                     aria-label={item.label}
-                    className="group inline-flex h-14 w-14 items-center justify-center rounded-xl border bg-[rgba(3,18,44,0.86)] dark:bg-[rgba(9,15,28,0.92)] border-[rgba(136,169,220,0.26)]"
+                    className="group inline-flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-surface shadow-[var(--shadow)] dark:bg-[rgba(9,15,28,0.92)]"
                     initial={{ opacity: 0, y: 14 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.5 }}
@@ -133,13 +133,13 @@ export default function SiteFooter() {
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {footerColumns.map((column) => (
                 <div key={column.title}>
-                  <h4 className="text-2xl font-semibold tracking-tight text-white">{column.title}</h4>
+                  <h4 className="text-2xl font-semibold tracking-tight text-text">{column.title}</h4>
                   <ul className="mt-4 space-y-3">
                     {column.links.map((item) => (
                       <li key={item.label}>
                         <Link
                           href={item.href}
-                          className="text-[1.05rem] text-[rgba(167,185,216,0.86)] transition-colors hover:text-white"
+                          className="text-[1.05rem] text-muted transition-colors hover:text-text"
                         >
                           {item.label}
                         </Link>
@@ -151,7 +151,7 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          <div className="mt-10 border-t border-[rgba(122,154,205,0.22)] pt-6 text-sm text-[rgba(151,172,206,0.8)] dark:border-[rgba(120,130,150,0.24)] dark:text-[rgba(150,160,178,0.82)]">
+          <div className="mt-10 border-t border-border pt-6 text-sm text-soft">
             © {new Date().getFullYear()} Priyank Patil · Designed for thoughtful, high-leverage analytics work.
           </div>
         </motion.div>

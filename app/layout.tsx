@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "@/components/Providers";
 import { siteDescription, siteName, siteUrl } from "@/lib/site";
+import { siteStructuredData, toJsonLd } from "@/lib/structured-data";
 import "./globals.css";
 
 const geist = Geist({
@@ -46,6 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable}`}>
       <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toJsonLd(siteStructuredData()) }} />
         <Providers>{children}</Providers>
         <Analytics />
       </body>

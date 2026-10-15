@@ -17,10 +17,10 @@ export default function ExperiencePage() {
           <div className="shell grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-end">
             <div>
               <p className="kicker mb-4">Career Timeline</p>
-              <h1 className="heading-lg font-semibold">Building durable decision systems across 13 years.</h1>
+              <h1 className="heading-lg font-semibold">Building products and decision systems across 13 years.</h1>
               <p className="body-lg mt-5">
-                I have worked across product analytics, platform migrations, and operational transformation. The work has
-                evolved, but the principle is constant: improve decision quality through better data foundations.
+                I have worked as a product manager, product analyst, and analytics leader: shipping products, migrating
+                platforms, and transforming operations. The principle is constant: build what helps people make better decisions.
               </p>
               <p className="mt-8 text-xs uppercase tracking-[0.2em] text-soft">
                 Scroll for timeline chapters

@@ -34,7 +34,7 @@ export default function ContactPage() {
         <section className="scroll-chapter">
           <div className="shell max-w-3xl">
             <p className="kicker mb-4">Contact</p>
-            <h1 className="heading-lg font-semibold">Let&apos;s build the next analytics capability together.</h1>
+            <h1 className="heading-lg font-semibold">Let&apos;s build the next data product together.</h1>
             <p className="body-lg mt-5">
               If you are shaping a new data platform, operational analytics product, or AI-enabled decision workflow, I am
               happy to collaborate.

@@ -13,3 +13,10 @@ export const siteName = "Priyank Patil";
 
 export const siteDescription =
   "Senior product & analytics leader building data products at the intersection of infrastructure, AI, and business strategy.";
+
+export const siteJobTitle = "Senior Product & Analytics Leader";
+
+export const profileLinks = {
+  linkedin: "https://www.linkedin.com/in/priyank-patil",
+  github: "https://github.com/priyankpatil",
+};

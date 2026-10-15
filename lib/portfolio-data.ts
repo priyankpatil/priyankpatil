@@ -60,6 +60,11 @@ export const projectItems: ProjectItem[] = [
 
 export const capabilityAreas = [
   {
+    title: "Product Management",
+    detail:
+      "Taking products from user research to launch: clear problem framing, prioritized roadmaps, and close work with engineering, design, and business teams.",
+  },
+  {
     title: "Data Platform Architecture",
     detail:
       "Modeling resilient pipelines and data contracts that make downstream analytics faster and safer.",
@@ -73,11 +78,6 @@ export const capabilityAreas = [
     title: "AI-Enabled Decisioning",
     detail:
       "Pairing model capability with governance, observability, and stakeholder trust to move from pilot to adoption.",
-  },
-  {
-    title: "Cross-Functional Delivery",
-    detail:
-      "Translating between product, engineering, and business teams to ship outcomes with clear ownership.",
   },
 ];
 
@@ -122,7 +122,7 @@ export const experienceItems: ExperienceItem[] = [
 ];
 
 export const heroStats = [
-  { label: "Years in Analytics", value: "13+" },
+  { label: "Years in Product & Analytics", value: "13+" },
   { label: "Industries", value: "3" },
   { label: "Major Programs", value: "20+" },
 ];

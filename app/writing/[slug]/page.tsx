@@ -3,6 +3,7 @@ import Link from "next/link";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import Navigation from "@/components/Navigation";
 import { siteName } from "@/lib/site";
+import { articleStructuredData, toJsonLd } from "@/lib/structured-data";
 import { formatDate, getAllArticles, getArticleBySlug } from "@/lib/writing";
 
 export async function generateStaticParams() {
@@ -57,6 +58,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     <>
       <Navigation />
       <main className="page-pad">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toJsonLd(articleStructuredData(article)) }} />
         <div className="shell section-stack">
           <section className="max-w-3xl">
             <Link href="/writing" className="pill-link">

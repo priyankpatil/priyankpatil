@@ -11,7 +11,7 @@ const SkillsBarChart = dynamic(() => import("@/components/SkillsBarChart"), {
   loading: () => <div className="h-full w-full rounded-xl bg-surface-muted" />,
 });
 
-type Lens = "engineering" | "analytics" | "strategy" | "ai";
+type Lens = "product" | "engineering" | "analytics" | "ai";
 
 const options: Array<{
   key: Lens;
@@ -21,6 +21,14 @@ const options: Array<{
   chips: string[];
   accent: string;
 }> = [
+  {
+    key: "product",
+    label: "Product",
+    title: "Product management",
+    subtitle: "Customer discovery, roadmaps, and shipping products with engineering and design.",
+    chips: ["Product Strategy", "User Research", "Roadmapping", "Agile/Scrum", "Stakeholder Mgmt", "KPI Design"],
+    accent: "#8b5cf6",
+  },
   {
     key: "engineering",
     label: "Engineering",
@@ -36,14 +44,6 @@ const options: Array<{
     subtitle: "Dashboards, experimentation, and decision-grade reporting surfaces.",
     chips: ["Tableau", "Looker", "Power BI", "QuickSight", "A/B Testing", "Regression"],
     accent: "#06b6d4",
-  },
-  {
-    key: "strategy",
-    label: "Strategy",
-    title: "Product and operating strategy",
-    subtitle: "Cross-functional leadership, KPI framing, and execution prioritization.",
-    chips: ["Consulting", "Stakeholder Mgmt", "Agile/Scrum", "Roadmapping", "KPI Design"],
-    accent: "#8b5cf6",
   },
   {
     key: "ai",
@@ -70,12 +70,12 @@ const skillData: Record<Lens, SkillPoint[]> = {
     { skill: "A/B and Metric Design", score: 86, color: "#8b5cf6", context: "Hypothesis-based validation and KPI governance." },
     { skill: "Root-Cause Analytics", score: 93, color: "#f97316", context: "Deep dives that drive operational action." },
   ],
-  strategy: [
-    { skill: "Business Framing", score: 90, color: "#8b5cf6", context: "Translating ambiguity into measurable outcomes." },
+  product: [
+    { skill: "Problem Framing", score: 90, color: "#8b5cf6", context: "Turning ambiguous needs into clear product bets and success metrics." },
     { skill: "Stakeholder Leadership", score: 94, color: "#6366f1", context: "Product, engineering, and science alignment." },
     { skill: "Operating Rhythm Design", score: 89, color: "#0ea5e9", context: "Standardizing KPI cadences across teams." },
-    { skill: "Program Prioritization", score: 88, color: "#f97316", context: "Sequencing initiatives for maximum impact." },
-    { skill: "Agile Delivery", score: 86, color: "#22c55e", context: "Shipping iteratively with strong ownership." },
+    { skill: "Roadmap Prioritization", score: 88, color: "#f97316", context: "Sequencing initiatives for maximum impact." },
+    { skill: "Agile Delivery", score: 86, color: "#22c55e", context: "Shipping iteratively with engineering, with strong ownership." },
   ],
   ai: [
     { skill: "AI/ML Enablement", score: 86, color: "#f97316", context: "Applied AI in analytics products and workflows." },
@@ -87,7 +87,7 @@ const skillData: Record<Lens, SkillPoint[]> = {
 };
 
 export default function SkillsPulseChart() {
-  const [lens, setLens] = useState<Lens>("engineering");
+  const [lens, setLens] = useState<Lens>("product");
 
   const current = useMemo(() => options.find((item) => item.key === lens)!, [lens]);
   const data = useMemo(() => skillData[lens], [lens]);

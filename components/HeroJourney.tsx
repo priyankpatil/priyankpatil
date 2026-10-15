@@ -134,11 +134,11 @@ export default function HeroJourney({ articles }: { articles: ArticleTeaser[] })
               {[
                 {
                   title: "Frame",
-                  body: "Translate ambiguous business problems into measurable KPI frameworks and clear ownership.",
+                  body: "Turn ambiguous business problems into clear product bets, success metrics, and ownership.",
                 },
                 {
                   title: "Build",
-                  body: "Ship resilient data products and pipelines across SQL, Python, PySpark, and AWS architectures.",
+                  body: "Ship products end to end, from field-tested mobile apps to data platforms and AI tools, with engineering and design.",
                 },
                 {
                   title: "Scale",
@@ -176,7 +176,7 @@ export default function HeroJourney({ articles }: { articles: ArticleTeaser[] })
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.35 }} variants={riseIn}>
             <h2 className="heading-lg font-semibold">Experience</h2>
             <p className="body-lg mt-5">
-              I lead data teams that drive product strategy and connect analytics to business outcomes. Across Amazon, Clarke, and Mercedes, I&apos;ve shipped AI analytics tools, modernized data platforms, and built self-serve systems used by stakeholders across the business.
+              I&apos;ve worked as both a product manager and an analytics leader. At Clarke Power I owned products from technician research to launch; at Amazon I&apos;ve shipped AI analytics tools, modernized data platforms, and built self-serve systems used across the business.
             </p>
 
             <div className="mt-6 grid gap-3">
@@ -283,7 +283,7 @@ export default function HeroJourney({ articles }: { articles: ArticleTeaser[] })
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.35 }} variants={riseIn}>
             <h2 className="heading-lg font-semibold">Writing snippets</h2>
             <p className="body-lg mt-5 max-w-2xl">
-              Short essays on analytics strategy and execution frameworks from real delivery contexts.
+              Short essays on product, analytics strategy, and execution from real delivery contexts.
             </p>
           </motion.div>
 

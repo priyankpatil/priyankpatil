@@ -5,7 +5,7 @@ import { projectItems } from "@/lib/portfolio-data";
 
 export const metadata = {
   title: "Projects",
-  description: "Selected analytics and platform programs delivered by Priyank Patil.",
+  description: "Selected product, analytics, and platform work delivered by Priyank Patil.",
 };
 
 export default function ProjectsPage() {
@@ -17,7 +17,7 @@ export default function ProjectsPage() {
           <div className="shell grid gap-8 lg:grid-cols-[1fr_1.25fr] lg:items-end">
             <div>
               <p className="kicker mb-4">Project Archive</p>
-              <h1 className="heading-lg font-semibold">High-impact analytics programs, end-to-end.</h1>
+              <h1 className="heading-lg font-semibold">Products and platforms, shipped end to end.</h1>
               <p className="body-lg mt-5">
                 Each initiative below combines product framing, data modeling, and technical execution. The chart reflects
                 directional performance signals from repeated delivery patterns.

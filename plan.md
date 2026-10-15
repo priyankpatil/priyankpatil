@@ -44,6 +44,7 @@ The SQL demo panel and code blocks are intentionally always dark (VS Code-style 
 Shared type classes in `globals.css`: `heading-xl`, `heading-lg`, `body-lg`, `kicker` (small uppercase label).
 
 ### Principles
+- Present product management and analytics as equal strengths: product framing first, data depth second.
 - Show impact with data: headline metrics and interactive charts are welcome, but every number should be tied to a specific project or role.
 - Motion is subtle and purposeful (scroll reveals, small hover lifts) and always respects `prefers-reduced-motion`.
 - Calls to action are allowed but restrained: "View projects", "View articles", "Contact".
@@ -56,7 +57,7 @@ Shared type classes in `globals.css`: `heading-xl`, `heading-lg`, `body-lg`, `ki
 
 ### Home (`/`) — single scrolling page with section nav
 1. **Intro** — large "PRIYANK PATIL" display name, one positioning line, three pill CTAs, a snapshot strip (13+ years, 3 industries, 20+ major programs, India/US flags), and the portrait.
-2. **Skills** — Learn / Build / Scale cards plus the interactive Skills Pulse bar chart (lens switcher: engineering, analytics, strategy, AI).
+2. **Skills** — Learn / Build / Scale cards plus the interactive Skills Pulse bar chart (lens switcher: product, engineering, analytics, AI; opens on product).
 3. **Experience** — short summary, the latest roles, and the Experience Signal chart (Amazon / Clarke / Mercedes outcomes).
 4. **Projects** — project cards plus the Project Impact chart.
 5. **Capabilities** — four capability areas written as short prose.
@@ -118,7 +119,8 @@ Only `published: true` articles are listed, routed, and included in the sitemap.
 ## Platform
 
 - Next.js 15 App Router, React 19, TypeScript, Tailwind CSS 3, framer-motion, Recharts.
-- SEO: `metadataBase`, generated Open Graph image (`app/opengraph-image.tsx`), `sitemap.xml`, `robots.txt`.
+- SEO: `metadataBase`, generated Open Graph images (site, each article, each project), canonical URLs, `sitemap.xml`, `robots.txt`, RSS at `/feed.xml`, and schema.org JSON-LD (Person + WebSite on every page, BlogPosting on articles) in `lib/structured-data.ts`.
+- Analytics: Vercel Web Analytics.
 - CI: GitHub Actions runs lint, typecheck, and build on every push and PR.
 
 ## Backlog

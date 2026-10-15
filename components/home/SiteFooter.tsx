@@ -34,6 +34,7 @@ const footerColumns = [
   {
     title: "Focus Areas",
     links: [
+      { label: "Product Management", href: "/projects/digital-inspection-app" },
       { label: "Analytics Strategy", href: "/experience" },
       { label: "Data Platforms", href: "/projects" },
       { label: "AI Decision Systems", href: "/projects" },
@@ -152,7 +153,7 @@ export default function SiteFooter() {
           </div>
 
           <div className="mt-10 border-t border-border pt-6 text-sm text-soft">
-            © {new Date().getFullYear()} Priyank Patil · Designed for thoughtful, high-leverage analytics work.
+            © {new Date().getFullYear()} Priyank Patil · Designed for thoughtful, high-leverage product and analytics work.
           </div>
         </motion.div>
       </div>

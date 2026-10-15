@@ -4,7 +4,7 @@ import { formatDate, getAllArticles } from "@/lib/writing";
 
 export const metadata = {
   title: "Writing",
-  description: "Thoughts on analytics strategy, decision systems, and data product execution.",
+  description: "Thoughts on product management, analytics strategy, and data product execution.",
 };
 
 export default function WritingPage() {
@@ -17,7 +17,7 @@ export default function WritingPage() {
         <div className="shell section-stack">
           <section className="max-w-3xl">
             <p className="kicker mb-4">Writing</p>
-            <h1 className="heading-lg font-semibold">Notes on analytics strategy, systems, and execution.</h1>
+            <h1 className="heading-lg font-semibold">Notes on product, analytics, and execution.</h1>
             <p className="body-lg mt-5">
               Essays from real delivery contexts: what worked, what failed, and what changed behavior.
             </p>

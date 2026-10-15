@@ -12,6 +12,7 @@
   "dependencies": {
     "@ai-sdk/groq": "^3.0.39",
     "@tailwindcss/typography": "^0.5.19",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^6.0.180",
     "framer-motion": "^11.15.0",
     "gray-matter": "^4.0.3",

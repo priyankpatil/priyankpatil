@@ -19,9 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return { title: "Not Found" };
   }
 
+  const url = `/projects/${id}`;
   return {
     title: project.title,
     description: writeup.tagline,
+    alternates: { canonical: url },
+    openGraph: { type: "article", title: project.title, description: writeup.tagline, url },
+    twitter: { card: "summary_large_image", title: project.title, description: writeup.tagline },
   };
 }
 

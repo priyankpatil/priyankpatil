@@ -102,15 +102,15 @@ export default function CustomerSegmentDemo() {
   const cardLabel = "text-[0.62rem] font-bold uppercase tracking-[0.2em] text-soft";
 
   return (
-    <div className="grid grid-cols-[1fr_340px] items-start gap-4">
+    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_340px]">
 
       {/* ── Scatter plot ── */}
       <div className={card}>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <span className={cardLabel}>
             Customer Distribution · 220 customers
           </span>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
             {SEGMENTS.map(s => (
               <span key={s.id} className="flex items-center gap-[5px] text-[0.7rem] text-muted">
                 <span className="inline-block h-2 w-2 rounded-full" style={{ background: s.color }} />

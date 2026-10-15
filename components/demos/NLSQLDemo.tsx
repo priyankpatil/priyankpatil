@@ -188,10 +188,10 @@ export default function NLSQLDemo() {
   return (
     <div className="flex flex-col gap-4">
       {/* ── Main panel ── */}
-      <div className="grid min-h-[440px] grid-cols-[200px_1fr] overflow-hidden rounded-[20px] border border-border bg-surface shadow-[var(--shadow)]">
+      <div className="grid min-h-[440px] grid-cols-1 overflow-hidden md:grid-cols-[200px_1fr] rounded-[20px] border border-border bg-surface shadow-[var(--shadow)]">
 
         {/* Schema sidebar */}
-        <div className="flex flex-col gap-0.5 overflow-y-auto border-r border-border p-4">
+        <div className="flex max-h-56 flex-col gap-0.5 overflow-y-auto border-b border-border p-4 md:max-h-none md:border-b-0 md:border-r">
           <p className="mb-[0.6rem] text-[0.62rem] font-bold uppercase tracking-[0.2em] text-soft">Schema</p>
 
           {SCHEMA.map(({ table, columns }) => {
@@ -243,7 +243,7 @@ export default function NLSQLDemo() {
         </div>
 
         {/* SQL / preview panel — always dark */}
-        <div className="flex flex-col gap-3 overflow-y-auto bg-[#1e1e1e] p-5">
+        <div className="flex min-h-[260px] flex-col gap-3 overflow-y-auto bg-[#1e1e1e] p-5">
           <div className="flex items-center justify-between">
             <span className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-[#858585]">
               {previewTable ? `${previewTable} · sample data` : "Generated SQL"}
@@ -289,7 +289,7 @@ export default function NLSQLDemo() {
           aria-label="Question"
           maxLength={MAX_QUESTION_LENGTH}
           disabled={loading}
-          className="flex-1 rounded-xl border border-border bg-surface px-4 py-3 font-sans text-[0.875rem] text-text outline-none"
+          className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-4 py-3 font-sans text-[0.875rem] text-text outline-none"
         />
         <button
           type="submit"

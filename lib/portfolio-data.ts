@@ -18,7 +18,7 @@ export const projectItems: ProjectItem[] = [
     outcome:
       "Prototyped against a pharmacy operations schema; demonstrated days-to-minutes insight turnaround for recurring business questions.",
     year: "2025",
-    org: "Personal Project",
+    org: "Amazon Pharmacy",
     tags: ["Python", "AWS", "NLP", "Analytics UX"],
     demoUrl: "/projects/nl-sql",
   },

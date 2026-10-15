@@ -77,7 +77,7 @@ Shared type classes in `globals.css`: `heading-xl`, `heading-lg`, `body-lg`, `ki
 ### Projects
 | Project | Org | Year |
 |---|---|---|
-| GenAI Analytics Agent | Personal project | 2025 |
+| GenAI Analytics Agent | Amazon Pharmacy | 2025 |
 | Snowflake to Redshift Migration | Amazon Pharmacy | 2024 |
 | Digital Inspection App | Clarke Power | 2020 |
 | Customer Stratification Model | Clarke Power | 2019 |

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import Navigation from "@/components/Navigation";
+import { siteName } from "@/lib/site";
 import { formatDate, getAllArticles, getArticleBySlug } from "@/lib/writing";
 
 export async function generateStaticParams() {
@@ -18,9 +19,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       return { title: "Not Found" };
     }
 
+    const url = `/writing/${slug}`;
     return {
       title: article.title,
       description: article.excerpt,
+      alternates: { canonical: url },
+      openGraph: {
+        type: "article",
+        title: article.title,
+        description: article.excerpt,
+        url,
+        publishedTime: article.date || undefined,
+        authors: [siteName],
+        tags: article.tag ? [article.tag] : undefined,
+      },
+      twitter: { card: "summary_large_image", title: article.title, description: article.excerpt },
     };
   } catch {
     return { title: "Not Found" };

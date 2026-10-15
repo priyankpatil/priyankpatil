@@ -21,6 +21,9 @@ export default function WritingPage() {
             <p className="body-lg mt-5">
               Essays from real delivery contexts: what worked, what failed, and what changed behavior.
             </p>
+            <a href="/feed.xml" className="pill-link mt-6">
+              Subscribe via RSS
+            </a>
           </section>
 
           <section>

@@ -43,7 +43,8 @@ app/                    Routes (App Router)
   api/nl-sql/           Streaming NL → SQL endpoint (Groq), rate limited
   projects/[id]/        Project case study pages
   writing/[slug]/       Article pages rendered from MDX
-  sitemap.ts, robots.ts, opengraph-image.tsx
+  feed.xml/              RSS feed of published articles
+  sitemap.ts, robots.ts, opengraph-image.tsx   (articles and projects have their own social images too)
 components/             UI components, charts and demos
   home/                 Pieces of the home page (footer, flags)
   demos/                NL → SQL and customer segmentation demos
@@ -54,6 +55,7 @@ lib/
   writing.ts            MDX loading and date formatting
   rate-limit.ts         Rate limiter for public API routes
   site.ts               Site URL, name and description
+  og.tsx                Shared layout for generated social preview images
 public/images/          Static images
 plan.md                 Design system and site structure
 ```
@@ -84,4 +86,4 @@ Theme colors are CSS variables in `app/globals.css` (light and dark), exposed as
 
 ## Deployment
 
-Designed for Vercel: import the repo, set `GROQ_API_KEY` (and ideally the Upstash variables), and deploy. Pages are statically generated; only `/api/nl-sql` runs per request.
+Designed for Vercel: import the repo, set `GROQ_API_KEY` (and ideally the Upstash variables), and deploy. Pages are statically generated; only `/api/nl-sql` runs per request. Visitor analytics use Vercel Web Analytics (`@vercel/analytics`); enable **Analytics** in the Vercel project dashboard for data to appear.

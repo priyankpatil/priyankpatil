@@ -20,8 +20,8 @@ export default function NLSQLPage() {
               <span className="text-accent">to SQL</span>
             </h1>
             <p className="body-lg mt-4">
-              Ask a business question in plain English. Llama 3.3 70B translates it into
-              production-ready Redshift SQL — live, streamed token by token.
+              Ask a business question in plain English. An open-weight model on Groq translates it into
+              production-ready Redshift SQL — live, streamed token by token, with automatic fallback across models.
             </p>
           </section>
 

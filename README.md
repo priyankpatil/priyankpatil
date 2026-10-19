@@ -21,6 +21,7 @@ Everything except the NL → SQL demo works without any environment variables.
 | Variable | Required | Purpose |
 |---|---|---|
 | `GROQ_API_KEY` | For the NL → SQL demo | Groq API key used by `/api/nl-sql` |
+| `GROQ_MODELS` | Optional | Comma-separated Groq model chain, tried in order with retries and fallback. Defaults to `openai/gpt-oss-120b,openai/gpt-oss-20b,qwen/qwen3.8-27b` (see `lib/llm.ts`). Update it when Groq retires a model; no code change needed. |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Recommended in production | Shared rate limiting for the demo API. Without them an in-memory limiter is used, which only limits per serverless instance. |
 | `NEXT_PUBLIC_SITE_URL` | Optional | Canonical URL for metadata, sitemap and robots. Falls back to the Vercel production domain, then `http://localhost:3000`. |
 

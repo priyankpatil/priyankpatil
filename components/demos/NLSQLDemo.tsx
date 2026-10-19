@@ -79,6 +79,11 @@ function renderSQL(sql: string) {
   });
 }
 
+// Models sometimes wrap SQL in Markdown fences despite instructions.
+function stripFences(text: string) {
+  return text.replace(/^\s*```[a-zA-Z]*\s*\n?/, "").replace(/\n?```\s*$/, "");
+}
+
 // ── Data table ──────────────────────────────────────────────────────────────
 
 function DataTable({ table }: { table: string }) {
@@ -119,6 +124,7 @@ export default function NLSQLDemo() {
   const [sql,          setSql]          = useState("");
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
+  const [model,        setModel]        = useState("");
   const [expanded,     setExpanded]     = useState<Set<string>>(new Set(["orders","customers"]));
   const [previewTable, setPreviewTable] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -141,7 +147,7 @@ export default function NLSQLDemo() {
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
-    setSql(""); setError(""); setLoading(true); setPreviewTable(null);
+    setSql(""); setError(""); setModel(""); setLoading(true); setPreviewTable(null);
     try {
       const res = await fetch("/api/nl-sql", {
         method: "POST",
@@ -150,6 +156,7 @@ export default function NLSQLDemo() {
         signal: ctrl.signal,
       });
       if (!res.ok) { setError(await res.text()); return; }
+      setModel(res.headers.get("X-Model") ?? "");
       const reader = res.body!.getReader();
       const dec    = new TextDecoder();
       let acc = "";
@@ -157,7 +164,7 @@ export default function NLSQLDemo() {
         const { done, value } = await reader.read();
         if (done) break;
         acc += dec.decode(value, { stream: true });
-        setSql(acc);
+        setSql(stripFences(acc));
       }
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== "AbortError") {
@@ -301,7 +308,7 @@ export default function NLSQLDemo() {
       </form>
 
       <p className="text-right text-[0.65rem] text-soft">
-        Llama 3.3 70B via Groq · Click ⊞ on any table to preview sample data
+        {model ? `Answered by ${model.replace(/^[^/]+\//, "")} via Groq` : "Open-weight models via Groq"} · Click ⊞ on any table to preview sample data
       </p>
     </div>
   );

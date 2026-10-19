@@ -1,7 +1,9 @@
-import { createGroq } from "@ai-sdk/groq";
-import { streamText } from "ai";
+import { LlmConfigError, streamWithFallback } from "@/lib/llm";
 import { MAX_QUESTION_LENGTH } from "@/lib/nl-sql";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+
+// Leaves room for retries and model fallback before the first token.
+export const maxDuration = 30;
 
 const RATE_LIMIT = { limit: 10, windowSeconds: 60 * 10, prefix: "nl-sql" };
 
@@ -49,43 +51,15 @@ export async function POST(req: Request) {
     return new Response(`Question must be ${MAX_QUESTION_LENGTH} characters or fewer`, { status: 400 });
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    return new Response(
-      "GROQ_API_KEY is not configured. Add it to your .env.local file.",
-      { status: 500 }
-    );
-  }
-
-  const groq = createGroq({ apiKey });
-
-  const result = streamText({
-    model: groq("llama-3.3-70b-versatile"),
-    system: SYSTEM,
-    prompt: question.trim(),
-    maxOutputTokens: 1024,
-    abortSignal: req.signal,
-  });
-
-  // Stream raw text chunks directly — avoids AI SDK protocol encoding.
-  const textParts = (async function* () {
-    for await (const part of result.fullStream) {
-      if (part.type === "text-delta") yield part.text;
-      else if (part.type === "error") throw part.error;
-    }
-  })();
-
-  // Wait for the first chunk before committing to a 200, so an upstream
-  // failure (bad key, model outage) returns a clear error status instead of
-  // an empty stream.
-  let first: IteratorResult<string>;
+  let stream: Awaited<ReturnType<typeof streamWithFallback>>;
   try {
-    first = await textParts.next();
+    stream = await streamWithFallback({ system: SYSTEM, prompt: question.trim(), signal: req.signal });
   } catch (err) {
     console.error("nl-sql generation failed:", err);
-    return new Response("The model service is unavailable right now. Please try again shortly.", {
-      status: 502,
-    });
+    if (err instanceof LlmConfigError) {
+      return new Response("The demo is temporarily unavailable. Please try again later.", { status: 503 });
+    }
+    return new Response("The model service is busy right now. Please try again in a minute.", { status: 503 });
   }
 
   // Failures after streaming has started become stream errors, so the client
@@ -94,8 +68,8 @@ export async function POST(req: Request) {
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        if (!first.done) controller.enqueue(encoder.encode(first.value));
-        for await (const text of textParts) {
+        controller.enqueue(encoder.encode(stream.first));
+        for await (const text of stream.rest) {
           controller.enqueue(encoder.encode(text));
         }
         controller.close();
@@ -111,6 +85,7 @@ export async function POST(req: Request) {
       "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "no-cache",
       "X-Accel-Buffering": "no",
+      "X-Model": stream.model,
     },
   });
 }

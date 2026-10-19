@@ -1,0 +1,6 @@
+# Minimal Supabase CLI config for this project's NL → SQL demo.
+# Link it to your project with: supabase link --project-ref <ref>
+project_id = "priyankpatil"
+
+[functions.nl-sql-embed]
+verify_jwt = false

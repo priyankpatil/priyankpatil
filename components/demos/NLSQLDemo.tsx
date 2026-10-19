@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
-import { MAX_QUESTION_LENGTH } from "@/lib/nl-sql";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { MAX_QUESTION_LENGTH } from "@/lib/nl-sql/constants";
 
 // ── Schema ──────────────────────────────────────────────────────────────────
 
@@ -15,6 +15,7 @@ const SCHEMA = [
 
 // ── Sample data ─────────────────────────────────────────────────────────────
 
+// Fallback when live data is not configured.
 const SAMPLE_DATA: Record<string, Record<string, string>[]> = {
   orders: [
     { order_id:"ord_8472a", customer_id:"cust_1234", product_id:"prod_9831", order_date:"2024-03-15", status:"completed",  total_amount:"$234.50", channel:"web"      },
@@ -63,8 +64,8 @@ const SAMPLE_QUESTIONS = [
 
 // ── SQL highlighting ─────────────────────────────────────────────────────────
 
-const KW = new Set(["SELECT","FROM","WHERE","JOIN","LEFT","RIGHT","INNER","OUTER","ON","AS","GROUP","BY","ORDER","HAVING","LIMIT","AND","OR","NOT","IN","DISTINCT","OVER","PARTITION","ASC","DESC","WITH","UNION","ALL","NULL","IS","BETWEEN","LIKE","CAST","INTERVAL","EXTRACT","CURRENT_DATE","RETURNING"]);
-const FN = new Set(["COUNT","SUM","AVG","MAX","MIN","ROUND","COALESCE","DATE_TRUNC","ROW_NUMBER","RANK","LAG","LEAD","NULLIF","CASE","WHEN","THEN","ELSE","END"]);
+const KW = new Set(["SELECT","FROM","WHERE","JOIN","LEFT","RIGHT","INNER","OUTER","ON","AS","GROUP","BY","ORDER","HAVING","LIMIT","AND","OR","NOT","IN","DISTINCT","OVER","PARTITION","ASC","DESC","WITH","UNION","ALL","NULL","IS","BETWEEN","LIKE","CAST","INTERVAL","EXTRACT","CURRENT_DATE","RETURNING","FILTER","CASE","WHEN","THEN","ELSE","END","TRUE","FALSE","ILIKE","FULL","CROSS"]);
+const FN = new Set(["COUNT","SUM","AVG","MAX","MIN","ROUND","COALESCE","DATE_TRUNC","ROW_NUMBER","RANK","DENSE_RANK","LAG","LEAD","NULLIF","GREATEST","LEAST","TO_CHAR","STRING_AGG","PERCENTILE_CONT"]);
 
 function renderSQL(sql: string) {
   return sql.split(/(\s+|[(),;]|'[^']*'|--[^\n]*|\d+(?:\.\d+)?)/).map((tok, i) => {
@@ -84,37 +85,103 @@ function stripFences(text: string) {
   return text.replace(/^\s*```[a-zA-Z]*\s*\n?/, "").replace(/\n?```\s*$/, "");
 }
 
-// ── Data table ──────────────────────────────────────────────────────────────
+// ── Pipeline events (mirrors lib/nl-sql/pipeline.ts) ────────────────────────
 
-function DataTable({ table }: { table: string }) {
-  const rows = SAMPLE_DATA[table] ?? [];
-  const cols = Object.keys(rows[0] ?? {});
+type Stage = "retrieve" | "generate" | "validate" | "execute";
+type StageStatus = "idle" | "running" | "done" | "error";
+type Cell = string | number | boolean | null;
+
+interface ResultSet { columns: string[]; rows: Cell[][]; rowCount: number; truncated: boolean; durationMs: number }
+interface Context { mode: "hybrid" | "full-text" | "static"; tables: string[]; definitions: string[]; examples: string[] }
+interface RunMeta { model: string | null; attempts: number; executed: boolean; latencyMs: number }
+
+type PipelineEvent =
+  | { type: "stage"; stage: Stage; status: "start" | "done" | "error"; detail?: string }
+  | ({ type: "context" } & Context)
+  | { type: "sql_delta"; text: string }
+  | { type: "sql_reset"; reason: string }
+  | { type: "sql"; sql: string }
+  | ({ type: "result" } & ResultSet)
+  | { type: "notice"; message: string }
+  | { type: "error"; message: string }
+  | ({ type: "done" } & RunMeta);
+
+const STAGES: { key: Stage; label: string }[] = [
+  { key: "retrieve", label: "Retrieve" },
+  { key: "generate", label: "Generate" },
+  { key: "validate", label: "Validate" },
+  { key: "execute",  label: "Run" },
+];
+
+const IDLE_STAGES: Record<Stage, StageStatus> = { retrieve: "idle", generate: "idle", validate: "idle", execute: "idle" };
+
+const MODE_LABEL: Record<Context["mode"], string> = {
+  "hybrid": "hybrid search (vector + full-text)",
+  "full-text": "full-text search",
+  "static": "full schema",
+};
+
+function formatCell(value: Cell) {
+  if (value === null) return "—";
+  if (typeof value === "number") return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return String(value);
+}
+
+// ── Tables ──────────────────────────────────────────────────────────────────
+
+function ResultTable({ columns, rows, caption }: { columns: string[]; rows: Cell[][]; caption: string }) {
   const cell = "whitespace-nowrap px-3 py-1.5 font-mono";
   return (
     <div className="overflow-x-auto">
-      <p className="mb-3 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#858585]">
-        {table} — sample data (5 rows)
-      </p>
-      <table className="w-full border-collapse text-[0.75rem]">
-        <thead>
-          <tr>
-            {cols.map(c => (
-              <th key={c} className={`${cell} border-b border-[#3e3e3e] text-left text-[0.68rem] font-semibold text-[#858585]`}>{c}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i}>
-              {cols.map(c => (
-                <td key={c} className={`${cell} border-b border-[#2d2d2d] text-[0.72rem] text-[#d4d4d4]`}>{row[c]}</td>
+      <p className="mb-2 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#858585]">{caption}</p>
+      {rows.length === 0 ? (
+        <p className="font-mono text-[0.75rem] text-[#858585]">No rows returned.</p>
+      ) : (
+        <table className="w-full border-collapse text-[0.75rem]">
+          <thead>
+            <tr>
+              {columns.map(c => (
+                <th key={c} className={`${cell} border-b border-[#3e3e3e] text-left text-[0.68rem] font-semibold text-[#858585]`}>{c}</th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={i}>
+                {row.map((value, j) => (
+                  <td key={j} className={`${cell} border-b border-[#2d2d2d] text-[0.72rem] ${typeof value === "number" ? "text-right text-[#b5cea8]" : "text-[#d4d4d4]"}`}>
+                    {formatCell(value)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
+}
+
+function TablePreview({ table }: { table: string }) {
+  const [live, setLive] = useState<ResultSet | null>(null);
+  const [state, setState] = useState<"loading" | "live" | "sample">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    setState("loading");
+    fetch(`/api/nl-sql/preview?table=${encodeURIComponent(table)}`)
+      .then(res => (res.ok ? res.json() : Promise.reject(res.status)))
+      .then((data: ResultSet) => { if (!cancelled) { setLive(data); setState("live"); } })
+      .catch(() => { if (!cancelled) setState("sample"); });
+    return () => { cancelled = true; };
+  }, [table]);
+
+  if (state === "loading") return <p className="font-mono text-[0.75rem] text-[#858585]">Loading {table}…</p>;
+  if (state === "live" && live) return <ResultTable columns={live.columns} rows={live.rows} caption={`${table} — live sample (5 rows)`} />;
+
+  const sample = SAMPLE_DATA[table] ?? [];
+  const columns = Object.keys(sample[0] ?? {});
+  return <ResultTable columns={columns} rows={sample.map(r => columns.map(c => r[c]))} caption={`${table} — sample data (5 rows)`} />;
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
@@ -124,30 +191,70 @@ export default function NLSQLDemo() {
   const [sql,          setSql]          = useState("");
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
-  const [model,        setModel]        = useState("");
+  const [notice,       setNotice]       = useState("");
+  const [stages,       setStages]       = useState<Record<Stage, StageStatus>>(IDLE_STAGES);
+  const [context,      setContext]      = useState<Context | null>(null);
+  const [repairs,      setRepairs]      = useState<string[]>([]);
+  const [result,       setResult]       = useState<ResultSet | null>(null);
+  const [meta,         setMeta]         = useState<RunMeta | null>(null);
   const [expanded,     setExpanded]     = useState<Set<string>>(new Set(["orders","customers"]));
   const [previewTable, setPreviewTable] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const mentioned = useMemo(() => {
-    const found = new Set<string>();
+    const found = new Set<string>(context?.tables ?? []);
     const lower = sql.toLowerCase();
     for (const { table, columns } of SCHEMA) {
       if (lower.includes(table)) found.add(table);
       for (const col of columns) if (lower.includes(col)) found.add(`${table}.${col}`);
     }
     return found;
-  }, [sql]);
+  }, [sql, context]);
 
   const toggle = (t: string) =>
     setExpanded(prev => { const n = new Set(prev); if (n.has(t)) { n.delete(t); } else { n.add(t); } return n; });
+
+  const handleEvent = useCallback((event: PipelineEvent) => {
+    switch (event.type) {
+      case "stage":
+        setStages(prev => ({ ...prev, [event.stage]: event.status === "start" ? "running" : event.status }));
+        break;
+      case "context":
+        setContext({ mode: event.mode, tables: event.tables, definitions: event.definitions, examples: event.examples });
+        break;
+      case "sql_delta":
+        setSql(prev => prev + event.text);
+        break;
+      case "sql_reset":
+        setRepairs(prev => [...prev, event.reason]);
+        setSql("");
+        setStages(prev => ({ ...prev, generate: "idle", validate: "idle", execute: "idle" }));
+        break;
+      case "sql":
+        setSql(event.sql);
+        break;
+      case "result":
+        setResult({ columns: event.columns, rows: event.rows, rowCount: event.rowCount, truncated: event.truncated, durationMs: event.durationMs });
+        break;
+      case "notice":
+        setNotice(event.message);
+        break;
+      case "error":
+        setError(event.message);
+        break;
+      case "done":
+        setMeta({ model: event.model, attempts: event.attempts, executed: event.executed, latencyMs: event.latencyMs });
+        break;
+    }
+  }, []);
 
   const run = useCallback(async (q: string) => {
     if (!q.trim() || loading) return;
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
-    setSql(""); setError(""); setModel(""); setLoading(true); setPreviewTable(null);
+    setSql(""); setError(""); setNotice(""); setContext(null); setRepairs([]); setResult(null); setMeta(null);
+    setStages(IDLE_STAGES); setLoading(true); setPreviewTable(null);
     try {
       const res = await fetch("/api/nl-sql", {
         method: "POST",
@@ -156,46 +263,41 @@ export default function NLSQLDemo() {
         signal: ctrl.signal,
       });
       if (!res.ok) { setError(await res.text()); return; }
-      setModel(res.headers.get("X-Model") ?? "");
       const reader = res.body!.getReader();
       const dec    = new TextDecoder();
-      let acc = "";
+      let buffer = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        acc += dec.decode(value, { stream: true });
-        setSql(stripFences(acc));
+        buffer += dec.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) if (line.trim()) handleEvent(JSON.parse(line) as PipelineEvent);
       }
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== "AbortError") {
-        setError("Generation was interrupted before the query finished. Please try again.");
+        setError("The connection was interrupted before the query finished. Please try again.");
       }
     } finally { setLoading(false); }
-  }, [loading]);
+  }, [loading, handleEvent]);
 
-  const panelContent = previewTable
-    ? <DataTable table={previewTable} />
-    : error
-      ? <p className="font-mono text-[0.85rem] text-[#f85149]">{error}</p>
-      : sql
-        ? <pre className="m-0 whitespace-pre-wrap font-mono text-[0.82rem] leading-[1.75]">
-            {renderSQL(sql)}
-            {loading && <span className="ml-0.5 inline-block h-[1em] w-0.5 animate-blink bg-[#569cd6] align-text-bottom" />}
-          </pre>
-        : <div className="flex h-full flex-1 items-center justify-center">
-            <p className="font-mono text-[0.875rem] text-[#555]">
-              {loading ? "Generating…" : "// Ask a question below or click a table to preview data"}
-            </p>
-          </div>;
+  const shownSql = stripFences(sql);
+  const started = loading || meta !== null || Boolean(error);
+
+  const stageDot = (status: StageStatus) =>
+    status === "done"    ? "bg-[#4ec9b0]" :
+    status === "running" ? "bg-[#569cd6] animate-pulse" :
+    status === "error"   ? "bg-[#f48771]" : "bg-[#3e3e3e]";
 
   const pillBtn =
     "inline-flex items-center whitespace-nowrap rounded-full px-[0.9rem] py-[0.45rem] font-sans text-[0.78rem] font-medium disabled:opacity-50";
   const darkBtn = "rounded border border-[#3e3e3e] bg-transparent px-2 py-0.5 text-[0.65rem] text-[#858585]";
+  const chip = "rounded border border-[#3e3e3e] px-1.5 py-0.5 font-mono text-[0.65rem] text-[#c5c5c5]";
 
   return (
     <div className="flex flex-col gap-4">
       {/* ── Main panel ── */}
-      <div className="grid min-h-[440px] grid-cols-1 overflow-hidden md:grid-cols-[200px_1fr] rounded-[20px] border border-border bg-surface shadow-[var(--shadow)]">
+      <div className="grid min-h-[480px] grid-cols-1 overflow-hidden rounded-[20px] border border-border bg-surface shadow-[var(--shadow)] md:grid-cols-[200px_1fr]">
 
         {/* Schema sidebar */}
         <div className="flex max-h-56 flex-col gap-0.5 overflow-y-auto border-b border-border p-4 md:max-h-none md:border-b-0 md:border-r">
@@ -249,26 +351,93 @@ export default function NLSQLDemo() {
           })}
         </div>
 
-        {/* SQL / preview panel — always dark */}
-        <div className="flex min-h-[260px] flex-col gap-3 overflow-y-auto bg-[#1e1e1e] p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-[#858585]">
-              {previewTable ? `${previewTable} · sample data` : "Generated SQL"}
-            </span>
-            <div className="flex gap-2">
+        {/* SQL / results panel — always dark */}
+        <div className="flex min-h-[320px] flex-col gap-3 overflow-y-auto bg-[#1e1e1e] p-5">
+          <div className="flex items-center justify-between gap-3">
+            {previewTable ? (
+              <span className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-[#858585]">Table preview</span>
+            ) : (
+              <ol className="flex flex-wrap items-center gap-x-3 gap-y-1" aria-label="Pipeline progress">
+                {STAGES.map(({ key, label }) => (
+                  <li key={key} className="flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#858585]">
+                    <span className={`h-1.5 w-1.5 rounded-full ${stageDot(stages[key])}`} />
+                    {label}
+                  </li>
+                ))}
+              </ol>
+            )}
+            <div className="flex shrink-0 gap-2">
               {previewTable && (
                 <button type="button" onClick={() => setPreviewTable(null)} className={darkBtn}>
                   ← SQL
                 </button>
               )}
-              {sql && !previewTable && (
-                <button type="button" onClick={() => navigator.clipboard.writeText(sql)} className={darkBtn}>
+              {shownSql && !previewTable && !loading && (
+                <button type="button" onClick={() => navigator.clipboard.writeText(shownSql)} className={darkBtn}>
                   Copy
                 </button>
               )}
             </div>
           </div>
-          {panelContent}
+
+          {previewTable ? (
+            <TablePreview table={previewTable} />
+          ) : !started ? (
+            <div className="flex flex-1 items-center justify-center">
+              <p className="text-center font-mono text-[0.875rem] text-[#555]">
+                {"// Ask a question below or click ⊞ to preview a table"}
+              </p>
+            </div>
+          ) : (
+            <>
+              {context && (
+                <div className="flex flex-col gap-1.5 border-b border-[#2d2d2d] pb-3">
+                  <p className="text-[0.62rem] uppercase tracking-[0.16em] text-[#858585]">
+                    Context · {MODE_LABEL[context.mode]}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {context.tables.map(t => <span key={t} className={chip}>{t}</span>)}
+                    {context.definitions.map(d => <span key={d} className={`${chip} border-[#4b3f72] text-[#c5b8f0]`}>{d}</span>)}
+                  </div>
+                  {context.examples.length > 0 && (
+                    <p className="text-[0.65rem] leading-relaxed text-[#858585]">
+                      Similar verified examples: {context.examples.join(" · ")}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {repairs.map((reason, i) => (
+                <p key={i} className="rounded border border-[#5a4a1f] bg-[#2b2615] px-2 py-1 font-mono text-[0.68rem] text-[#e5c07b]">
+                  Self-correcting: {reason}
+                </p>
+              ))}
+
+              {shownSql ? (
+                <pre className="m-0 whitespace-pre-wrap font-mono text-[0.82rem] leading-[1.75]">
+                  {renderSQL(shownSql)}
+                  {loading && stages.generate === "running" && <span className="ml-0.5 inline-block h-[1em] w-0.5 animate-blink bg-[#569cd6] align-text-bottom" />}
+                </pre>
+              ) : loading ? (
+                <p className="font-mono text-[0.82rem] text-[#555]">
+                  {stages.retrieve === "running" ? "Retrieving schema, definitions and examples…" : "Generating SQL…"}
+                </p>
+              ) : null}
+
+              {error && <p className="font-mono text-[0.85rem] text-[#f85149]">{error}</p>}
+              {notice && <p className="font-mono text-[0.75rem] text-[#e5c07b]">{notice}</p>}
+
+              {result && (
+                <div className="border-t border-[#2d2d2d] pt-3">
+                  <ResultTable
+                    columns={result.columns}
+                    rows={result.rows}
+                    caption={`Result · ${result.rowCount}${result.truncated ? "+" : ""} rows · ${result.durationMs} ms`}
+                  />
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -303,12 +472,15 @@ export default function NLSQLDemo() {
           disabled={loading || !question.trim()}
           className={`${pillBtn} border-none bg-accent px-5 text-white disabled:cursor-not-allowed`}
         >
-          {loading ? "Generating…" : "Generate SQL"}
+          {loading ? "Working…" : "Ask"}
         </button>
       </form>
 
       <p className="text-right text-[0.65rem] text-soft">
-        {model ? `Answered by ${model.replace(/^[^/]+\//, "")} via Groq` : "Open-weight models via Groq"} · Click ⊞ on any table to preview sample data
+        {meta?.model
+          ? `${meta.model.replace(/^[^/]+\//, "")} via Groq · ${(meta.latencyMs / 1000).toFixed(1)}s${meta.attempts > 1 ? " · self-corrected" : ""}`
+          : "Open-weight models via Groq · RAG over Supabase pgvector"}
+        {" · "}Click ⊞ to preview a table
       </p>
     </div>
   );

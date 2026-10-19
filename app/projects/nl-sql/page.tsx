@@ -3,7 +3,7 @@ import NLSQLDemo from "@/components/demos/NLSQLDemo";
 
 export const metadata = {
   title: "NL → SQL Demo",
-  description: "Type a business question, get a production-ready SQL query.",
+  description: "Ask a business question; a RAG pipeline writes, validates and runs the SQL against live sample data.",
 };
 
 export default function NLSQLPage() {
@@ -20,8 +20,9 @@ export default function NLSQLPage() {
               <span className="text-accent">to SQL</span>
             </h1>
             <p className="body-lg mt-4">
-              Ask a business question in plain English. An open-weight model on Groq translates it into
-              production-ready Redshift SQL — live, streamed token by token, with automatic fallback across models.
+              Ask a business question in plain English. The system retrieves the relevant schema, business
+              definitions and verified examples from a pgvector knowledge base, writes PostgreSQL with an open-weight
+              model, validates it, and runs it read-only against 40,000+ rows of synthetic pharmacy data.
             </p>
           </section>
 

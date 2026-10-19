@@ -69,7 +69,7 @@ Shared type classes in `globals.css`: `heading-xl`, `heading-lg`, `body-lg`, `ki
 |---|---|
 | `/projects` | Project archive |
 | `/projects/[id]` | Case study: problem, reflection, approach, architecture diagram, impact tiles. The GenAI project uses a long-form article instead (`components/project-articles/GenAIArticle.tsx`). |
-| `/projects/nl-sql` | Live NL → SQL demo (Groq, Llama 3.3 70B), streamed, rate limited |
+| `/projects/nl-sql` | Live NL → SQL demo: RAG over a Supabase pgvector knowledge base, Groq open-weight models with fallback, validated read-only execution with self-correction, rate limited |
 | `/projects/customer-segments` | Client-side customer segmentation demo (nearest-centroid) |
 | `/experience` | Full career timeline |
 | `/writing`, `/writing/[slug]` | Article list and article pages (MDX) |

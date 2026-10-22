@@ -88,7 +88,7 @@ export function buildSystemPrompt(context: RetrievedContext): string {
     ? context.examples.map((e) => `Question: ${e.question}\nSQL:\n${e.sql}`).join("\n\n")
     : "(none retrieved)";
 
-  return `You are a senior analytics engineer writing PostgreSQL for a pharmacy retail analytics database.
+  return `You are a senior analytics engineer writing PostgreSQL for an online retail analytics database.
 Translate the user's question into ONE correct, readable PostgreSQL SELECT query.
 
 Return ONLY the SQL. No prose, no Markdown fences, no explanation. Use -- comments only for non-obvious logic.

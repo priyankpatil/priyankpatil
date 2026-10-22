@@ -6,11 +6,11 @@ import { MAX_QUESTION_LENGTH } from "@/lib/nl-sql/constants";
 // ── Schema ──────────────────────────────────────────────────────────────────
 
 const SCHEMA = [
-  { table: "orders",         columns: ["order_id","customer_id","product_id","order_date","status","total_amount","channel"] },
-  { table: "customers",      columns: ["customer_id","segment","lifetime_value","acquisition_date","region","prime_member"] },
-  { table: "products",       columns: ["product_id","product_name","category","brand","price","margin_pct"] },
-  { table: "pharmacy_fills", columns: ["fill_id","customer_id","drug_id","fill_date","days_supply","copay","fill_status"] },
-  { table: "inventory",      columns: ["product_id","warehouse_id","quantity_on_hand","reorder_point","last_restocked"] },
+  { table: "orders",     columns: ["order_id","customer_id","product_id","order_date","status","total_amount","channel"] },
+  { table: "customers",  columns: ["customer_id","segment","lifetime_value","acquisition_date","region","loyalty_tier"] },
+  { table: "products",   columns: ["product_id","product_name","category","brand","price","margin_pct"] },
+  { table: "deliveries", columns: ["delivery_id","order_id","customer_id","carrier","shipping_speed","shipping_fee","ship_date","promised_date","delivered_date","delivery_status"] },
+  { table: "inventory",  columns: ["product_id","warehouse_id","quantity_on_hand","reorder_point","last_restocked"] },
 ];
 
 // ── Sample data ─────────────────────────────────────────────────────────────
@@ -18,46 +18,46 @@ const SCHEMA = [
 // Fallback when live data is not configured.
 const SAMPLE_DATA: Record<string, Record<string, string>[]> = {
   orders: [
-    { order_id:"ord_8472a", customer_id:"cust_1234", product_id:"prod_9831", order_date:"2024-03-15", status:"completed",  total_amount:"$234.50", channel:"web"      },
-    { order_id:"ord_2931b", customer_id:"cust_5678", product_id:"prod_4521", order_date:"2024-03-14", status:"completed",  total_amount:"$89.99",  channel:"mobile"   },
-    { order_id:"ord_6183c", customer_id:"cust_9012", product_id:"prod_7732", order_date:"2024-03-14", status:"pending",    total_amount:"$156.75", channel:"web"      },
-    { order_id:"ord_4827d", customer_id:"cust_3456", product_id:"prod_2219", order_date:"2024-03-13", status:"completed",  total_amount:"$412.00", channel:"pharmacy" },
-    { order_id:"ord_9174e", customer_id:"cust_7890", product_id:"prod_6643", order_date:"2024-03-12", status:"refunded",   total_amount:"$67.25",  channel:"web"      },
+    { order_id:"ord_008472", customer_id:"cust_1234", product_id:"prod_0031", order_date:"2024-03-15", status:"completed",  total_amount:"$234.50", channel:"web"   },
+    { order_id:"ord_002931", customer_id:"cust_5678", product_id:"prod_0045", order_date:"2024-03-14", status:"completed",  total_amount:"$89.99",  channel:"app"   },
+    { order_id:"ord_006183", customer_id:"cust_9012", product_id:"prod_0077", order_date:"2024-03-14", status:"pending",    total_amount:"$156.75", channel:"web"   },
+    { order_id:"ord_004827", customer_id:"cust_3456", product_id:"prod_0022", order_date:"2024-03-13", status:"completed",  total_amount:"$412.00", channel:"store" },
+    { order_id:"ord_009174", customer_id:"cust_7890", product_id:"prod_0066", order_date:"2024-03-12", status:"refunded",   total_amount:"$67.25",  channel:"web"   },
   ],
   customers: [
-    { customer_id:"cust_1234", segment:"Champions",  lifetime_value:"$4,820", acquisition_date:"2021-06-10", region:"Northeast", prime_member:"true"  },
-    { customer_id:"cust_5678", segment:"Promising",  lifetime_value:"$892",   acquisition_date:"2024-01-22", region:"Southeast", prime_member:"false" },
-    { customer_id:"cust_9012", segment:"At-Risk",    lifetime_value:"$3,240", acquisition_date:"2020-03-05", region:"Midwest",   prime_member:"true"  },
-    { customer_id:"cust_3456", segment:"Champions",  lifetime_value:"$6,100", acquisition_date:"2019-11-18", region:"West",      prime_member:"true"  },
-    { customer_id:"cust_7890", segment:"Inactive",   lifetime_value:"$210",   acquisition_date:"2022-08-30", region:"Southwest", prime_member:"false" },
+    { customer_id:"cust_1234", segment:"Champions",  lifetime_value:"$4,820", acquisition_date:"2021-06-10", region:"Northeast", loyalty_tier:"gold"   },
+    { customer_id:"cust_5678", segment:"Promising",  lifetime_value:"$892",   acquisition_date:"2024-01-22", region:"Southeast", loyalty_tier:"none"   },
+    { customer_id:"cust_9012", segment:"At-Risk",    lifetime_value:"$3,240", acquisition_date:"2020-03-05", region:"Midwest",   loyalty_tier:"silver" },
+    { customer_id:"cust_3456", segment:"Champions",  lifetime_value:"$6,100", acquisition_date:"2019-11-18", region:"West",      loyalty_tier:"gold"   },
+    { customer_id:"cust_7890", segment:"Inactive",   lifetime_value:"$210",   acquisition_date:"2022-08-30", region:"Southwest", loyalty_tier:"none"   },
   ],
   products: [
-    { product_id:"prod_9831", product_name:"Metformin 500mg",    category:"Diabetes",       brand:"Generic",  price:"$12.99", margin_pct:"62%" },
-    { product_id:"prod_4521", product_name:"Lisinopril 10mg",    category:"Blood Pressure", brand:"Generic",  price:"$8.50",  margin_pct:"58%" },
-    { product_id:"prod_7732", product_name:"Atorvastatin 20mg",  category:"Cholesterol",    brand:"Lipitor",  price:"$45.00", margin_pct:"41%" },
-    { product_id:"prod_2219", product_name:"Vitamin D3 2000IU",  category:"Supplements",    brand:"Nature",   price:"$18.75", margin_pct:"72%" },
-    { product_id:"prod_6643", product_name:"Omeprazole 20mg",    category:"GI",             brand:"Generic",  price:"$14.25", margin_pct:"65%" },
+    { product_id:"prod_0031", product_name:"Linen Duvet Cover — Queen",   category:"Bedding",    brand:"Harbor & Pine", price:"$129.00", margin_pct:"52%" },
+    { product_id:"prod_0045", product_name:"Merino Pullover — Navy",      category:"Apparel",    brand:"Northfield",    price:"$89.00",  margin_pct:"58%" },
+    { product_id:"prod_0077", product_name:"Cast Iron Skillet — 10 inch", category:"Kitchen",    brand:"Lumen Home",    price:"$42.00",  margin_pct:"41%" },
+    { product_id:"prod_0022", product_name:"Leather Ankle Boot — Cognac", category:"Footwear",   brand:"Trailmark",     price:"$148.00", margin_pct:"47%" },
+    { product_id:"prod_0066", product_name:"Ceramic Table Lamp — Sage",   category:"Home Decor", brand:"House Label",   price:"$64.00",  margin_pct:"65%" },
   ],
-  pharmacy_fills: [
-    { fill_id:"fill_7821", customer_id:"cust_1234", drug_id:"drug_0031", fill_date:"2024-03-10", days_supply:"90", copay:"$10.00", fill_status:"dispensed" },
-    { fill_id:"fill_4932", customer_id:"cust_9012", drug_id:"drug_0047", fill_date:"2024-03-08", days_supply:"30", copay:"$5.00",  fill_status:"dispensed" },
-    { fill_id:"fill_1083", customer_id:"cust_5678", drug_id:"drug_0019", fill_date:"2024-03-05", days_supply:"90", copay:"$0.00",  fill_status:"dispensed" },
-    { fill_id:"fill_6294", customer_id:"cust_3456", drug_id:"drug_0031", fill_date:"2024-03-01", days_supply:"90", copay:"$10.00", fill_status:"dispensed" },
-    { fill_id:"fill_3815", customer_id:"cust_7890", drug_id:"drug_0062", fill_date:"2024-02-28", days_supply:"30", copay:"$20.00", fill_status:"abandoned" },
+  deliveries: [
+    { delivery_id:"dlv_007821", order_id:"ord_008472", customer_id:"cust_1234", carrier:"Northline",     shipping_speed:"express",  shipping_fee:"$7.99", ship_date:"2024-03-16", promised_date:"2024-03-18", delivered_date:"2024-03-18", delivery_status:"delivered"  },
+    { delivery_id:"dlv_004932", order_id:"ord_002931", customer_id:"cust_5678", carrier:"Metro Courier", shipping_speed:"standard", shipping_fee:"$6.99", ship_date:"2024-03-15", promised_date:"2024-03-20", delivered_date:"2024-03-23", delivery_status:"delivered"  },
+    { delivery_id:"dlv_001083", order_id:"ord_006183", customer_id:"cust_9012", carrier:"Bluebird Post", shipping_speed:"standard", shipping_fee:"$3.99", ship_date:"2024-03-15", promised_date:"2024-03-20", delivered_date:"",           delivery_status:"in_transit" },
+    { delivery_id:"dlv_006294", order_id:"ord_004827", customer_id:"cust_3456", carrier:"Northline",     shipping_speed:"standard", shipping_fee:"$0.00", ship_date:"2024-03-14", promised_date:"2024-03-19", delivered_date:"2024-03-18", delivery_status:"delivered"  },
+    { delivery_id:"dlv_003815", order_id:"ord_009174", customer_id:"cust_7890", carrier:"Metro Courier", shipping_speed:"standard", shipping_fee:"$6.99", ship_date:"2024-03-12", promised_date:"2024-03-17", delivered_date:"",           delivery_status:"failed"     },
   ],
   inventory: [
-    { product_id:"prod_9831", warehouse_id:"wh-east-01", quantity_on_hand:"4,820", reorder_point:"500", last_restocked:"2024-03-01" },
-    { product_id:"prod_4521", warehouse_id:"wh-west-02", quantity_on_hand:"312",   reorder_point:"400", last_restocked:"2024-02-15" },
-    { product_id:"prod_7732", warehouse_id:"wh-east-01", quantity_on_hand:"891",   reorder_point:"200", last_restocked:"2024-03-10" },
-    { product_id:"prod_2219", warehouse_id:"wh-central", quantity_on_hand:"127",   reorder_point:"300", last_restocked:"2024-02-20" },
-    { product_id:"prod_6643", warehouse_id:"wh-west-02", quantity_on_hand:"2,340", reorder_point:"600", last_restocked:"2024-03-05" },
+    { product_id:"prod_0031", warehouse_id:"wh-east-01", quantity_on_hand:"4,820", reorder_point:"500", last_restocked:"2024-03-01" },
+    { product_id:"prod_0045", warehouse_id:"wh-west-02", quantity_on_hand:"312",   reorder_point:"400", last_restocked:"2024-02-15" },
+    { product_id:"prod_0077", warehouse_id:"wh-east-01", quantity_on_hand:"891",   reorder_point:"200", last_restocked:"2024-03-10" },
+    { product_id:"prod_0022", warehouse_id:"wh-central", quantity_on_hand:"127",   reorder_point:"300", last_restocked:"2024-02-20" },
+    { product_id:"prod_0066", warehouse_id:"wh-west-02", quantity_on_hand:"2,340", reorder_point:"600", last_restocked:"2024-03-05" },
   ],
 };
 
 const SAMPLE_QUESTIONS = [
   "Top 10 customers by lifetime value with order count",
   "Monthly revenue for the past 12 months",
-  "Fill rate by region — prime vs non-prime",
+  "On-time delivery rate by carrier — gold vs other loyalty tiers",
   "Products with inventory below reorder point",
   "Average order value by acquisition channel",
 ];

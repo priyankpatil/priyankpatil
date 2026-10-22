@@ -16,7 +16,7 @@ export const projectItems: ProjectItem[] = [
     summary:
       "LLM-powered query assistant that translates natural language into SQL — built to explore how analytics teams can reduce stakeholder dependency on manual reporting.",
     outcome:
-      "Prototyped against a pharmacy operations schema; demonstrated days-to-minutes insight turnaround for recurring business questions.",
+      "Prototyped against a synthetic online-retail operations schema; demonstrated days-to-minutes insight turnaround for recurring business questions.",
     year: "2025",
     org: "Amazon Pharmacy",
     tags: ["Python", "AWS", "NLP", "Analytics UX"],

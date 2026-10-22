@@ -27,28 +27,27 @@ const systemPromptExample = `SYSTEM PROMPT (excerpt)
 ────────────────────────────────────────────────────
 
 You are a read-only SQL analyst with access to the following schema.
-Generate valid Amazon Redshift SQL only. Never use UPDATE, DELETE,
+Generate valid Redshift SQL only. Never use UPDATE, DELETE,
 INSERT, DROP, or any DDL statement. If the user's question cannot
 be answered from the available tables, say so explicitly.
 
 AVAILABLE TABLES
 ────────────────
-fills (
-  fill_id          BIGINT,        -- unique prescription fill event
-  patient_id       BIGINT,        -- FK → customers.patient_id (PII-masked)
-  ndc_code         VARCHAR(11),   -- national drug code (non-PII)
-  channel          VARCHAR(20),   -- 'prime_rx' | 'mail_order' | 'retail'
-  fill_ts          TIMESTAMP,     -- UTC time of dispense
-  copay_usd        NUMERIC(10,2), -- patient copay amount
-  cost_usd         NUMERIC(10,2), -- total drug cost
-  days_supply      INT,           -- quantity dispensed in days
-  status           VARCHAR(20)    -- 'completed' | 'returned' | 'partial'
+orders (
+  order_id         BIGINT,        -- unique customer order
+  customer_id      BIGINT,        -- FK → customers.customer_id (PII-masked)
+  sku              VARCHAR(12),   -- product SKU (non-PII)
+  channel          VARCHAR(20),   -- 'web' | 'app' | 'store'
+  order_ts         TIMESTAMP,     -- UTC time the order was placed
+  item_total_usd   NUMERIC(10,2), -- merchandise value
+  shipping_fee_usd NUMERIC(10,2), -- shipping charged to the customer
+  status           VARCHAR(20)    -- 'completed' | 'returned' | 'cancelled'
 )
 
-orders (
-  order_id         BIGINT,
-  fill_id          BIGINT,        -- FK → fills.fill_id
-  pharmacy_id      VARCHAR(8),    -- fulfillment location code
+shipments (
+  shipment_id      BIGINT,
+  order_id         BIGINT,        -- FK → orders.order_id
+  warehouse_id     VARCHAR(8),    -- fulfillment location code
   promised_ts      TIMESTAMP,     -- SLA promise time
   shipped_ts       TIMESTAMP,     -- actual ship time
   delivery_days    INT            -- transit days, NULL if not yet delivered
@@ -65,24 +64,25 @@ RULES
 
 FEW-SHOT EXAMPLES (highest-rated pairs from feedback pool)
 ──────────────────────────────────────────────────────────
-Q: "What was the 30-day fill rate by channel last month?"
+Q: "What was the on-time shipping rate by channel last month?"
 A:
-WITH monthly_fills AS (
+WITH monthly_shipments AS (
   SELECT
-    channel,
-    COUNT(*) FILTER (WHERE days_supply = 30)  AS thirty_day_fills,
-    COUNT(*)                                   AS total_fills
-  FROM fills
-  WHERE DATE_TRUNC('month', fill_ts) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
-  GROUP BY channel
+    o.channel,
+    COUNT(*) FILTER (WHERE s.shipped_ts <= s.promised_ts) AS on_time_shipments,
+    COUNT(*)                                               AS total_shipments
+  FROM shipments s
+  JOIN orders o ON o.order_id = s.order_id
+  WHERE DATE_TRUNC('month', s.shipped_ts) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+  GROUP BY o.channel
 )
 SELECT
   channel,
-  thirty_day_fills,
-  total_fills,
-  ROUND(100.0 * thirty_day_fills / NULLIF(total_fills, 0), 2) AS fill_rate_pct
-FROM monthly_fills
-ORDER BY fill_rate_pct DESC;`;
+  on_time_shipments,
+  total_shipments,
+  ROUND(100.0 * on_time_shipments / NULLIF(total_shipments, 0), 2) AS on_time_rate_pct
+FROM monthly_shipments
+ORDER BY on_time_rate_pct DESC;`;
 
 export default function GenAIArticle() {
   return (
@@ -90,7 +90,7 @@ export default function GenAIArticle() {
       {/* Lead paragraph */}
       <p className="mb-10 max-w-[640px] text-[1.15rem] font-[450] leading-[1.8] text-text">
         Natural language to SQL is one of those demos that looks trivial in a notebook and breaks
-        catastrophically in production. Getting a model to turn &ldquo;what was our fill rate last
+        catastrophically in production. Getting a model to turn &ldquo;what was our on-time rate last
         month?&rdquo; into a syntactically correct Redshift query is a solved problem. Getting it to
         do that reliably, safely, at scale, across a schema with hundreds of tables and PII-adjacent
         data — that&rsquo;s a different engineering problem entirely.
@@ -124,7 +124,7 @@ export default function GenAIArticle() {
         <strong className="text-text">Column hallucination.</strong> When a model
         doesn&rsquo;t find the column it needs, it invents one. This isn&rsquo;t a failure mode you
         can catch at generation time — the SQL looks valid. It fails at execution, or worse, it
-        executes on a column that happens to exist but means something different. In a pharmacy
+        executes on a column that happens to exist but means something different. In an operations
         context, a hallucinated column mapping in a cost query isn&rsquo;t just wrong; it could
         drive a procurement decision in the wrong direction.
       </p>
@@ -217,7 +217,7 @@ export default function GenAIArticle() {
       </p>
       <p className={bodyText}>
         Domain-specific few-shot examples are more valuable than general SQL examples by roughly an
-        order of magnitude. A model that has seen ten correct pharmacy fill-rate queries in its
+        order of magnitude. A model that has seen ten correct on-time-rate queries in its
         context will write the eleventh correctly under conditions where zero-shot inference would
         hallucinate a GROUP BY. The examples in the pool should come from real, high-rated query
         pairs — not hand-authored demonstrations. More on how to build that pool in the RL section.
@@ -248,9 +248,9 @@ export default function GenAIArticle() {
       </p>
       <p className={bodyText}>
         The indexing step embeds each table and column as a natural-language description — not the
-        DDL. &ldquo;Table: fills. Tracks each completed prescription dispense event at Amazon
-        Pharmacy. Grain: one row per fill. Key business use: fill rate, copay analysis, channel mix
-        reporting. Joins to orders via fill_id.&rdquo; That is a retrievable document. Raw DDL is
+        DDL. &ldquo;Table: shipments. Tracks each order shipped from a fulfillment
+        location. Grain: one row per shipment. Key business use: on-time rate, shipping cost
+        analysis, carrier mix reporting. Joins to orders via order_id.&rdquo; That is a retrievable document. Raw DDL is
         not. Research on the Spider benchmark has shown that including rich foreign-key and
         description metadata in prompts improves execution accuracy by over 50 percentage points
         compared to DDL-only injection.
@@ -267,7 +267,7 @@ export default function GenAIArticle() {
       <p className={bodyText}>
         Graph traversal handles multi-hop joins. When the retrieved tables are{" "}
         <code className={inlineCode}>
-          fills
+          shipments
         </code>{" "}
         and{" "}
         <code className={inlineCode}>
@@ -304,18 +304,18 @@ export default function GenAIArticle() {
       <ol className="mb-6 flex flex-col gap-[0.85rem] pl-6">
         <li className={listItem}>
           <strong className="text-text">PII column masking in schema metadata.</strong>{" "}
-          Columns containing direct or quasi-identifiers — patient_id, member_id, address,
+          Columns containing direct or quasi-identifiers — customer_id, email, address,
           date-of-birth — are tagged in the schema registry. When that column&rsquo;s description is
           retrieved and injected into the prompt, it is replaced with a masked description that
-          communicates join semantics (&ldquo;foreign key for linking fill records to the patient
+          communicates join semantics (&ldquo;foreign key for linking order records to the customer
           record&rdquo;) without describing the PII. The LLM knows the column exists and how to join
           through it; it cannot be prompted to surface its contents.
         </li>
         <li className={listItem}>
           <strong className="text-text">Permission-scoped schema injection.</strong>{" "}
           The schema retrieval step is aware of the requesting user&rsquo;s IAM role and
-          data-access entitlements. A finance analyst sees cost columns. A pharmacist sees
-          dispensing columns. Neither sees the other&rsquo;s domain unless their role explicitly
+          data-access entitlements. A finance analyst sees cost columns. A fulfillment analyst sees
+          shipping columns. Neither sees the other&rsquo;s domain unless their role explicitly
           grants it. The injected schema is the intersection of (semantically relevant) and
           (user-authorized) — not the full schema subset.
         </li>
@@ -347,7 +347,7 @@ export default function GenAIArticle() {
         Execution-Guided Self-Correction
       </h2>
       <p className={bodyText}>
-        The first generated query fails more often than you want. In early testing on the pharmacy
+        The first generated query fails more often than you want. In early testing on the production
         schema, first-pass execution success was roughly 70% — meaning three in ten queries required
         either a retry or a human correction. That number is unacceptable for a tool that&rsquo;s
         supposed to replace analyst bandwidth.
@@ -422,7 +422,7 @@ export default function GenAIArticle() {
       </h2>
       <p className={bodyText}>
         The system as described brings first-pass-or-retry success above 90% on the bounded
-        pharmacy analytics domain. The remaining failure surface points to three things worth
+        operations analytics domain. The remaining failure surface points to three things worth
         building.
       </p>
       <p className={bodyText}>
@@ -436,7 +436,7 @@ export default function GenAIArticle() {
       <p className={bodyText}>
         <strong className="text-text">Semantic result validation.</strong> Execution
         success is a weak correctness signal. A stronger signal comes from checking whether the
-        result is plausible given the question — a fill rate of 340% should trigger a validation
+        result is plausible given the question — an on-time rate of 340% should trigger a validation
         flag, not silently appear in the output. Statistical bounds on expected result ranges,
         derived from historical query results, would catch this class of error before it reaches
         the user.

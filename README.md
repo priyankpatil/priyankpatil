@@ -64,6 +64,7 @@ lib/
   rate-limit.ts         Rate limiter for public API routes
   site.ts               Site URL, name and description
   og.tsx                Shared layout for generated social preview images
+pipelines/cx-eval/      CX auto-evaluation pipeline (ETL → LLM judge → scores → marts); see PLAN.md
 public/images/          Static images
 scripts/                nl-sql-ingest.mts (knowledge base loader)
 supabase/               Migration (demo data, pgvector store, app role) and the embedding Edge Function

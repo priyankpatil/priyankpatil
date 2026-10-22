@@ -23,6 +23,18 @@ export const projectItems: ProjectItem[] = [
     demoUrl: "/projects/nl-sql",
   },
   {
+    id: "cx-eval",
+    title: "CX Auto-Evaluation Pipeline",
+    summary:
+      "End-to-end data pipeline that prepares 10,000 support chats for an LLM judge, validates what it returns, and turns the scores into CX metrics, drift monitoring and root cause analysis.",
+    outcome:
+      "Judge accuracy measured against ground truth, not assumed; three planted incidents (data, model and customer-driven) detected and explained before they reached a report.",
+    year: "2026",
+    org: "Personal project",
+    tags: ["LLM Evaluation", "ELT", "Postgres", "Monitoring"],
+    demoUrl: "/projects/cx-eval",
+  },
+  {
     id: "digital-inspection-app",
     title: "Digital Inspection App",
     summary:

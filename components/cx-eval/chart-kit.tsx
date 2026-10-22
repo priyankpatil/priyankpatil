@@ -1,9 +1,8 @@
 "use client";
 
 import { ReferenceLine } from "recharts";
-import type { Incident } from "@/lib/cx-eval/data";
 
-// Shared pieces for the CX eval charts. Series colours are CSS variables set on
+// Shared pieces for the CX eval finding charts. Series colours are CSS variables set on
 // the page root (light and dark steps of a validated categorical palette), so
 // every chart follows the site theme without re-rendering.
 
@@ -11,6 +10,7 @@ export const SERIES = {
   primary: "var(--cx-1)",
   secondary: "var(--cx-2)",
   neutral: "var(--cx-neutral)",
+  bad: "var(--cx-bad)",
 } as const;
 
 export const axisTick = { fill: "var(--soft)", fontSize: 11 };
@@ -102,34 +102,15 @@ export function Legend({ rows }: { rows: Pick<TooltipRow, "label" | "color" | "d
   );
 }
 
-export const INCIDENT_TYPE_LABEL = { data: "data-driven", model: "model-driven", customer: "real CX change" } as const;
-
-/** Numbered dashed verticals for the planted incidents (labels listed under the chart). */
-export function incidentLines(incidents: Incident[], showLabels = true) {
-  return incidents.map((inc) => (
+/** A dated, labelled dashed vertical (the day something changed). */
+export function eventLine(date: string, label: string) {
+  return (
     <ReferenceLine
-      key={inc.date + inc.marker}
-      x={inc.date}
+      x={date}
       stroke="var(--soft)"
       strokeDasharray="3 4"
       ifOverflow="extendDomain"
-      label={showLabels ? { value: inc.marker, position: "insideTopLeft", fill: "var(--soft)", fontSize: 11, fontWeight: 600 } : undefined}
+      label={{ value: label, position: "insideTopLeft", fill: "var(--soft)", fontSize: 11 }}
     />
-  ));
-}
-
-export function IncidentKey({ incidents }: { incidents: Incident[] }) {
-  if (!incidents.length) return null;
-  return (
-    <ol className="mt-3 grid gap-1 text-xs text-soft sm:grid-cols-3">
-      {incidents.map((inc) => (
-        <li key={inc.marker} className="flex gap-1.5">
-          <span className="font-semibold text-muted">{inc.marker}</span>
-          <span>
-            {shortDate(inc.date)} · {inc.label} <span className="whitespace-nowrap">({INCIDENT_TYPE_LABEL[inc.type]})</span>
-          </span>
-        </li>
-      ))}
-    </ol>
   );
 }

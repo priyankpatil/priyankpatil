@@ -22,7 +22,7 @@ export default function NLSQLPage() {
             <p className="body-lg mt-4">
               Ask a business question in plain English. The system retrieves the relevant schema, business
               definitions and verified examples from a pgvector knowledge base, writes PostgreSQL with an open-weight
-              model, validates it, and runs it read-only against 40,000+ rows of synthetic pharmacy data.
+              model, validates it, and runs it read-only against 40,000+ rows of synthetic online-retail data: orders, customers, products, deliveries and inventory.
             </p>
           </section>
 

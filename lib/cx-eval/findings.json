@@ -1,0 +1,589 @@
+{
+ "generatedAt": "2026-10-22T20:55:11.321Z",
+ "hero": {
+  "conversations": 10042,
+  "days": 30,
+  "scoredProduction": 600,
+  "checkableVerdicts": 1498,
+  "checkableAgreementPct": 83.4
+ },
+ "team": {
+  "routingDate": "2026-10-14",
+  "series": [
+   {
+    "date": "2026-09-23",
+    "t4": 93.3,
+    "others": 87.4,
+    "company": 89
+   },
+   {
+    "date": "2026-09-24",
+    "t4": 83.3,
+    "others": 91.7,
+    "company": 89.5
+   },
+   {
+    "date": "2026-09-25",
+    "t4": 83.3,
+    "others": 89.4,
+    "company": 87.9
+   },
+   {
+    "date": "2026-09-26",
+    "t4": 82.1,
+    "others": 89.7,
+    "company": 87.2
+   },
+   {
+    "date": "2026-09-27",
+    "t4": 91.7,
+    "others": 85.6,
+    "company": 87
+   },
+   {
+    "date": "2026-09-28",
+    "t4": 88.9,
+    "others": 88.1,
+    "company": 88.3
+   },
+   {
+    "date": "2026-09-29",
+    "t4": 73.7,
+    "others": 91.2,
+    "company": 87.4
+   },
+   {
+    "date": "2026-09-30",
+    "t4": 93.2,
+    "others": 92.8,
+    "company": 92.9
+   },
+   {
+    "date": "2026-10-01",
+    "t4": 87.8,
+    "others": 86.1,
+    "company": 86.5
+   },
+   {
+    "date": "2026-10-02",
+    "t4": 92.7,
+    "others": 89,
+    "company": 89.9
+   },
+   {
+    "date": "2026-10-03",
+    "t4": 97.1,
+    "others": 83.3,
+    "company": 86.1
+   },
+   {
+    "date": "2026-10-04",
+    "t4": 82.4,
+    "others": 87.1,
+    "company": 85.8
+   },
+   {
+    "date": "2026-10-05",
+    "t4": 91.8,
+    "others": 87.4,
+    "company": 88.6
+   },
+   {
+    "date": "2026-10-06",
+    "t4": 95.3,
+    "others": 87.6,
+    "company": 89.5
+   },
+   {
+    "date": "2026-10-07",
+    "t4": 89.5,
+    "others": 86.6,
+    "company": 87.2
+   },
+   {
+    "date": "2026-10-08",
+    "t4": 86.7,
+    "others": 92.7,
+    "company": 91.2
+   },
+   {
+    "date": "2026-10-09",
+    "t4": 80.6,
+    "others": 85.1,
+    "company": 84.1
+   },
+   {
+    "date": "2026-10-10",
+    "t4": 97.2,
+    "others": 83.5,
+    "company": 86.4
+   },
+   {
+    "date": "2026-10-11",
+    "t4": 81.4,
+    "others": 88.5,
+    "company": 86.5
+   },
+   {
+    "date": "2026-10-12",
+    "t4": 90.9,
+    "others": 78.7,
+    "company": 81.3
+   },
+   {
+    "date": "2026-10-13",
+    "t4": 89.1,
+    "others": 89.9,
+    "company": 89.7
+   },
+   {
+    "date": "2026-10-14",
+    "t4": 70.5,
+    "others": 91.5,
+    "company": 86.1
+   },
+   {
+    "date": "2026-10-15",
+    "t4": 68.1,
+    "others": 97.5,
+    "company": 89.2
+   },
+   {
+    "date": "2026-10-16",
+    "t4": 77.2,
+    "others": 97.7,
+    "company": 91.5
+   },
+   {
+    "date": "2026-10-17",
+    "t4": 63.5,
+    "others": 89.8,
+    "company": 81.8
+   },
+   {
+    "date": "2026-10-18",
+    "t4": 53.8,
+    "others": 100,
+    "company": 86
+   },
+   {
+    "date": "2026-10-19",
+    "t4": 69.4,
+    "others": 93.1,
+    "company": 84
+   },
+   {
+    "date": "2026-10-20",
+    "t4": 66.7,
+    "others": 97.6,
+    "company": 89.3
+   },
+   {
+    "date": "2026-10-21",
+    "t4": 75.5,
+    "others": 97.1,
+    "company": 90.1
+   },
+   {
+    "date": "2026-10-22",
+    "t4": 71.2,
+    "others": 92.9,
+    "company": 86.6
+   }
+  ],
+  "before": {
+   "t4": 88,
+   "others": 87.7,
+   "company": 87.8
+  },
+  "after": {
+   "t4": 69.8,
+   "others": 94.8,
+   "company": 87.3
+  },
+  "csat": {
+   "t4Before": 3.96,
+   "t4After": 3.79,
+   "othersBefore": 3.98,
+   "othersAfter": 4.02
+  }
+ },
+ "model": {
+  "switchDate": "2026-10-10",
+  "fromModel": "openai/gpt-oss-20b",
+  "toModel": "nvidia/nemotron-3-ultra-550b-a55b",
+  "series": [
+   {
+    "date": "2026-09-23",
+    "cxi": 77.3,
+    "csat": 3.9
+   },
+   {
+    "date": "2026-09-24",
+    "cxi": 78,
+    "csat": 4.03
+   },
+   {
+    "date": "2026-09-25",
+    "cxi": 76.9,
+    "csat": 3.95
+   },
+   {
+    "date": "2026-09-26",
+    "cxi": 73.5,
+    "csat": 3.88
+   },
+   {
+    "date": "2026-09-27",
+    "cxi": 76.7,
+    "csat": 3.97
+   },
+   {
+    "date": "2026-09-28",
+    "cxi": 74.4,
+    "csat": 4.14
+   },
+   {
+    "date": "2026-09-29",
+    "cxi": 79.7,
+    "csat": 3.93
+   },
+   {
+    "date": "2026-09-30",
+    "cxi": 80.3,
+    "csat": 4.08
+   },
+   {
+    "date": "2026-10-01",
+    "cxi": 79.6,
+    "csat": 4.05
+   },
+   {
+    "date": "2026-10-02",
+    "cxi": 76.5,
+    "csat": 3.98
+   },
+   {
+    "date": "2026-10-03",
+    "cxi": 72.1,
+    "csat": 3.85
+   },
+   {
+    "date": "2026-10-04",
+    "cxi": 86,
+    "csat": 3.92
+   },
+   {
+    "date": "2026-10-05",
+    "cxi": 80.5,
+    "csat": 4.09
+   },
+   {
+    "date": "2026-10-06",
+    "cxi": 74.8,
+    "csat": 4.14
+   },
+   {
+    "date": "2026-10-07",
+    "cxi": 86.2,
+    "csat": 3.84
+   },
+   {
+    "date": "2026-10-08",
+    "cxi": 88.3,
+    "csat": 4.01
+   },
+   {
+    "date": "2026-10-09",
+    "cxi": 84,
+    "csat": 3.9
+   },
+   {
+    "date": "2026-10-10",
+    "cxi": 79.4,
+    "csat": 3.95
+   },
+   {
+    "date": "2026-10-11",
+    "cxi": 88,
+    "csat": 3.97
+   },
+   {
+    "date": "2026-10-12",
+    "cxi": 87.8,
+    "csat": 3.86
+   },
+   {
+    "date": "2026-10-13",
+    "cxi": 88.4,
+    "csat": 3.99
+   },
+   {
+    "date": "2026-10-14",
+    "cxi": 83.2,
+    "csat": 4.01
+   },
+   {
+    "date": "2026-10-15",
+    "cxi": 81.6,
+    "csat": 3.91
+   },
+   {
+    "date": "2026-10-16",
+    "cxi": 86.8,
+    "csat": 3.94
+   },
+   {
+    "date": "2026-10-17",
+    "cxi": 75.9,
+    "csat": 3.83
+   },
+   {
+    "date": "2026-10-18",
+    "cxi": 87.4,
+    "csat": 3.63
+   },
+   {
+    "date": "2026-10-19",
+    "cxi": 93,
+    "csat": 4.03
+   },
+   {
+    "date": "2026-10-20",
+    "cxi": 87.7,
+    "csat": 4.01
+   },
+   {
+    "date": "2026-10-21",
+    "cxi": 86.8,
+    "csat": 4.02
+   },
+   {
+    "date": "2026-10-22",
+    "cxi": 89.6,
+    "csat": 3.94
+   }
+  ],
+  "before": {
+   "cxi": 79.1,
+   "csat": 3.98,
+   "empathy": 3.74,
+   "resolvedPct": 82.9
+  },
+  "after": {
+   "cxi": 85.8,
+   "csat": 3.95,
+   "empathy": 3.96,
+   "resolvedPct": 94.6
+  },
+  "backtest": {
+   "from": "2026-09-23",
+   "to": "2026-09-29",
+   "n": 32,
+   "planned": 140,
+   "primary": {
+    "cxi": 77.3,
+    "empathy": 3.75,
+    "resolvedPct": 87.5
+   },
+   "secondary": {
+    "cxi": 83.9,
+    "empathy": 4.06,
+    "resolvedPct": 93.8
+   }
+  }
+ },
+ "quarantine": {
+  "date": "2026-10-18",
+  "series": [
+   {
+    "date": "2026-09-23",
+    "loaded": 337,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-09-24",
+    "loaded": 335,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-09-25",
+    "loaded": 341,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-09-26",
+    "loaded": 327,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-09-27",
+    "loaded": 322,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-09-28",
+    "loaded": 358,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-09-29",
+    "loaded": 327,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-09-30",
+    "loaded": 326,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-01",
+    "loaded": 318,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-02",
+    "loaded": 320,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-03",
+    "loaded": 340,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-04",
+    "loaded": 367,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-05",
+    "loaded": 347,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-06",
+    "loaded": 328,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-07",
+    "loaded": 344,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-08",
+    "loaded": 343,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-09",
+    "loaded": 328,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-10",
+    "loaded": 338,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-11",
+    "loaded": 330,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-12",
+    "loaded": 344,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-13",
+    "loaded": 353,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-14",
+    "loaded": 322,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-15",
+    "loaded": 338,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-16",
+    "loaded": 334,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-17",
+    "loaded": 334,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-18",
+    "loaded": 316,
+    "quarantined": 230
+   },
+   {
+    "date": "2026-10-19",
+    "loaded": 327,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-20",
+    "loaded": 332,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-21",
+    "loaded": 312,
+    "quarantined": 0
+   },
+   {
+    "date": "2026-10-22",
+    "loaded": 354,
+    "quarantined": 0
+   }
+  ],
+  "loaded": 10042,
+  "quarantined": 230,
+  "lastValidAt": "2026-10-18T11:58:55Z",
+  "firstQuarantinedAt": "2026-10-18T12:00:35Z",
+  "csatResponses": 16,
+  "typicalCsatResponses": 84
+ },
+ "trust": {
+  "production": [
+   {
+    "model": "openai/gpt-oss-20b",
+    "rubric": "v1",
+    "n": 340,
+    "intentPct": 73.8,
+    "identityPct": 88.2,
+    "policyPct": 79.7
+   },
+   {
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "rubric": "v1",
+    "n": 260,
+    "intentPct": 86.5,
+    "identityPct": 96.1,
+    "policyPct": 88.5
+   }
+  ],
+  "rubricBacktest": {
+   "from": "2026-09-23",
+   "to": "2026-09-29",
+   "model": "openai/gpt-oss-20b",
+   "planned": 140,
+   "n": 137,
+   "trueFails": 13,
+   "v1Recall": 23.1,
+   "v2Recall": 84.6,
+   "v1IdentityPct": 82.1,
+   "v2IdentityPct": 92.5
+  }
+ }
+}

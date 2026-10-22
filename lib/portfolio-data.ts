@@ -16,11 +16,23 @@ export const projectItems: ProjectItem[] = [
     summary:
       "LLM-powered query assistant that translates natural language into SQL — built to explore how analytics teams can reduce stakeholder dependency on manual reporting.",
     outcome:
-      "Prototyped against a pharmacy operations schema; demonstrated days-to-minutes insight turnaround for recurring business questions.",
+      "Prototyped against a synthetic online-retail operations schema; demonstrated days-to-minutes insight turnaround for recurring business questions.",
     year: "2025",
     org: "Amazon Pharmacy",
     tags: ["Python", "AWS", "NLP", "Analytics UX"],
     demoUrl: "/projects/nl-sql",
+  },
+  {
+    id: "cx-eval",
+    title: "CX Auto-Evaluation Pipeline",
+    summary:
+      "End-to-end data pipeline that prepares 10,000 support chats for an LLM judge, validates what it returns, and turns the scores into CX metrics, drift monitoring and root cause analysis.",
+    outcome:
+      "Judge accuracy measured against ground truth, not assumed; three planted incidents (data, model and customer-driven) detected and explained before they reached a report.",
+    year: "2026",
+    org: "Personal project",
+    tags: ["LLM Evaluation", "ELT", "Postgres", "Monitoring"],
+    demoUrl: "/projects/cx-eval",
   },
   {
     id: "digital-inspection-app",

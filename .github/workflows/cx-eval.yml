@@ -1,0 +1,59 @@
+# Daily run of the CX auto-evaluation pipeline (pipelines/cx-eval/PLAN.md):
+# load → validate → transform → assemble → LLM judge → checks → GitHub issues.
+# The pg_cron freshness watchdog in Supabase alerts if this stops running.
+
+name: cx-eval pipeline
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # 06:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "Simulated day to (re)deliver, 1–30. Empty = today's day."
+        required: false
+      skip_score:
+        description: "Skip LLM scoring"
+        type: boolean
+        default: false
+
+concurrency:
+  group: cx-eval
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Cache ABCD dataset
+        uses: actions/cache@v4
+        with:
+          path: pipelines/cx-eval/.data
+          key: abcd-v1.1
+
+      - name: Run pipeline
+        env:
+          CXEVAL_DATABASE_URL: ${{ secrets.CXEVAL_DATABASE_URL }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DAY: ${{ inputs.day }}
+          SKIP_SCORE: ${{ inputs.skip_score }}
+        run: |
+          args=()
+          if [ -n "$DAY" ]; then args+=(--day "$DAY"); fi
+          if [ "$SKIP_SCORE" = "true" ]; then args+=(--skip-score); fi
+          npx tsx pipelines/cx-eval/scripts/run.mts "${args[@]}"

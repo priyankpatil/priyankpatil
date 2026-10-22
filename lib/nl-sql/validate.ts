@@ -44,7 +44,7 @@ export interface ValidationResult {
 // The system prompt asks the model to answer with this marker instead of SQL
 // when a question is out of scope (writes, other data, not a data question).
 export const CANNOT_ANSWER = "-- CANNOT_ANSWER:";
-const DEFAULT_REFUSAL = "This demo can only answer read-only questions about the sample pharmacy data.";
+const DEFAULT_REFUSAL = "This demo can only answer read-only questions about the sample retail data.";
 
 /**
  * Returns a message for the user when the model declined to write SQL, either

@@ -1,4 +1,4 @@
--- NL → SQL demo: synthetic pharmacy retail data, a RAG knowledge store with
+-- NL → SQL demo: synthetic online-retail data, a RAG knowledge store with
 -- hybrid (vector + full-text) search, a query log, and a dedicated login role
 -- the website uses. Run once per Supabase project (SQL editor or `supabase db push`).
 --
@@ -18,7 +18,7 @@ create table if not exists nlsql_demo.customers (
   lifetime_value   numeric(12, 2) not null,
   acquisition_date date not null,
   region           text not null,
-  prime_member     boolean not null
+  loyalty_tier     text not null
 );
 
 create table if not exists nlsql_demo.products (
@@ -40,14 +40,17 @@ create table if not exists nlsql_demo.orders (
   channel      text not null
 );
 
-create table if not exists nlsql_demo.pharmacy_fills (
-  fill_id     text primary key,
-  customer_id text not null references nlsql_demo.customers,
-  drug_id     text not null,
-  fill_date   date not null,
-  days_supply integer not null,
-  copay       numeric(8, 2) not null,
-  fill_status text not null
+create table if not exists nlsql_demo.deliveries (
+  delivery_id     text primary key,
+  order_id        text not null references nlsql_demo.orders,
+  customer_id     text not null references nlsql_demo.customers,
+  carrier         text not null,
+  shipping_speed  text not null,
+  shipping_fee    numeric(8, 2) not null,
+  ship_date       date not null,
+  promised_date   date not null,
+  delivered_date  date,
+  delivery_status text not null
 );
 
 create table if not exists nlsql_demo.inventory (
@@ -61,8 +64,9 @@ create table if not exists nlsql_demo.inventory (
 
 create index if not exists orders_customer_idx on nlsql_demo.orders (customer_id);
 create index if not exists orders_date_idx on nlsql_demo.orders (order_date);
-create index if not exists fills_customer_idx on nlsql_demo.pharmacy_fills (customer_id);
-create index if not exists fills_date_idx on nlsql_demo.pharmacy_fills (fill_date);
+create index if not exists deliveries_customer_idx on nlsql_demo.deliveries (customer_id);
+create index if not exists deliveries_order_idx on nlsql_demo.deliveries (order_id);
+create index if not exists deliveries_ship_date_idx on nlsql_demo.deliveries (ship_date);
 
 -- Deterministic synthetic data, anchored to the date the migration runs.
 -- Re-running is a no-op once data exists.
@@ -93,33 +97,33 @@ begin
     end)::numeric, 2),
     anchor - (30 + floor(random() * 2400))::int,
     (array['Northeast', 'Southeast', 'Midwest', 'Southwest', 'West'])[1 + floor(random() * 5)::int],
-    random() < 0.55
+    case when random() < 0.45 then 'none' when random() < 0.65 then 'silver' else 'gold' end
   from (select i, random() as r from generate_series(1, 2000) as i) s;
 
   insert into nlsql_demo.products
   select
     'prod_' || lpad(i::text, 4, '0'),
-    d.name || ' ' || d.strength,
+    d.name || ' — ' || d.variant,
     d.category,
-    case when random() < 0.7 then 'Generic' else d.brand end,
+    case when random() < 0.4 then 'House Label' else d.brand end,
     round((d.base_price * (0.8 + random() * 0.6))::numeric, 2),
     round((25 + random() * 50)::numeric, 2)
   from generate_series(1, 120) as i
   cross join lateral (
     select * from (values
-      ('Metformin', '500mg', 'Diabetes', 'Glucophage', 12.99),
-      ('Lisinopril', '10mg', 'Blood Pressure', 'Zestril', 8.50),
-      ('Atorvastatin', '20mg', 'Cholesterol', 'Lipitor', 45.00),
-      ('Vitamin D3', '2000IU', 'Supplements', 'Nature Made', 18.75),
-      ('Omeprazole', '20mg', 'GI', 'Prilosec', 14.25),
-      ('Amlodipine', '5mg', 'Blood Pressure', 'Norvasc', 9.80),
-      ('Levothyroxine', '50mcg', 'Thyroid', 'Synthroid', 16.40),
-      ('Sertraline', '50mg', 'Mental Health', 'Zoloft', 22.10),
-      ('Albuterol', '90mcg', 'Respiratory', 'ProAir', 38.60),
-      ('Ibuprofen', '200mg', 'Pain Relief', 'Advil', 7.25),
-      ('Cetirizine', '10mg', 'Allergy', 'Zyrtec', 11.90),
-      ('Insulin Glargine', '100u/mL', 'Diabetes', 'Lantus', 89.00)
-    ) as v(name, strength, category, brand, base_price)
+      ('Cotton Crew Tee', 'Heather Grey', 'Apparel', 'Northfield', 24.00),
+      ('Merino Pullover', 'Navy', 'Apparel', 'Northfield', 89.00),
+      ('Canvas Sneaker', 'Off White', 'Footwear', 'Trailmark', 65.00),
+      ('Leather Ankle Boot', 'Cognac', 'Footwear', 'Trailmark', 148.00),
+      ('Linen Duvet Cover', 'Queen', 'Bedding', 'Harbor & Pine', 129.00),
+      ('Percale Sheet Set', 'King', 'Bedding', 'Harbor & Pine', 98.00),
+      ('Stoneware Dinner Set', '12-piece', 'Kitchen', 'Lumen Home', 79.00),
+      ('Cast Iron Skillet', '10 inch', 'Kitchen', 'Lumen Home', 42.00),
+      ('Ceramic Table Lamp', 'Sage', 'Home Decor', 'Lumen Home', 64.00),
+      ('Wool Throw Blanket', 'Oatmeal', 'Home Decor', 'Harbor & Pine', 72.00),
+      ('Waffle Bath Towel', 'Set of 2', 'Bath', 'Harbor & Pine', 38.00),
+      ('Canvas Weekender Bag', 'Olive', 'Accessories', 'Trailmark', 110.00)
+    ) as v(name, variant, category, brand, base_price)
     offset (i % 12) limit 1
   ) d;
 
@@ -136,25 +140,66 @@ begin
       else 'cancelled'
     end,
     round(p.price * (1 + floor(random() * 3))::numeric, 2),
-    (array['web', 'web', 'mobile', 'mobile', 'pharmacy', 'phone'])[1 + floor(random() * 6)::int]
+    (array['web', 'web', 'app', 'app', 'store', 'phone'])[1 + floor(random() * 6)::int]
   from (select i, random() as s, 1 + floor(random() * 120)::int as pick from generate_series(1, 25000) as i) o
   join nlsql_demo.products p on p.product_id = 'prod_' || lpad(o.pick::text, 4, '0');
 
-  insert into nlsql_demo.pharmacy_fills
+  -- One shipment for most non-cancelled orders. Carriers differ in
+  -- reliability and loyalty tiers in shipping fees, so comparisons by carrier
+  -- or tier show real gaps. Shipments not yet due by today are in transit.
+  insert into nlsql_demo.deliveries
+  with base as (
+    select
+      o.order_id,
+      o.customer_id,
+      c.loyalty_tier,
+      least(o.order_date + floor(random() * 3)::int, anchor) as ship_date,
+      (array['Northline', 'Northline', 'Bluebird Post', 'Metro Courier'])[1 + floor(random() * 4)::int] as carrier,
+      case when random() < 0.3 then 'express' else 'standard' end as shipping_speed,
+      random() as late_r,
+      random() as s
+    from nlsql_demo.orders o
+    join nlsql_demo.customers c on c.customer_id = o.customer_id
+    where o.status <> 'cancelled' and random() < 0.65
+  ),
+  dated as (
+    select
+      b.*,
+      b.ship_date + case b.shipping_speed when 'express' then 2 else 5 end as promised_date,
+      b.ship_date + case b.shipping_speed when 'express' then 2 else 5 end
+        + case
+            when b.late_r < case b.carrier when 'Northline' then 0.9 when 'Bluebird Post' then 0.8 else 0.68 end
+              then -floor(random() * 2)::int
+            else 1 + floor(random() * 4)::int
+          end as arrival_date
+    from base b
+  ),
+  resolved as (
+    select
+      d.*,
+      case
+        when d.arrival_date > anchor then 'in_transit'
+        when d.s < 0.9 then 'delivered'
+        when d.s < 0.96 then 'failed'
+        else 'returned'
+      end as delivery_status
+    from dated d
+  )
   select
-    'fill_' || lpad(i::text, 6, '0'),
-    'cust_' || lpad((1 + floor(random() * 2000))::int::text, 4, '0'),
-    'drug_' || lpad((1 + floor(random() * 80))::int::text, 4, '0'),
-    anchor - floor(random() * 730)::int,
-    case when random() < 0.6 then 30 else 90 end,
-    (array[0, 5, 10, 10, 20, 40])[1 + floor(random() * 6)::int],
+    'dlv_' || lpad((row_number() over (order by r.order_id))::text, 6, '0'),
+    r.order_id,
+    r.customer_id,
+    r.carrier,
+    r.shipping_speed,
     case
-      when s < 0.82 then 'dispensed'
-      when s < 0.90 then 'abandoned'
-      when s < 0.96 then 'rejected'
-      else 'pending'
-    end
-  from (select i, random() as s from generate_series(1, 15000) as i) f;
+      when r.shipping_speed = 'express' then case r.loyalty_tier when 'gold' then 7.99 else 12.99 end
+      else case r.loyalty_tier when 'gold' then 0 when 'silver' then 3.99 else 6.99 end
+    end,
+    r.ship_date,
+    r.promised_date,
+    case when r.delivery_status = 'delivered' then r.arrival_date end,
+    r.delivery_status
+  from resolved r;
 
   insert into nlsql_demo.inventory
   select
@@ -185,7 +230,10 @@ begin
     return 0;
   end if;
   update orders set order_date = order_date + gap;
-  update pharmacy_fills set fill_date = fill_date + gap;
+  update deliveries set
+    ship_date = ship_date + gap,
+    promised_date = promised_date + gap,
+    delivered_date = delivered_date + gap;
   update customers set acquisition_date = acquisition_date + gap;
   update inventory set last_restocked = last_restocked + gap;
   return gap;

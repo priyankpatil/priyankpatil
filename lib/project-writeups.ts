@@ -24,11 +24,11 @@ export const projectWriteups: ProjectWriteup[] = [
     id: "genai-analytics-agent",
     tagline: "Exploring how LLM-powered interfaces can eliminate the gap between a business question and a data answer.",
     problem:
-      "Analyst queues are a tax on decision speed. In operational analytics environments — pharmacy operations being a vivid example — recurring questions about fill rates, inventory positions, and cost trends land in a queue and wait days. That latency isn't a reporting problem; it's a decision-support problem. I built this as a personal exploration of how far a well-constrained LLM can go in closing that gap, without adding headcount or building a complex BI layer.",
+      "Analyst queues are a tax on decision speed. In operational analytics environments — retail fulfillment being a vivid example — recurring questions about delivery performance, inventory positions, and cost trends land in a queue and wait days. That latency isn't a reporting problem; it's a decision-support problem. I built this as a personal exploration of how far a well-constrained LLM can go in closing that gap, without adding headcount or building a complex BI layer.",
     approach: [
       {
         title: "Define the contract, not the query",
-        body: "Instead of building an open-ended chatbot, I designed a structured schema contract: five canonical tables — orders, customers, products, pharmacy fills, and inventory — each documented with business-aligned column names and data types. The LLM doesn't infer relationships; the system prompt tells it exactly what exists, what's off-limits, and how to format output. Constraining the domain dramatically reduced hallucination rate.",
+        body: "Instead of building an open-ended chatbot, I designed a structured schema contract: five canonical tables — orders, customers, products, deliveries, and inventory — each documented with business-aligned column names and data types. The LLM doesn't infer relationships; the system prompt tells it exactly what exists, what's off-limits, and how to format output. Constraining the domain dramatically reduced hallucination rate.",
       },
       {
         title: "Choose speed over sophistication for v1",
@@ -36,7 +36,7 @@ export const projectWriteups: ProjectWriteup[] = [
       },
       {
         title: "Validate with actual question patterns",
-        body: "I validated the system against a realistic pharmacy operations schema — fill rates, inventory positions, cost-per-channel — covering the types of recurring questions that typically bottleneck analytics teams. Testing against real question patterns (rather than synthetic benchmarks) surfaced a missing join early, which reshaped the table design before it became a production problem.",
+        body: "I validated the system against a realistic retail operations schema — on-time delivery rates, inventory positions, cost-per-channel — covering the types of recurring questions that typically bottleneck analytics teams. Testing against real question patterns (rather than synthetic benchmarks) surfaced a missing join early, which reshaped the table design before it became a production problem.",
       },
     ],
     outcomes: [

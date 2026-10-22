@@ -20,14 +20,14 @@ export interface KnowledgeDoc {
   sql?: string;
 }
 
-export const DEMO_TABLES = ["orders", "customers", "products", "pharmacy_fills", "inventory"] as const;
+export const DEMO_TABLES = ["orders", "customers", "products", "deliveries", "inventory"] as const;
 export type DemoTable = (typeof DEMO_TABLES)[number];
 
 const tables: KnowledgeDoc[] = [
   {
     id: "table:orders",
     kind: "table",
-    title: "orders — retail and pharmacy orders",
+    title: "orders — online and in-store retail orders",
     tables: ["orders"],
     content: `orders (one row per order line; ~25k rows covering the last 24 months)
   order_id      text PK         e.g. 'ord_000123'
@@ -36,7 +36,7 @@ const tables: KnowledgeDoc[] = [
   order_date    date            date the order was placed
   status        text            'completed' | 'pending' | 'refunded' | 'cancelled'
   total_amount  numeric(10,2)   order value in USD (price × quantity)
-  channel       text            channel the order was placed through: 'web' | 'mobile' | 'pharmacy' | 'phone'
+  channel       text            channel the order was placed through: 'web' | 'app' | 'store' | 'phone'
 Use for revenue, order counts, average order value, sales trends, channel mix.`,
   },
   {
@@ -50,8 +50,8 @@ Use for revenue, order counts, average order value, sales trends, channel mix.`,
   lifetime_value    numeric(12,2) modeled lifetime value (LTV) in USD
   acquisition_date  date         date the customer was acquired
   region            text         'Northeast' | 'Southeast' | 'Midwest' | 'Southwest' | 'West'
-  prime_member      boolean      true for Prime members
-Join to orders and pharmacy_fills on customer_id. Use for segmentation, LTV, regional and Prime vs non-Prime comparisons.`,
+  loyalty_tier      text         loyalty program tier: 'none' | 'silver' | 'gold'
+Join to orders and deliveries on customer_id. Use for segmentation, LTV, regional and loyalty tier comparisons.`,
   },
   {
     id: "table:products",
@@ -60,27 +60,30 @@ Join to orders and pharmacy_fills on customer_id. Use for segmentation, LTV, reg
     tables: ["products"],
     content: `products (one row per product; 120 rows)
   product_id    text PK        e.g. 'prod_0007'
-  product_name  text           e.g. 'Metformin 500mg'
-  category      text           'Diabetes' | 'Blood Pressure' | 'Cholesterol' | 'Supplements' | 'GI' | 'Thyroid' | 'Mental Health' | 'Respiratory' | 'Pain Relief' | 'Allergy'
-  brand         text           brand name, or 'Generic'
+  product_name  text           e.g. 'Linen Duvet Cover — Queen'
+  category      text           'Apparel' | 'Footwear' | 'Bedding' | 'Kitchen' | 'Home Decor' | 'Bath' | 'Accessories'
+  brand         text           'Northfield' | 'Trailmark' | 'Harbor & Pine' | 'Lumen Home', or 'House Label' for own-brand
   price         numeric(10,2)  unit list price in USD
   margin_pct    numeric(5,2)   gross margin as a percentage, e.g. 42.50 means 42.5%
 Join to orders and inventory on product_id.`,
   },
   {
-    id: "table:pharmacy_fills",
+    id: "table:deliveries",
     kind: "table",
-    title: "pharmacy_fills — prescription fill events",
-    tables: ["pharmacy_fills"],
-    content: `pharmacy_fills (one row per prescription fill attempt; ~15k rows covering the last 24 months)
-  fill_id      text PK        e.g. 'fill_000311'
-  customer_id  text FK → customers.customer_id
-  drug_id      text           e.g. 'drug_0031' (no drug dimension table)
-  fill_date    date           date of the fill attempt
-  days_supply  integer        30 or 90
-  copay        numeric(8,2)   patient copay in USD
-  fill_status  text           'dispensed' | 'abandoned' | 'rejected' | 'pending'
-Use for fill rate, abandonment, copay and 30- vs 90-day supply analysis. Join to customers for region or Prime membership.`,
+    title: "deliveries — shipments from warehouse to customer",
+    tables: ["deliveries"],
+    content: `deliveries (one row per shipment; ~15k rows covering the last 24 months; most non-cancelled orders have one)
+  delivery_id      text PK        e.g. 'dlv_000311'
+  order_id         text FK → orders.order_id
+  customer_id      text FK → customers.customer_id
+  carrier          text           'Northline' | 'Bluebird Post' | 'Metro Courier'
+  shipping_speed   text           'standard' (promised in 5 days) | 'express' (promised in 2 days)
+  shipping_fee     numeric(8,2)   shipping fee charged to the customer in USD (0 = free shipping)
+  ship_date        date           date the shipment left the warehouse
+  promised_date    date           delivery date promised to the customer
+  delivered_date   date           actual delivery date; NULL unless delivery_status = 'delivered'
+  delivery_status  text           'delivered' | 'failed' | 'returned' | 'in_transit'
+Use for on-time rate, delivery success, failed deliveries, carrier and shipping-speed comparisons and shipping fees. Join to customers for region, segment or loyalty tier.`,
   },
   {
     id: "table:inventory",
@@ -122,20 +125,20 @@ const glossary: KnowledgeDoc[] = [
       "Gross profit for an order = orders.total_amount * products.margin_pct / 100, joining products on product_id. Only completed orders count.",
   },
   {
-    id: "glossary:fill-rate",
+    id: "glossary:on-time-rate",
     kind: "glossary",
-    title: "Fill rate",
-    tables: ["pharmacy_fills"],
+    title: "On-time delivery rate",
+    tables: ["deliveries"],
     content:
-      "Fill rate = dispensed fills / resolved fills, where resolved means fill_status IN ('dispensed', 'abandoned', 'rejected'). Pending fills are excluded from both numerator and denominator. Express as a percentage rounded to 1 decimal.",
+      "On-time delivery rate = deliveries with delivered_date <= promised_date / deliveries with delivery_status = 'delivered'. Failed, returned and in-transit shipments are excluded from both numerator and denominator. Express as a percentage rounded to 1 decimal. Late deliveries are delivered ones with delivered_date > promised_date.",
   },
   {
-    id: "glossary:abandonment",
+    id: "glossary:delivery-success",
     kind: "glossary",
-    title: "Abandonment rate",
-    tables: ["pharmacy_fills"],
+    title: "Delivery success rate and failed delivery rate",
+    tables: ["deliveries"],
     content:
-      "Abandonment rate = abandoned fills / resolved fills (fill_status IN ('dispensed', 'abandoned', 'rejected')), as a percentage.",
+      "Resolved deliveries are delivery_status IN ('delivered', 'failed', 'returned'); in-transit shipments are excluded. Delivery success rate = delivered / resolved. Failed delivery rate = failed / resolved. Both as percentages.",
   },
   {
     id: "glossary:active-customer",
@@ -154,12 +157,12 @@ const glossary: KnowledgeDoc[] = [
       "There is no acquisition channel column. A customer's acquisition channel is the channel of their first order (earliest order_date in orders). Derive it with ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date, order_id) = 1.",
   },
   {
-    id: "glossary:prime",
+    id: "glossary:loyalty",
     kind: "glossary",
-    title: "Prime vs non-Prime",
+    title: "Loyalty members and loyalty tier",
     tables: ["customers"],
     content:
-      "Prime membership is customers.prime_member (boolean). Label it with CASE WHEN prime_member THEN 'Prime' ELSE 'Non-Prime' END.",
+      "Loyalty tier is customers.loyalty_tier ('none' | 'silver' | 'gold'). Loyalty members are customers with loyalty_tier <> 'none'; non-members have loyalty_tier = 'none'.",
   },
   {
     id: "glossary:low-stock",
@@ -241,18 +244,18 @@ GROUP BY 1
 ORDER BY 1`,
   },
   {
-    slug: "fill-rate-region-prime",
-    question: "Fill rate by region — Prime vs non-Prime",
-    tables: ["pharmacy_fills", "customers"],
+    slug: "on-time-rate-region-loyalty",
+    question: "On-time delivery rate by region and loyalty tier",
+    tables: ["deliveries", "customers"],
     sql: `SELECT
   c.region,
-  CASE WHEN c.prime_member THEN 'Prime' ELSE 'Non-Prime' END AS membership,
-  ROUND(100.0 * COUNT(*) FILTER (WHERE f.fill_status = 'dispensed')
-        / NULLIF(COUNT(*), 0), 1) AS fill_rate_pct,
-  COUNT(*) AS resolved_fills
-FROM pharmacy_fills f
-JOIN customers c ON c.customer_id = f.customer_id
-WHERE f.fill_status IN ('dispensed', 'abandoned', 'rejected')
+  c.loyalty_tier,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE d.delivered_date <= d.promised_date)
+        / NULLIF(COUNT(*), 0), 1) AS on_time_rate_pct,
+  COUNT(*) AS delivered
+FROM deliveries d
+JOIN customers c ON c.customer_id = d.customer_id
+WHERE d.delivery_status = 'delivered'
 GROUP BY 1, 2
 ORDER BY 1, 2`,
   },
@@ -337,18 +340,19 @@ GROUP BY 1
 ORDER BY active_customers DESC`,
   },
   {
-    slug: "abandonment-days-supply",
-    question: "Abandonment rate for 30-day vs 90-day prescriptions",
-    tables: ["pharmacy_fills"],
+    slug: "failed-rate-carrier-speed",
+    question: "Failed delivery rate by carrier for standard vs express shipping",
+    tables: ["deliveries"],
     sql: `SELECT
-  days_supply,
-  ROUND(100.0 * COUNT(*) FILTER (WHERE fill_status = 'abandoned')
-        / NULLIF(COUNT(*), 0), 1) AS abandonment_rate_pct,
-  COUNT(*) AS resolved_fills
-FROM pharmacy_fills
-WHERE fill_status IN ('dispensed', 'abandoned', 'rejected')
-GROUP BY 1
-ORDER BY 1`,
+  carrier,
+  shipping_speed,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE delivery_status = 'failed')
+        / NULLIF(COUNT(*), 0), 1) AS failed_rate_pct,
+  COUNT(*) AS resolved_deliveries
+FROM deliveries
+WHERE delivery_status IN ('delivered', 'failed', 'returned')
+GROUP BY 1, 2
+ORDER BY failed_rate_pct DESC`,
   },
   {
     slug: "mom-growth",
@@ -398,18 +402,18 @@ GROUP BY 1
 ORDER BY refund_rate_pct DESC`,
   },
   {
-    slug: "copay-by-segment",
-    question: "Average copay by customer segment",
-    tables: ["pharmacy_fills", "customers"],
+    slug: "shipping-fee-by-segment",
+    question: "Average shipping fee and free-shipping share by customer segment",
+    tables: ["deliveries", "customers"],
     sql: `SELECT
   c.segment,
-  ROUND(AVG(f.copay), 2) AS avg_copay,
-  COUNT(*) AS dispensed_fills
-FROM pharmacy_fills f
-JOIN customers c ON c.customer_id = f.customer_id
-WHERE f.fill_status = 'dispensed'
+  ROUND(AVG(d.shipping_fee), 2) AS avg_shipping_fee,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE d.shipping_fee = 0) / NULLIF(COUNT(*), 0), 1) AS free_shipping_pct,
+  COUNT(*) AS deliveries
+FROM deliveries d
+JOIN customers c ON c.customer_id = d.customer_id
 GROUP BY 1
-ORDER BY avg_copay DESC`,
+ORDER BY avg_shipping_fee DESC`,
   },
   {
     slug: "new-customers-by-quarter",

@@ -115,6 +115,25 @@ async function notify(db: pg.Client) {
       continue;
     }
     if (a.status === "open") {
+      // One issue per ongoing incident: a check that keeps firing day after day
+      // joins the issue already open for it instead of opening a new one.
+      const { rows: [episode] } = await db.query<{ external_url: string }>(
+        `SELECT external_url FROM cx_eval.alerts
+         WHERE check_name = $1 AND subject = $2 AND status = 'open' AND alert_id <> $3
+           AND external_url IS NOT NULL AND external_url NOT LIKE '%#closed'
+         ORDER BY batch_date DESC LIMIT 1`,
+        [a.check_name, a.subject, a.alert_id]
+      );
+      if (episode) {
+        const number = episode.external_url.split("/").pop();
+        await github(`/issues/${number}/comments`, {
+          method: "POST",
+          body: JSON.stringify({ body: `Still firing on ${a.batch_date ?? "now"}: ${a.message}` }),
+        });
+        await db.query("UPDATE cx_eval.alerts SET external_url = $2 WHERE alert_id = $1", [a.alert_id, episode.external_url]);
+        console.log(`  updated ${episode.external_url}: ${title}`);
+        continue;
+      }
       const issue = await github("/issues", {
         method: "POST",
         body: JSON.stringify({ title, body: issueBody(a), labels: ["cx-eval-alert", `layer:${a.layer}`, `severity:${a.severity}`] }),
@@ -122,6 +141,12 @@ async function notify(db: pg.Client) {
       await db.query("UPDATE cx_eval.alerts SET external_url = $2 WHERE alert_id = $1", [a.alert_id, issue.html_url]);
       console.log(`  opened ${issue.html_url}: ${title}`);
     } else {
+      // Close only when no alert in the same incident is still open.
+      const { rows: [stillOpen] } = await db.query(
+        "SELECT 1 FROM cx_eval.alerts WHERE external_url = $1 AND status = 'open' LIMIT 1",
+        [a.external_url]
+      );
+      if (stillOpen) continue;
       const number = a.external_url!.split("/").pop();
       await github(`/issues/${number}/comments`, { method: "POST", body: JSON.stringify({ body: "Check cleared on the latest run; closing." }) });
       await github(`/issues/${number}`, { method: "PATCH", body: JSON.stringify({ state: "closed", state_reason: "completed" }) });

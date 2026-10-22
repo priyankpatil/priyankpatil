@@ -143,7 +143,7 @@ Judge test on 12 labelled conversations (4 skipped identity checks, 4 clean, 4 F
 
 **Decisions:**
 - **Primary judge:** `openai/gpt-oss-20b`, about 820 tokens per conversation.
-- **Day-18 incident model:** `nvidia/nemotron-3-ultra-550b-a55b`. It catches fewer skipped checks, so the model-driven drift is real, not faked.
+- **Day-18 incident model:** `nvidia/nemotron-3-ultra-550b-a55b`. The 12-chat test suggested it catches fewer skipped checks. On ~260 production chats the opposite held: it was more accurate on every checkable dimension, and more generous on the judgment-only ones (empathy, resolution), which raised CXI by ~5 points while CSAT stayed flat. The drift is real either way; the 12-chat result was not. See the model-switch RCA.
 - **Throughput:** at most ~4 concurrent requests; back off and retry on 429. NVIDIA sends no rate-limit headers.
 - **Intent accuracy** was low for every model with bare flow labels. The fix belongs in the prompt (add flow descriptions from `guidelines.json`), and the before/after is reported as a telemetry result.
 - **Groq** stays the site's NL → SQL provider. Its free tier (8K tokens/min on `openai/gpt-oss-120b`) is too tight for batch scoring.

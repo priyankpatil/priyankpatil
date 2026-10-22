@@ -79,13 +79,15 @@ begin
   end loop;
 
   -- ── Model layer: judge drift that ground truth does not explain ──
+  -- PSI over a 3-day window (~60 scored chats) has sampling noise of about
+  -- 0.1–0.15 on its own, so thresholds sit above it: warn 0.2, critical 0.3.
   for r in
     select d.*, (select string_agg(distinct model, ', ') from cx_eval.mart_conversation_scores m
                  where m.batch_date between p_batch - 2 and p_batch) as models
     from cx_eval.mart_drift d
-    where d.batch_date = p_batch and d.judge_psi >= 0.1 and coalesce(d.truth_psi, 0) < 0.1
+    where d.batch_date = p_batch and d.judge_psi >= 0.2 and coalesce(d.truth_psi, 0) < 0.1
   loop
-    perform cx_eval.raise_alert(v_run, p_batch, 'judge_drift', 'model', case when r.judge_psi >= 0.25 then 'critical' else 'warn' end,
+    perform cx_eval.raise_alert(v_run, p_batch, 'judge_drift', 'model', case when r.judge_psi >= 0.3 then 'critical' else 'warn' end,
       r.dimension,
       format('Judge scores for %s shifted (PSI %s) while ground truth did not (PSI %s). Models in window: %s.',
              r.dimension, r.judge_psi, coalesce(r.truth_psi::text, 'n/a'), r.models),

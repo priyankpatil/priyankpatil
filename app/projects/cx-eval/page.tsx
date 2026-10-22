@@ -9,7 +9,7 @@ import type { Findings } from "@/lib/cx-eval/types";
 export const metadata = {
   title: "Customer Support Evaluation using an LLM",
   description:
-    "A data pipeline that has an AI judge grade 10,000 support chats, checks what it returns, and turns the grades into metrics people can trust.",
+    "A framework for evaluating customer support conversations with an LLM: data pipelines, a rubric-based LLM judge validated against ground truth, and metrics for model accuracy and business processes.",
 };
 
 const f = findingsJson as unknown as Findings;
@@ -97,8 +97,9 @@ export default function CxEvalPage() {
               Customer Support Evaluation <span className="text-accent">using an LLM</span>
             </h1>
             <p className="body-lg mt-4">
-              An AI judge reads every customer-support chat and grades it against a written rubric. I built the pipeline around it: the data going in, the
-              checks on what comes out, and the daily metrics that explain why the numbers move.
+              A framework for evaluating customer support conversations with an LLM. This project walks through building data pipelines that normalize the
+              conversation data, an LLM that scores each conversation against a defined rubric, and validation of the results against ground truth. It also
+              provides metrics to measure the model&apos;s accuracy and support business processes.
             </p>
             <dl className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
               <div>

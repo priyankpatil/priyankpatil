@@ -1,6 +1,6 @@
 import { buildRepairPrompt, buildSystemPrompt, retrieveContext, type RetrievalMode } from "@/lib/nl-sql/context";
 import { dbConfigured, logQuery, runReadOnly, type QueryResultSet } from "@/lib/nl-sql/db";
-import { cleanSql, validateSql } from "@/lib/nl-sql/validate";
+import { cleanSql, refusalReason, validateSql } from "@/lib/nl-sql/validate";
 import { LlmConfigError, streamWithFallback } from "@/lib/llm";
 
 export type Stage = "retrieve" | "generate" | "validate" | "execute";
@@ -80,6 +80,15 @@ export async function runPipeline(
       emit({ type: "stage", stage: "generate", status: "done", detail: model });
 
       emit({ type: "stage", stage: "validate", status: "start" });
+      const refusal = refusalReason(raw);
+      if (refusal) {
+        lastError = refusal;
+        status = "refused";
+        emit({ type: "sql", sql: "" }); // clear the streamed refusal from the SQL panel
+        emit({ type: "stage", stage: "validate", status: "error", detail: "Out of scope" });
+        emit({ type: "error", message: refusal });
+        return;
+      }
       const validation = validateSql(raw);
       if (!validation.ok) {
         lastError = validation.error!;

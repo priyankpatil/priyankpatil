@@ -41,6 +41,31 @@ export interface ValidationResult {
   tables: string[];
 }
 
+// The system prompt asks the model to answer with this marker instead of SQL
+// when a question is out of scope (writes, other data, not a data question).
+export const CANNOT_ANSWER = "-- CANNOT_ANSWER:";
+const DEFAULT_REFUSAL = "This demo can only answer read-only questions about the sample pharmacy data.";
+
+/**
+ * Returns a message for the user when the model declined to write SQL, either
+ * with the marker or with plain prose, or null when the output looks like SQL.
+ * A refusal is final: asking the model to repair it only produces another one.
+ */
+export function refusalReason(raw: string): string | null {
+  const text = cleanSql(raw);
+  const marker = text.toUpperCase().indexOf(CANNOT_ANSWER);
+  if (marker !== -1) {
+    const reason = text.slice(marker + CANNOT_ANSWER.length).split("\n")[0].trim();
+    return reason ? reason.slice(0, 200) : DEFAULT_REFUSAL;
+  }
+  const firstCode = text
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith("--"));
+  if (!firstCode) return text ? DEFAULT_REFUSAL : null;
+  return /^(select|with|\()/i.test(firstCode) ? null : DEFAULT_REFUSAL;
+}
+
 export function cleanSql(raw: string): string {
   return raw
     .replace(/^\s*```[a-zA-Z]*\s*\n?/, "")

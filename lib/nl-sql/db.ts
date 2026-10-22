@@ -1,4 +1,4 @@
-import { Pool, types, type PoolConfig } from "pg";
+import { Pool, types, type PoolConfig, type QueryArrayConfig } from "pg";
 
 // The site connects as the dedicated nlsql_app role (see the Supabase
 // migration): SELECT on the demo tables, read on the knowledge base, insert
@@ -77,11 +77,15 @@ export async function runReadOnly(sql: string): Promise<QueryResultSet> {
     await client.query("BEGIN READ ONLY");
     await client.query(`SET LOCAL statement_timeout = ${STATEMENT_TIMEOUT_MS}`);
     await client.query("SET LOCAL search_path = nlsql_demo");
-    const result = await client.query({
+    // The extended protocol makes Postgres reject more than one statement, so
+    // SQL that slips past the validator cannot smuggle in a second query.
+    const query: QueryArrayConfig & { queryMode: "extended" } = {
       text: `SELECT * FROM (\n${sql}\n) AS nlsql_result LIMIT ${MAX_RESULT_ROWS + 1}`,
       rowMode: "array",
       types: typeParsers,
-    });
+      queryMode: "extended",
+    };
+    const result = await client.query(query);
     const rows = result.rows as unknown[][];
     return {
       columns: result.fields.map((f) => f.name),

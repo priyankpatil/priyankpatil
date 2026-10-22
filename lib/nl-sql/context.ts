@@ -1,6 +1,7 @@
 import { dbConfigured, hybridSearch, type RetrievedDoc } from "@/lib/nl-sql/db";
 import { embed, embeddingsConfigured } from "@/lib/nl-sql/embed";
 import { DEMO_TABLES, knowledge, tableDocs, type DemoTable } from "@/lib/nl-sql/knowledge";
+import { CANNOT_ANSWER } from "@/lib/nl-sql/validate";
 
 export type RetrievalMode = "hybrid" | "full-text" | "static";
 
@@ -91,6 +92,8 @@ export function buildSystemPrompt(context: RetrievedContext): string {
 Translate the user's question into ONE correct, readable PostgreSQL SELECT query.
 
 Return ONLY the SQL. No prose, no Markdown fences, no explanation. Use -- comments only for non-obvious logic.
+If the question asks to change data, or cannot be answered from the tables below, return exactly one line instead:
+${CANNOT_ANSWER} <one short sentence telling the user why>
 
 Rules:
 ${rules}

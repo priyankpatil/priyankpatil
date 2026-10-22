@@ -64,7 +64,10 @@ select convo_id, batch_date, rubric_version, model, team_id, agent_id, channel, 
          + (weights->>'resolution')::numeric * case j_resolution when 'resolved' then 100 when 'partial' then 50 else 0 end
          + (weights->>'empathy')::numeric * (j_empathy - 1) / 4.0 * 100
          + (weights->>'efficiency')::numeric * (efficiency - 1) / 4.0 * 100
-       ) / (1 - case when j_identity = 'na' then (weights->>'identity_verification')::numeric else 0 end), 1) as cxi
+       ) / (1 - case when j_identity = 'na' then (weights->>'identity_verification')::numeric else 0 end), 1) as cxi,
+       -- The score from the model and rubric live for this day (cx_eval.judge_config).
+       -- Business metrics use only these; backtests and re-scores sit alongside.
+       (model, rubric_version) = (select c.model, c.rubric_version from cx_eval.judge_config_for(batch_date) c) as is_production
 from scored;
 
 -- ── Daily business view ─────────────────────────────────────────────────────
@@ -89,18 +92,27 @@ judged as (
          round(100.0 * avg((j_policy = 'pass')::int), 1) as judge_policy_pass_pct,
          round(100.0 * avg((j_resolution = 'resolved')::int), 1) as resolved_pct,
          round(avg(j_empathy), 2) as empathy_avg
-  from cx_eval.mart_conversation_scores group by 1
+  from cx_eval.mart_conversation_scores where is_production group by 1
+),
+-- Ground truth on the same scored sample, so judge and truth compare like with like.
+sample_truth as (
+  select batch_date,
+         round(100.0 * avg((gt_identity = 'pass')::int) filter (where gt_identity <> 'na'), 1) as sample_gt_identity_pass_pct,
+         round(100.0 * avg((gt_policy = 'pass')::int), 1) as sample_gt_policy_pass_pct
+  from cx_eval.mart_conversation_scores where is_production group by 1
 )
 select b.batch_date, b.incident, coalesce(v.conversations, 0) as conversations,
        b.row_count - coalesce(v.conversations, 0) as not_transformed,
        v.gt_identity_pass_pct, v.gt_policy_pass_pct,
        c.csat_avg, c.csat_responses, c.csat_top2_pct,
        j.models, coalesce(j.scored, 0) as scored, j.cxi_avg, j.judge_identity_pass_pct, j.judge_policy_pass_pct,
-       j.resolved_pct, j.empathy_avg
+       j.resolved_pct, j.empathy_avg,
+       st.sample_gt_identity_pass_pct, st.sample_gt_policy_pass_pct
 from cx_eval.raw_batches b
 left join volume v using (batch_date)
 left join csat c using (batch_date)
 left join judged j using (batch_date)
+left join sample_truth st using (batch_date)
 order by b.batch_date;
 
 -- ── Cohorts (population metrics from all conversations; CXI from the scored sample) ─
@@ -124,7 +136,7 @@ select k.batch_date, k.cohort_type, k.cohort,
        round(avg(m.cxi), 1) as cxi_avg
 from cohorts k
 left join cx_eval.csat_responses cs on cs.convo_id = k.convo_id
-left join cx_eval.mart_conversation_scores m on m.convo_id = k.convo_id
+left join cx_eval.mart_conversation_scores m on m.convo_id = k.convo_id and m.is_production
 group by 1, 2, 3;
 
 -- ── Judge accuracy against ground truth ─────────────────────────────────────
@@ -149,10 +161,10 @@ group by 1, 2;
 
 create or replace view cx_eval.mart_drift as
 with long as (
-  select batch_date, 'identity_verification' as dimension, j_identity as judged, gt_identity as truth from cx_eval.mart_conversation_scores
-  union all select batch_date, 'policy_adherence', j_policy, gt_policy from cx_eval.mart_conversation_scores
-  union all select batch_date, 'resolution', j_resolution, null from cx_eval.mart_conversation_scores
-  union all select batch_date, 'empathy', j_empathy::text, null from cx_eval.mart_conversation_scores
+  select batch_date, 'identity_verification' as dimension, j_identity as judged, gt_identity as truth from cx_eval.mart_conversation_scores where is_production
+  union all select batch_date, 'policy_adherence', j_policy, gt_policy from cx_eval.mart_conversation_scores where is_production
+  union all select batch_date, 'resolution', j_resolution, null from cx_eval.mart_conversation_scores where is_production
+  union all select batch_date, 'empathy', j_empathy::text, null from cx_eval.mart_conversation_scores where is_production
 ),
 bounds as (select min(batch_date) as first_day from long),
 days as (select distinct batch_date from long),

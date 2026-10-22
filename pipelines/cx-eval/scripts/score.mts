@@ -37,6 +37,9 @@ if (!dbUrl) {
   process.exit(1);
 }
 const db = new pg.Pool({ connectionString: dbUrl, max: 4 });
+// An idle connection dropped by the network must not crash the run; the pool
+// replaces it, and a failed write leaves its request pending for the next run.
+db.on("error", (err) => console.error("[db] idle connection error:", err.message));
 
 /** Numeric form of each dimension for aggregation; null where an average is meaningless. */
 function numeric(dimension: LlmDimension, output: JudgeOutput): number | null {

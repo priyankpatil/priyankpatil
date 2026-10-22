@@ -121,17 +121,27 @@ try {
 
     const started = Date.now();
     let done = 0;
-    const results = await judgeBatch(group.map((r) => r.context as JudgeContext), {
-      rubric,
-      model,
-      concurrency,
-      onResult: async (result, i) => {
-        await store(result, group[i], run.run_id);
-        done++;
-        const flag = result.status === "ok" ? (result.repaired ? "ok (repaired)" : "ok") : `${result.status}: ${result.error?.slice(0, 90)}`;
-        console.log(`  [${String(done).padStart(3)}/${group.length}] ${group[i].batch_date} ${result.convoId.padEnd(10)} ${(result.latencyMs / 1000).toFixed(1).padStart(5)}s ${flag}`);
-      },
-    });
+    const results: JudgeResult[] = [];
+    let writeErrors = 0;
+    try {
+      await judgeBatch(group.map((r) => r.context as JudgeContext), {
+        rubric,
+        model,
+        concurrency,
+        onResult: async (result, i) => {
+          results.push(result);
+          await store(result, group[i], run.run_id);
+          done++;
+          const flag = result.status === "ok" ? (result.repaired ? "ok (repaired)" : "ok") : `${result.status}: ${result.error?.slice(0, 90)}`;
+          console.log(`  [${String(done).padStart(3)}/${group.length}] ${group[i].batch_date} ${result.convoId.padEnd(10)} ${(result.latencyMs / 1000).toFixed(1).padStart(5)}s ${flag}`);
+        },
+      });
+    } catch (err) {
+      // Failed writes leave their requests pending for the next run; record
+      // the run as partial and carry on with the next model/rubric group.
+      writeErrors = results.length - done;
+      console.error(`Run ${run.run_id}: ${(err as Error).message.split("\n")[0]}`);
+    }
 
     const latencies = results.filter((r) => r.status === "ok").map((r) => r.latencyMs).sort((a, b) => a - b);
     const count = (s: string) => results.filter((r) => r.status === s).length;
@@ -141,7 +151,7 @@ try {
          p50_latency_ms = $5, p95_latency_ms = $6, total_tokens = $7, status = $8 WHERE run_id = $1`,
       [run.run_id, nOk, count("invalid"), count("error"), percentile(latencies, 0.5), percentile(latencies, 0.95),
        results.reduce((n, r) => n + r.usage.totalTokens, 0),
-       nOk === results.length ? "ok" : nOk === 0 ? "failed" : "partial"]
+       nOk === group.length && !writeErrors ? "ok" : nOk === 0 ? "failed" : "partial"]
     );
     console.log(`Run ${run.run_id} finished in ${((Date.now() - started) / 60000).toFixed(1)} min: ok ${nOk}, invalid ${count("invalid")}, error ${count("error")}, p50 ${((percentile(latencies, 0.5) ?? 0) / 1000).toFixed(1)}s`);
   }

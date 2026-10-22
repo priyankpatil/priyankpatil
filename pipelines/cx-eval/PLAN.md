@@ -184,6 +184,8 @@ If time runs short, reduce the dashboard polish in stage 8, not stages 6–7.
   - Action intents may use the general FAQ (`search-faq`, `select-faq`) but not topic searches such as `search-boots`. On-policy rate: 78.3%.
   - FAQ intents pass policy when any search ran (95.3%), even if the agent also opened the account.
 - **Candidate rule for rubric v2:** opening a customer's account on an FAQ chat (226 chats, 10.7% of FAQ intents) is unnecessary access to personal data. v1 does not penalise it.
+- **The v1 judge applied the identity rule by its spirit, ground truth by its letter.** On days 1–7 it caught 3 of 13 real identity failures: it passed chats verified with the wrong gate button, without `pull-up-account`, or after a read-only policy step. **Rubric v2** keeps every rule but makes the judge cite the required buttons' positions before deciding. Backtest on the same 137 chats (gpt-oss-20b): identity failures caught 23% → 85%, identity accuracy 82.1% → 92.5%, correct passes kept 96.3% → 94.4%, policy unchanged, +12% tokens.
+- **Backtests before rollout:** `create_backtest()` re-scores already-scored chats with their stored inputs under another rubric or model, so a comparison changes exactly one variable. Backtest scores are never production.
 - **Model switch lives in `judge_config`**, a dated change log, so a root cause analysis can find it the way it would find a real deployment.
 
 ## Requirement coverage

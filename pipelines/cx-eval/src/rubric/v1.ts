@@ -482,7 +482,7 @@ export function renderRubricPrompt(r: Rubric = RUBRIC_V1): string {
   return lines.join("\n");
 }
 
-function renderContext(c: JudgeContext, r: Rubric): string {
+export function renderContext(c: JudgeContext, r: Rubric): string {
   const steps = c.policySteps.length
     ? c.policySteps.join(" → ")
     : "none (FAQ intent: search the FAQ; no account access, identity na)";

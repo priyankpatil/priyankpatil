@@ -16,9 +16,10 @@ import pg from "pg";
 import type { JudgeContext, JudgeOutput, LlmDimension } from "../src/contract.ts";
 import { judgeBatch, type JudgeResult } from "../src/judge/judge.ts";
 import { rubricV1 } from "../src/rubric/v1.ts";
+import { rubricV2 } from "../src/rubric/v2.ts";
 import { dayDate, SIM_DAYS } from "../src/source-sim.ts";
 
-const RUBRICS = { [rubricV1.version]: rubricV1 };
+const RUBRICS = { [rubricV1.version]: rubricV1, [rubricV2.version]: rubricV2 };
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);

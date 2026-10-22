@@ -163,6 +163,7 @@ select model, min(batch_date) as "firstDate", max(batch_date) as "lastDate", cou
        count(*) filter (where gt_policy = 'fail') as "policyTrueFails",
        percentile_disc(0.5) within group (order by latency_ms) as "p50LatencyMs"
 from cx_eval.mart_conversation_scores
+where is_production
 group by model
 order by min(batch_date)`;
 

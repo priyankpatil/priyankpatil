@@ -165,16 +165,26 @@ Each incident is detected by the pipeline's own monitoring, then diagnosed in a 
 | # | Stage | Builds | Status |
 |---|---|---|---|
 | 0 | Profile data, draft rubric and schema, select judge model | This plan | ✅ done |
-| 1 | **ELT:** load raw ABCD batches → validate and quarantine (SQL) → transform and enrich (SQL) | `cx_eval` migration, raw loader script, `validate_batch` / `transform_batch` SQL functions, synthetic metadata, ground-truth flags | ⬜ |
-| 2 | **Rubric:** written definitions, decision rules, anchors; prompt generated from it; human calibration | `RUBRIC.md`, `rubric_versions` | ⬜ |
-| 3 | **Judge:** prompt assembly → LLM → JSON validation and retry | `scoring_requests`, judge client | ⬜ |
-| 4 | **Store outputs:** append-only, versioned | `scores`, `scoring_runs` | ⬜ |
+| 1 | **ELT:** load raw ABCD batches → validate and quarantine (SQL) → transform and enrich (SQL) | `cx_eval` migration, raw loader script, `validate_batch` / `transform_batch` SQL functions, synthetic metadata, ground-truth flags | ✅ 30 days loaded; day 26 quarantined 230 records |
+| 2 | **Rubric:** written definitions, decision rules, anchors; prompt generated from it; human calibration | `RUBRIC.md`, `rubric_versions` | ✅ rubric; ⬜ human calibration |
+| 3 | **Judge:** prompt assembly → LLM → JSON validation and retry | `scoring_requests`, `judge_config`, judge client | ✅ |
+| 4 | **Store outputs:** append-only, versioned | `judge_results`, `scores`, `scoring_runs` | ✅ |
 | 5 | **Combine:** inputs + outputs into marts; retraining export | mart views | ⬜ |
 | 6 | **Orchestrate and alert:** scheduled workflow; post-run checks open GitHub issues | `.github/workflows/cx-eval.yml`, checks | ⬜ |
 | 7 | **Incidents and RCA:** plant, detect, diagnose, quantify | incident switches, RCA write-ups | ⬜ |
 | 8 | **Dashboard:** exec summary, early warnings, cohorts, judge health, RCA write-ups, pipeline diagram | `/projects/cx-eval`, project write-up | ⬜ |
 
 If time runs short, reduce the dashboard polish in stage 8, not stages 6–7.
+
+## Decisions made while building
+
+- **The judge sees the logged contact reason, not the true one.** A synthetic disposition tag matches the true intent 91.8% of the time; policy context follows the tag. Giving the judge the true reason would hand it the intent answer. A wrong tag is also a realistic upstream data-quality issue.
+- **Action turns carry the logged button id** (`button` in `JudgeContext.turns`), so the judge does not infer buttons from system messages. Three troubleshooting buttons share one message text.
+- **Ground truth follows RUBRIC.md exactly**, so judge accuracy is measured against the rules the judge was given:
+  - Action intents may use the general FAQ (`search-faq`, `select-faq`) but not topic searches such as `search-boots`. On-policy rate: 78.3%.
+  - FAQ intents pass policy when any search ran (95.3%), even if the agent also opened the account.
+- **Candidate rule for rubric v2:** opening a customer's account on an FAQ chat (226 chats, 10.7% of FAQ intents) is unnecessary access to personal data. v1 does not penalise it.
+- **Model switch lives in `judge_config`**, a dated change log, so a root cause analysis can find it the way it would find a real deployment.
 
 ## Requirement coverage
 

@@ -11,8 +11,8 @@ export default function Rubric() {
     <details className="group rounded-2xl border border-border bg-surface">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-5 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--ring)]">
         <span>
-          <span className="block text-base font-semibold text-text">Read the rubric ({r.version})</span>
-          <span className="block text-sm text-muted">The same text the judge is given, rendered from the rubric object the prompt is built from.</span>
+          <span className="block text-base font-semibold text-text">Read the rubric</span>
+          <span className="block text-sm text-muted">The exact instructions the judge is given (rubric {r.version}, the version in use).</span>
         </span>
         <span aria-hidden className="text-soft transition-transform group-open:rotate-90">
           ▶
@@ -31,7 +31,7 @@ export default function Rubric() {
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h4 className="text-sm font-semibold text-text">{d.name}</h4>
                 <span className="text-xs text-soft">
-                  {d.scoredBy === "llm" ? "LLM" : "code"} · {Math.round((weights[d.id] ?? 0) * 100) ? `${Math.round(weights[d.id] * 100)}% of CXI` : "not in CXI"}
+                  {d.scoredBy === "llm" ? "LLM" : "code"} · {Math.round((weights[d.id] ?? 0) * 100) ? `${Math.round(weights[d.id] * 100)}% of the score` : "not in the score"}
                 </span>
               </div>
               <p className="mt-1 text-sm text-muted">{d.definition}</p>
@@ -58,8 +58,8 @@ export default function Rubric() {
           ))}
         </div>
         <p className="mt-4 text-xs leading-relaxed text-soft">
-          Rubric v2 keeps every rule above and adds a procedure to identity and policy: the judge must find each required button, cite its position and only
-          then give a verdict.
+          Version 2 keeps every rule above and adds one step for identity and policy: the judge must point to the exact position of each required
+          button before giving a verdict.
         </p>
       </div>
     </details>

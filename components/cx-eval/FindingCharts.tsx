@@ -3,38 +3,50 @@
 import { useReducedMotion } from "framer-motion";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Findings } from "@/lib/cx-eval/types";
-import { ChartTooltip, Legend, SERIES, eventLine, gridStroke, shortDate, xAxisProps, yAxisProps } from "./chart-kit";
+import { ChartTooltip, SERIES, eventLine, gridStroke, shortDate, xAxisProps, yAxisProps } from "./chart-kit";
 
 // One chart per finding. Single y-axis each: CXI and CSAT get two stacked
 // panels sharing the date axis rather than a dual-axis chart.
 
 const pct = (v: number) => `${v.toFixed(1)}%`;
 
+/** A direct label drawn at the last point of a line, so the chart needs no legend. */
+function endLabel(text: string, color: string, lastIndex: number) {
+  function EndLabel(props: { x?: number | string; y?: number | string; index?: number }) {
+    if (props.index !== lastIndex || props.x == null || props.y == null) return <g />;
+    return (
+      <text x={Number(props.x) + 6} y={Number(props.y)} dy={4} fill={color} fontSize={11} fontWeight={600}>
+        {text}
+      </text>
+    );
+  }
+  return EndLabel;
+}
+
 export function TeamChart({ data }: { data: Findings["team"] }) {
   const reduce = useReducedMotion();
+  const last = data.series.length - 1;
   const rows = [
     { key: "t4", label: "Team T4", color: SERIES.secondary, format: pct },
-    { key: "others", label: "Other teams", color: SERIES.neutral, format: pct },
-    { key: "company", label: "Company-wide", color: SERIES.primary, format: pct, dashed: true },
+    { key: "company", label: "Whole company", color: SERIES.primary, format: pct },
   ];
   return (
     <div>
-      <Legend rows={rows} />
+      <p className="text-xs font-medium text-muted">Share of chats with the required identity check, per day</p>
       <div
-        className="mt-3 h-56"
+        className="mt-1 h-56"
         role="img"
-        aria-label={`Daily identity compliance. From ${shortDate(data.routingDate)} team T4 falls from ${data.before.t4}% to ${data.after.t4}% while other teams rise to ${data.after.others}% and the company-wide rate stays near ${data.after.company}%.`}
+        aria-label={`Daily identity-check rate. From ${shortDate(data.routingDate)} team T4 falls from ${data.before.t4}% to ${data.after.t4}% while the whole company stays near ${data.after.company}%.`}
       >
         <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 220 }}>
-          <LineChart data={data.series} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+          <LineChart data={data.series} margin={{ top: 16, right: 64, left: 0, bottom: 0 }}>
             <CartesianGrid stroke={gridStroke} strokeDasharray="2 6" vertical={false} />
             <XAxis {...xAxisProps} />
             <YAxis {...yAxisProps} domain={[50, 100]} unit="%" width={44} />
             {eventLine(data.routingDate, "routing change")}
             <Tooltip cursor={{ stroke: "var(--border-strong)" }} content={<ChartTooltip rows={rows} />} />
-            <Line dataKey="others" stroke={SERIES.neutral} strokeWidth={2} dot={false} isAnimationActive={!reduce} />
-            <Line dataKey="company" stroke={SERIES.primary} strokeWidth={2} strokeDasharray="5 4" dot={false} isAnimationActive={!reduce} />
-            <Line dataKey="t4" stroke={SERIES.secondary} strokeWidth={2.5} dot={false} activeDot={{ r: 4, stroke: "var(--surface)", strokeWidth: 2 }} isAnimationActive={!reduce} />
+            <Line dataKey="company" stroke={SERIES.primary} strokeWidth={2} dot={false} label={endLabel("Company", SERIES.primary, last)} isAnimationActive={!reduce} />
+            <Line dataKey="t4" stroke={SERIES.secondary} strokeWidth={2.5} dot={false} label={endLabel("Team T4", SERIES.secondary, last)} activeDot={{ r: 4, stroke: "var(--surface)", strokeWidth: 2 }} isAnimationActive={!reduce} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -95,15 +107,15 @@ function MiniLine({
 }
 
 export function ModelChart({ data }: { data: Findings["model"] }) {
-  const marker = { date: data.switchDate, label: "judge model switched" };
+  const marker = { date: data.switchDate, label: "judge switched" };
   return (
     <div
       role="img"
-      aria-label={`Daily CX Index rises from about ${data.before.cxi} to ${data.after.cxi} after the judge model switch on ${shortDate(data.switchDate)}, while CSAT stays flat near ${data.after.csat}.`}
+      aria-label={`Daily quality score rises from about ${data.before.cxi} to ${data.after.cxi} after the judge model switch on ${shortDate(data.switchDate)}, while customer satisfaction stays flat near ${data.after.csat}.`}
       className="flex flex-col gap-2"
     >
-      <MiniLine data={data.series} dataKey="cxi" label="CX Index (judge score, 0–100)" color={SERIES.primary} domain={[60, 100]} format={(v) => v.toFixed(0)} marker={marker} showX={false} means={[data.before.cxi, data.after.cxi]} />
-      <MiniLine data={data.series} dataKey="csat" label="CSAT (customers, 1–5)" color={SERIES.neutral} domain={[3, 5]} format={(v) => v.toFixed(2)} marker={marker} means={[data.before.csat, data.after.csat]} />
+      <MiniLine data={data.series} dataKey="cxi" label="Quality score from the judge (0–100)" color={SERIES.primary} domain={[60, 100]} format={(v) => v.toFixed(0)} marker={marker} showX={false} means={[data.before.cxi, data.after.cxi]} />
+      <MiniLine data={data.series} dataKey="csat" label="Customer satisfaction rating (1–5)" color={SERIES.neutral} domain={[3, 5]} format={(v) => v.toFixed(2)} marker={marker} means={[data.before.csat, data.after.csat]} />
     </div>
   );
 }
@@ -111,26 +123,42 @@ export function ModelChart({ data }: { data: Findings["model"] }) {
 export function QuarantineChart({ data }: { data: Findings["quarantine"] }) {
   const reduce = useReducedMotion();
   const series = data.series.map((d) => ({ date: d.date, valid: d.loaded - d.quarantined, quarantined: d.quarantined }));
+  const day = data.series.find((d) => d.date === data.date);
   const rows = [
-    { key: "valid", label: "Loaded and valid", color: SERIES.neutral },
-    { key: "quarantined", label: "Quarantined", color: SERIES.bad },
+    { key: "valid", label: "Passed the checks", color: SERIES.neutral },
+    { key: "quarantined", label: "Held back", color: SERIES.bad },
   ];
   return (
     <div>
-      <Legend rows={rows} />
+      <p className="text-xs font-medium text-muted">
+        Chats per day: <span className="text-[color:var(--cx-bad)]">held back</span> vs passed the checks
+      </p>
       <div
-        className="mt-3 h-56"
+        className="mt-1 h-56"
         role="img"
-        aria-label={`Records per daily batch. Every day loads about 330 valid records except ${shortDate(data.date)}, when ${data.series.find((d) => d.date === data.date)?.quarantined} records were quarantined.`}
+        aria-label={`Chats per daily batch. Every day about 330 chats pass the checks, except ${shortDate(data.date)}, when ${day?.quarantined} of ${day?.loaded} were held back.`}
       >
         <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 220 }}>
-          <BarChart data={series} margin={{ top: 16, right: 8, left: 0, bottom: 0 }} barCategoryGap={2}>
+          <BarChart data={series} margin={{ top: 22, right: 8, left: 0, bottom: 0 }} barCategoryGap={2}>
             <CartesianGrid stroke={gridStroke} strokeDasharray="2 6" vertical={false} />
             <XAxis {...xAxisProps} />
             <YAxis {...yAxisProps} width={40} />
             <Tooltip cursor={{ fill: "var(--surface-muted)" }} content={<ChartTooltip rows={rows} />} />
             <Bar dataKey="valid" stackId="a" fill={SERIES.neutral} fillOpacity={0.55} isAnimationActive={!reduce} />
-            <Bar dataKey="quarantined" stackId="a" fill={SERIES.bad} radius={[3, 3, 0, 0]} isAnimationActive={!reduce} />
+            <Bar
+              dataKey="quarantined"
+              stackId="a"
+              fill={SERIES.bad}
+              radius={[3, 3, 0, 0]}
+              isAnimationActive={!reduce}
+              label={{
+                position: "top",
+                fill: SERIES.bad,
+                fontSize: 11,
+                fontWeight: 600,
+                formatter: (v: unknown) => (typeof v === "number" && v > 0 ? `${v} held back` : ""),
+              }}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

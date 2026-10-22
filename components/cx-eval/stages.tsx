@@ -5,11 +5,11 @@ import type { JudgeContext, JudgeOutput } from "@/pipelines/cx-eval/src/contract
 import { FLOWS } from "@/pipelines/cx-eval/src/contract.ts";
 import type { ParseResult } from "@/pipelines/cx-eval/src/judge/parse.ts";
 import { RUBRIC_V1 } from "@/pipelines/cx-eval/src/rubric/v1.ts";
-import { cxiBreakdown, estimateTokens, shortModel } from "@/lib/cx-eval/demo";
+import { cxiBreakdown, estimateTokens, MODELS, shortModel, type ModelId } from "@/lib/cx-eval/demo";
 import { explainIdentity, explainPolicy } from "@/lib/cx-eval/ground-truth";
 import type { DemoChat, RawRecord, RubricId, StoredRun } from "@/lib/cx-eval/types";
 import type { CheckResult } from "@/lib/cx-eval/validate";
-import { Badge, Code, Collapsible, Fact, Mark, verdictTone } from "./ui";
+import { Badge, Code, Collapsible, Fact, Mark, TextButton, TryThis, verdictTone } from "./ui";
 
 // ── View model ──────────────────────────────────────────────────────────────
 
@@ -42,27 +42,44 @@ export interface RunView {
   validation: { checks: CheckResult[]; quarantined: boolean };
   context: JudgeContext;
   prompt: { system: string; user: string };
-  /** v1 prompt with the logged reason: lines that differ from it are highlighted. */
+  /** The prompt with the logged reason: lines that differ from it are highlighted. */
   baseline: { system: string; user: string };
-  rubric: RubricId;
-  model: string;
+  model: ModelId;
+  /** The recorded answer for this chat and model (rubric v1). */
   judge: JudgeView | null;
-  /** Why there is no judge result to show. */
-  missing?: string;
   parse: ParseResult | null;
+}
+
+/** "Ask it again, live" in stage 5. */
+export interface LiveView {
+  phase: "running" | "done" | "fallback";
+  elapsed: number;
+  result?: JudgeView;
+  notice?: string;
+}
+
+/** What the "Try this" boxes can change. */
+export interface DemoActions {
+  setRename: (v: boolean) => void;
+  setUseAlt: (v: boolean) => void;
+  setModel: (m: ModelId) => void;
+  goTo: (stage: number) => void;
+  live: LiveView | null;
+  askLive: () => void;
+  cancelLive: () => void;
 }
 
 export type StageKey = "ingest" | "validate" | "enrich" | "prompt" | "judge" | "check" | "store" | "metrics";
 
 export const STAGES: { key: StageKey; name: string; group: string; does: string; where: string }[] = [
   { key: "ingest", name: "Ingest", group: "Input", does: "The record exactly as the support system delivers it.", where: "Loader script → raw_conversations (jsonb, no logic)" },
-  { key: "validate", name: "Validate", group: "ETL + synthetic data", does: "Contract checks. Failing an error check quarantines the record, with the reason.", where: "SQL · cx_eval.validate_batch()" },
+  { key: "validate", name: "Validate", group: "ETL + synthetic data", does: "Format checks. A record that fails one is held back, with the reason.", where: "SQL · cx_eval.validate_batch()" },
   { key: "enrich", name: "Enrich", group: "ETL + synthetic data", does: "Actions extracted, policy attached, ground truth computed. The judge never sees the ground truth.", where: "SQL · cx_eval.transform_batch()" },
-  { key: "prompt", name: "Rubric + prompt", group: "LLM evaluator + rubric", does: "The stored context is rendered into a prompt by the versioned rubric.", where: "SQL assembles context · rubric renders prompt" },
-  { key: "judge", name: "LLM judge", group: "LLM evaluator + rubric", does: "An open-weight model scores five dimensions and quotes its evidence.", where: "NVIDIA API · temperature 0 · retries with backoff" },
-  { key: "check", name: "Validate output", group: "Output", does: "Strict schema check. A bad reply gets one repair round, then is stored as invalid.", where: "Pipeline parser (parse.ts)" },
-  { key: "store", name: "Store", group: "Output", does: "One row per dimension. Append-only and versioned by model and rubric.", where: "cx_eval.judge_results + cx_eval.scores" },
-  { key: "metrics", name: "Metrics", group: "ETL → metrics", does: "Scores joined with ground truth: this chat's CX Index and whether the judge was right.", where: "SQL view · mart_conversation_scores" },
+  { key: "prompt", name: "Rubric + prompt", group: "LLM evaluator + rubric", does: "The written rubric and this chat's facts are turned into the prompt the judge reads.", where: "SQL assembles context · rubric renders prompt" },
+  { key: "judge", name: "LLM judge", group: "LLM evaluator + rubric", does: "An open-weight model gives five verdicts and quotes its evidence for each.", where: "NVIDIA API · temperature 0 · retries with backoff" },
+  { key: "check", name: "Validate output", group: "Output", does: "Strict format check. A bad answer is sent back once to fix, then stored as invalid.", where: "Pipeline parser (parse.ts)" },
+  { key: "store", name: "Store", group: "Output", does: "One row per verdict, never overwritten, labelled with the model and rubric version.", where: "cx_eval.judge_results + cx_eval.scores" },
+  { key: "metrics", name: "Metrics", group: "ETL → metrics", does: "Verdicts turned into this chat's quality score, and checked against the facts: was the judge right?", where: "SQL view · mart_conversation_scores" },
 ];
 
 const SYNTHETIC: Record<string, string> = {
@@ -226,7 +243,7 @@ function IngestStage({ run }: { run: RunView }) {
 
 // ── 2 Validate ──────────────────────────────────────────────────────────────
 
-function ValidateStage({ run }: { run: RunView }) {
+function ValidateStage({ run, actions }: { run: RunView; actions: DemoActions }) {
   const { checks, quarantined } = run.validation;
   const failed = checks.filter((c) => !c.passed && c.severity === "error");
   return (
@@ -249,9 +266,9 @@ function ValidateStage({ run }: { run: RunView }) {
       <div className="mt-3">
         {quarantined ? (
           <Banner tone="bad">
-            <strong>Quarantined.</strong> {failed.map((c) => `${c.name} (${c.detail})`).join("; ")}. The record is written to cx_eval.quarantine with
-            the reason and stops here: nothing downstream sees it, so no metric is computed from a broken record. On Oct 18 this happened to 230 real
-            records after an upstream deploy renamed the field; the raw rows were kept, so the day can be replayed once the source is fixed.
+            <strong>Held back (quarantined).</strong> {failed.map((c) => `${c.name} (${c.detail})`).join("; ")}. The record is set aside with the
+            reason and stops here: nothing downstream sees it, so no score or metric is computed from a broken record. The raw record is kept, so it can
+            be re-run once the source is fixed.
           </Banner>
         ) : (
           <Banner tone="good">
@@ -260,7 +277,25 @@ function ValidateStage({ run }: { run: RunView }) {
           </Banner>
         )}
       </div>
-      <Note>These checks run as SQL inside the warehouse. This page runs a TypeScript mirror of the same rules in your browser, so you can break the record and watch.</Note>
+      <Note>These checks run as SQL inside the warehouse. This page runs a copy of the same rules in your browser, so you can break the record below.</Note>
+      <TryThis
+        question="What if the source system renames a field?"
+        explain={
+          <>
+            On Oct 18 the support system started sending the chat text as <code className="font-mono text-[0.85em]">messages</code> instead of{" "}
+            <code className="font-mono text-[0.85em]">transcript</code>. Press the button to do the same to this record: it will be held back here, and every
+            later stage will show &ldquo;Never reached&rdquo;.
+          </>
+        }
+      >
+        {run.renamed ? (
+          <TextButton onClick={() => actions.setRename(false)}>Restore the field</TextButton>
+        ) : (
+          <button type="button" className="pill-link" onClick={() => actions.setRename(true)}>
+            Rename transcript → messages
+          </button>
+        )}
+      </TryThis>
     </div>
   );
 }
@@ -387,15 +422,16 @@ function DiffLines({ text, baseline }: { text: string; baseline: string }) {
   );
 }
 
-function PromptStage({ run }: { run: RunView }) {
+function PromptStage({ run, actions }: { run: RunView; actions: DemoActions }) {
   const [rubricText, contextText = ""] = run.prompt.system.split("\n\nThis chat:\n");
-  const [baseRubric, baseContext = ""] = run.baseline.system.split("\n\nThis chat:\n");
+  const [, baseContext = ""] = run.baseline.system.split("\n\nThis chat:\n");
   const tokens = estimateTokens(run.prompt.system + run.prompt.user);
   const llm = RUBRIC_V1.dimensions.filter((d) => d.scoredBy === "llm");
-  const rubricChanged = rubricText !== baseRubric;
+  const chat = run.chat;
+  const fixing = chat.alt.kind === "correct";
   return (
     <div>
-      <H>Rubric {run.rubric}: five judged dimensions</H>
+      <H>The rubric: five verdicts the judge must give</H>
       <ul className="grid gap-1.5 sm:grid-cols-2">
         {llm.map((d) => (
           <li key={d.id} className="rounded-lg border border-border px-3 py-2 text-sm">
@@ -410,34 +446,75 @@ function PromptStage({ run }: { run: RunView }) {
           <span className="block text-xs text-soft">Computed in code from turn counts, never asked of the LLM.</span>
         </li>
       </ul>
-      {run.rubric === "v2" && (
-        <Note>
-          v2 keeps every v1 rule and adds a procedure: the judge must locate each required button and cite its position before giving an identity or
-          policy verdict. The added lines are highlighted below.
-        </Note>
-      )}
 
       <H>The assembled prompt · about {tokens.toLocaleString("en-US")} tokens</H>
       <div className="space-y-2">
-        <Collapsible defaultOpen={rubricChanged} summary={<span>System: rubric ({rubricText.split("\n").length} lines, identical for every chat, so providers can cache it)</span>}>
-          <Code label="Rubric part of the system prompt">
-            <DiffLines text={rubricText} baseline={baseRubric} />
-          </Code>
+        <Collapsible summary={<span>Rubric text ({rubricText.split("\n").length} lines, the same for every chat)</span>}>
+          <Code label="Rubric part of the system prompt">{rubricText}</Code>
         </Collapsible>
-        <Collapsible defaultOpen summary={<span>System: context for this chat</span>}>
+        <Collapsible defaultOpen summary={<span>Facts about this chat</span>}>
           <Code label="Context part of the system prompt">
             <DiffLines text={`This chat:\n${contextText}`} baseline={`This chat:\n${baseContext}`} />
           </Code>
         </Collapsible>
-        <Collapsible summary={<span>User: the transcript ({run.context.turns.length} lines; actions carry their button id)</span>}>
+        <Collapsible summary={<span>The transcript ({run.context.turns.length} lines; button presses carry their id)</span>}>
           <Code label="Transcript sent to the judge">{run.prompt.user}</Code>
         </Collapsible>
       </div>
-      <Note>
-        Built in your browser by the pipeline&apos;s own rubric code from the context stored in cx_eval.scoring_requests, so every prompt is reproducible.
-        {run.useAlt || rubricChanged ? " Highlighted lines differ from the production prompt." : ""}
-      </Note>
+      <Note>Built in your browser by the pipeline&apos;s own rubric code from the stored facts, so every prompt can be rebuilt exactly.</Note>
+
+      <TryThis
+        question={fixing ? "What if the agent had logged the right contact reason?" : "What if the agent logged the wrong contact reason?"}
+        explain={
+          fixing
+            ? "This chat was logged under the wrong reason, so the prompt lists the wrong policy steps. Fix the label and see what the judge is told instead."
+            : "The prompt lists the policy steps for whatever reason the agent logged. Swap in a wrong one and see what the judge is told instead."
+        }
+      >
+        {run.useAlt ? (
+          <div className="space-y-3">
+            <dl className="grid gap-3 sm:grid-cols-2">
+              <div className="min-w-0 rounded-xl border border-border bg-surface px-3 py-2">
+                <dt className="text-[0.68rem] uppercase tracking-[0.14em] text-soft">Before</dt>
+                <dd className="mt-1 text-sm">
+                  <span className="font-mono text-xs text-text">{chat.context.contactReason}</span>
+                  <PolicyLine steps={chat.context.policySteps} />
+                </dd>
+              </div>
+              <div className="min-w-0 rounded-xl border border-[color:var(--cx-warn-line)] bg-[color:var(--cx-warn-soft)] px-3 py-2">
+                <dt className="text-[0.68rem] uppercase tracking-[0.14em] text-soft">Now</dt>
+                <dd className="mt-1 text-sm">
+                  <span className="font-mono text-xs text-text">{chat.alt.contactReason}</span>
+                  <PolicyLine steps={chat.alt.policySteps} />
+                </dd>
+              </div>
+            </dl>
+            <p className="text-sm text-muted">
+              The changed lines are highlighted in &ldquo;Facts about this chat&rdquo; above. The transcript is untouched: the agent did exactly the same
+              things.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <button type="button" className="pill-link primary" onClick={() => actions.goTo(4)}>
+                Was the judge fooled? See stage 5 →
+              </button>
+              <TextButton onClick={() => actions.setUseAlt(false)}>Restore the logged reason</TextButton>
+            </div>
+          </div>
+        ) : (
+          <button type="button" className="pill-link" onClick={() => actions.setUseAlt(true)}>
+            {fixing ? "Use the right reason" : "Log the wrong reason"} ({chat.alt.contactReason})
+          </button>
+        )}
+      </TryThis>
     </div>
+  );
+}
+
+function PolicyLine({ steps }: { steps: string[] }) {
+  return (
+    <span className="mt-1 block text-xs text-muted">
+      {steps.length ? <>Policy steps: {steps.join(" → ")}</> : "No policy steps (an FAQ question)."}
+    </span>
   );
 }
 
@@ -450,41 +527,219 @@ const DIM_LABEL: Record<string, string> = {
   resolution: "Resolution",
   empathy: "Empathy",
 };
+const DIMS = Object.keys(DIM_LABEL) as (keyof JudgeOutput["evidence"])[];
+
+const fmtValue = (o: JudgeOutput, d: keyof JudgeOutput["evidence"]) => (d === "empathy" ? `${o.empathy}/5` : String(o[d]));
+const seconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
 
 function sourceLabel(j: JudgeView): string {
-  if (j.source === "live") return "Live run, just now";
-  if (j.source === "alt") return "What-if run, precomputed for this page (not in the warehouse)";
-  return j.role === "production" ? "Production score, replayed from the warehouse" : "Backtest score, replayed from the warehouse";
+  if (j.source === "live") return "Asked just now";
+  if (j.source === "alt") return "Recorded for this page, with the swapped reason";
+  return j.role === "production" ? "Recorded when the pipeline ran" : "Recorded later, re-scoring the same chat";
 }
 
-export function NoJudge({ run, onLive }: { run: RunView; onLive?: () => void }) {
+function MissingJudge({ run }: { run: RunView }) {
   return (
     <Banner tone="neutral">
-      {run.missing}
-      {onLive && (
-        <>
-          {" "}
-          <button type="button" onClick={onLive} className="font-medium text-accent underline underline-offset-4">
-            Run it live
-          </button>
-        </>
-      )}
+      {shortModel(run.model)} has no recorded answer for this chat. In stage 5, switch back to {MODELS[0].short} or ask {shortModel(run.model)} live.
     </Banner>
   );
 }
 
-function JudgeStage({ run, onLive }: { run: RunView; onLive?: () => void }) {
-  const j = run.judge;
-  const [raw, setRaw] = useState(false);
-  if (!j) return <NoJudge run={run} onLive={onLive} />;
+/** Three verdicts that can be checked against the facts, with ✓ / ✗. */
+function TruthCheck({ chat, output }: { chat: DemoChat; output: JudgeOutput }) {
+  const e = chat.enrich;
+  const rows = [
+    { label: "Intent", judged: output.intent, truth: e.trueFlow },
+    { label: "Identity", judged: output.identity_verification, truth: e.gtIdentity },
+    { label: "Policy", judged: output.policy_adherence, truth: e.gtPolicy },
+  ];
+  return (
+    <ul className="space-y-1.5">
+      {rows.map((r) => (
+        <li key={r.label} className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm">
+          <Mark ok={r.judged === r.truth} label={r.judged === r.truth ? "matches the facts" : "differs from the facts"} />
+          <span className="w-16 shrink-0 text-muted">{r.label}</span>
+          <span className="min-w-0 break-all font-mono text-xs text-text">
+            {r.judged}
+            {r.judged !== r.truth && <span className="text-soft"> · truth: {r.truth}</span>}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ModelChoice({ run, actions }: { run: RunView; actions: DemoActions }) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Judge model">
+      {MODELS.map((m) => {
+        const active = m.id === run.model;
+        return (
+          <button
+            key={m.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => actions.setModel(m.id)}
+            className={`rounded-xl border px-3 py-2 text-left ${active ? "border-accent bg-accent-soft" : "border-border bg-surface hover:border-border-strong"}`}
+          >
+            <span className="block font-mono text-sm font-medium text-text">{m.short}</span>
+            <span className="block text-xs text-muted">{m.note}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function LiveCompare({ recorded, live }: { recorded: JudgeView | null; live: JudgeView }) {
+  const r = recorded?.output;
+  const l = live.output;
+  if (!l) {
+    return (
+      <Banner tone="warn">
+        The model answered in {seconds(live.latencyMs)}, but the answer did not pass the format check (the job of stage 6), so the pipeline would store it as
+        invalid rather than guess. The recorded answer above is unchanged.
+      </Banner>
+    );
+  }
+  const diffs = r ? DIMS.filter((d) => fmtValue(r, d) !== fmtValue(l, d)).length : 0;
+  const cell = "px-3 py-1.5 text-left";
   return (
     <div>
+      <p className="mb-2 text-sm text-text">
+        {!r
+          ? "No recorded answer to compare with, so here is the live answer on its own."
+          : diffs === 0
+            ? "Same verdicts as the recorded answer, on every question."
+            : `${diffs} of ${DIMS.length} verdicts came out differently this time (highlighted).`}
+      </p>
+      <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+        <table className="w-full text-xs">
+          <caption className="sr-only">Recorded answer and live answer, verdict by verdict</caption>
+          <thead className="bg-surface-muted text-soft">
+            <tr>
+              <th scope="col" className={`${cell} font-normal`}>
+                <span className="sr-only">Question</span>
+              </th>
+              {r && (
+                <th scope="col" className={`${cell} font-medium text-text`}>
+                  Recorded
+                </th>
+              )}
+              <th scope="col" className={`${cell} font-medium text-text`}>
+                Live, just now
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[color:var(--border)]">
+            {DIMS.map((d) => {
+              const differs = r ? fmtValue(r, d) !== fmtValue(l, d) : false;
+              return (
+                <tr key={d} className={differs ? "bg-[color:var(--cx-warn-soft)]" : ""}>
+                  <th scope="row" className={`${cell} font-medium text-muted`}>
+                    {DIM_LABEL[d]}
+                    {differs && <span className="ml-1.5 font-normal text-[color:var(--cx-warn)]">changed</span>}
+                  </th>
+                  {r && <td className={`${cell} font-mono text-text`}>{fmtValue(r, d)}</td>}
+                  <td className={`${cell} font-mono text-text`}>{fmtValue(l, d)}</td>
+                </tr>
+              );
+            })}
+            <tr>
+              <th scope="row" className={`${cell} font-medium text-muted`}>
+                Time to answer
+              </th>
+              {r && <td className={`${cell} tabular-nums text-muted`}>{seconds(recorded!.latencyMs)}</td>}
+              <td className={`${cell} tabular-nums text-muted`}>{seconds(live.latencyMs)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      {live.repaired && <Note>The live answer needed one round of fixing before it passed the format check.</Note>}
+    </div>
+  );
+}
+
+function LiveTry({ run, actions }: { run: RunView; actions: DemoActions }) {
+  const live = actions.live;
+  const name = shortModel(run.model);
+  return (
+    <TryThis
+      question="Ask it again, live"
+      explain={
+        <>
+          The answer above was recorded when the pipeline ran. Press the button to send the exact same prompt to {name} right now. It takes 10–40 seconds.
+          Language models don&apos;t always answer the same way twice, which is why the pipeline stores every answer.
+        </>
+      }
+    >
+      {live?.phase === "running" ? (
+        <div className="flex flex-wrap items-center gap-3" role="status">
+          <span className="relative flex h-2.5 w-2.5" aria-hidden>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60 motion-reduce:animate-none" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
+          </span>
+          <span className="text-sm text-text">
+            Waiting for {name}… <span className="tabular-nums">{live.elapsed}s</span>
+          </span>
+          <TextButton onClick={actions.cancelLive}>Cancel</TextButton>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {live?.phase === "fallback" && (
+            <Banner tone="warn">
+              Couldn&apos;t ask the model live: {live.notice} The recorded answer above is unchanged.
+            </Banner>
+          )}
+          {live?.phase === "done" && live.result && <LiveCompare recorded={run.judge} live={live.result} />}
+          <button type="button" className="pill-link primary" onClick={actions.askLive}>
+            {live ? `Ask ${name} again` : `Ask ${name} now`}
+          </button>
+        </div>
+      )}
+    </TryThis>
+  );
+}
+
+function JudgeStage({ run, actions }: { run: RunView; actions: DemoActions }) {
+  const j = run.judge;
+  const [raw, setRaw] = useState(false);
+  const tries = (
+    <>
+      <TryThis
+        question="Ask a different model"
+        explain="The pipeline switched judges on Oct 10. Pick one to see its recorded answer for this same chat and prompt."
+      >
+        <ModelChoice run={run} actions={actions} />
+      </TryThis>
+      <LiveTry run={run} actions={actions} />
+    </>
+  );
+  if (!j) {
+    return (
+      <div>
+        <MissingJudge run={run} />
+        {tries}
+      </div>
+    );
+  }
+  return (
+    <div>
+      {run.useAlt && j.output && (
+        <div className="mb-4 rounded-xl border border-[color:var(--cx-warn-line)] bg-[color:var(--cx-warn-soft)] p-3">
+          <p className="mb-2 text-sm text-text">
+            With the logged reason swapped to <span className="font-mono text-xs">{run.chat.alt.contactReason}</span>, did the judge still get it right?
+          </p>
+          <TruthCheck chat={run.chat} output={j.output} />
+        </div>
+      )}
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
         <Fact label="Model">
-          <span className="font-mono text-xs">{j.model}</span>
+          <span className="font-mono text-xs">{shortModel(j.model)}</span>
         </Fact>
         <Fact label="Source">{sourceLabel(j)}</Fact>
-        <Fact label="Latency">{(j.latencyMs / 1000).toFixed(1)} s</Fact>
+        <Fact label="Time to answer">{seconds(j.latencyMs)}</Fact>
         <Fact label="Tokens">
           {j.promptTokens.toLocaleString("en-US")} in · {j.completionTokens.toLocaleString("en-US")} out
         </Fact>
@@ -499,7 +754,7 @@ function JudgeStage({ run, onLive }: { run: RunView; onLive?: () => void }) {
       </div>
       {j.output && !raw ? (
         <ul className="space-y-2">
-          {(Object.keys(DIM_LABEL) as (keyof JudgeOutput["evidence"])[]).map((d) => {
+          {DIMS.map((d) => {
             const value = String(j.output![d]);
             return (
               <li key={d} className="rounded-xl border border-border px-3 py-2">
@@ -517,15 +772,16 @@ function JudgeStage({ run, onLive }: { run: RunView; onLive?: () => void }) {
       ) : (
         <Code label="Raw judge reply">{j.rawContent || "(empty reply)"}</Code>
       )}
+      {tries}
     </div>
   );
 }
 
 // ── 6 Validate output ───────────────────────────────────────────────────────
 
-function CheckStage({ run, onLive }: { run: RunView; onLive?: () => void }) {
+function CheckStage({ run }: { run: RunView }) {
   const j = run.judge;
-  if (!j) return <NoJudge run={run} onLive={onLive} />;
+  if (!j) return <MissingJudge run={run} />;
   const parse = run.parse;
   const o = parse?.ok ? parse.value : null;
   const checks: [string, boolean][] = o
@@ -580,9 +836,9 @@ function numeric(dimension: string, value: string): number | null {
   return null;
 }
 
-function StoreStage({ run, onLive }: { run: RunView; onLive?: () => void }) {
+function StoreStage({ run }: { run: RunView }) {
   const j = run.judge;
-  if (!j) return <NoJudge run={run} onLive={onLive} />;
+  if (!j) return <MissingJudge run={run} />;
   if (!j.output) return <Banner tone="bad">Invalid replies are stored in cx_eval.judge_results with the error, and no score rows are written.</Banner>;
   const stored = j.source === "stored";
   const rows =
@@ -600,7 +856,7 @@ function StoreStage({ run, onLive }: { run: RunView; onLive?: () => void }) {
       {!stored && (
         <div className="mb-3">
           <Banner tone="neutral">
-            Preview: {j.source === "live" ? "live" : "what-if"} runs are not written to the warehouse. This is the shape they would take.
+            Preview: answers recorded for this page&apos;s experiments are not written to the warehouse. This is the shape they would take.
           </Banner>
         </div>
       )}
@@ -656,8 +912,8 @@ function StoreStage({ run, onLive }: { run: RunView; onLive?: () => void }) {
         </table>
       </div>
       <Note>
-        Evidence is stored in each row too (hidden here). Scores are append-only and keyed by model and rubric version: a re-score or backtest adds rows next to
-        production instead of overwriting it, and the dated judge_config table says which pair is production on each day.
+        Evidence is stored in each row too (hidden here). Rows are never overwritten: re-scoring with another model or rubric adds new rows next to the
+        old ones, and a dated config table says which pair was in use on each day.
       </Note>
     </div>
   );
@@ -665,106 +921,104 @@ function StoreStage({ run, onLive }: { run: RunView; onLive?: () => void }) {
 
 // ── 8 Metrics ───────────────────────────────────────────────────────────────
 
-interface CompareColumn {
-  id: string;
-  title: string;
-  sub: string;
-  output: JudgeOutput;
-  current: boolean;
-}
-
-function truthOf(chat: DemoChat, dim: "intent" | "identity_verification" | "policy_adherence"): string {
+function RubricTry({ run }: { run: RunView }) {
+  const [show, setShow] = useState(false);
+  const chat = run.chat;
+  const base = MODELS[0].id;
+  const v1 = chat.runs.find((r) => r.model === base && r.rubric === "v1");
+  const v2 = chat.runs.find((r) => r.model === base && r.rubric === "v2");
   const e = chat.enrich;
-  return dim === "intent" ? e.trueFlow : dim === "identity_verification" ? e.gtIdentity : e.gtPolicy;
-}
-
-function CompareTable({ run, columns }: { run: RunView; columns: CompareColumn[] }) {
-  const e = run.chat.enrich;
-  const rows: { dim: keyof JudgeOutput["evidence"] | "cxi"; label: string; checkable: boolean }[] = [
-    { dim: "intent", label: "Intent", checkable: true },
-    { dim: "identity_verification", label: "Identity", checkable: true },
-    { dim: "policy_adherence", label: "Policy", checkable: true },
-    { dim: "resolution", label: "Resolution", checkable: false },
-    { dim: "empathy", label: "Empathy", checkable: false },
-    { dim: "cxi", label: "CXI", checkable: false },
+  const rows = [
+    { label: "Intent", truth: e.trueFlow, get: (o: JudgeOutput) => o.intent },
+    { label: "Identity", truth: e.gtIdentity, get: (o: JudgeOutput) => o.identity_verification },
+    { label: "Policy", truth: e.gtPolicy, get: (o: JudgeOutput) => o.policy_adherence },
   ];
-  const cell = "px-2.5 py-1.5 text-left align-top";
+  const cell = "px-3 py-1.5 text-left";
+  const verdict = (o: JudgeOutput, r: (typeof rows)[number]) => (
+    <span className="inline-flex items-center gap-1">
+      <Mark ok={r.get(o) === r.truth} label={r.get(o) === r.truth ? "matches the facts" : "differs from the facts"} />
+      <span className="break-all font-mono">{r.get(o)}</span>
+    </span>
+  );
   return (
-    <div className="overflow-x-auto rounded-xl border border-border">
-      <table className="w-full text-xs">
-        <thead className="bg-surface-muted">
-          <tr>
-            <th className={`${cell} text-soft`} scope="col">
-              <span className="sr-only">Dimension</span>
-            </th>
-            {columns.map((c) => (
-              <th key={c.id} scope="col" className={`${cell} font-medium ${c.current ? "text-accent" : "text-text"}`}>
-                {c.title}
-                <span className="block font-normal text-soft">{c.sub}</span>
-              </th>
-            ))}
-            <th scope="col" className={`${cell} font-medium text-text`}>
-              Ground truth
-              <span className="block font-normal text-soft">from logged actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[color:var(--border)]">
-          {rows.map((r) => {
-            const values = columns.map((c) => (r.dim === "cxi" ? cxiBreakdown(c.output, e.efficiency).total.toFixed(1) : String(c.output[r.dim])));
-            const differs = new Set(values).size > 1;
-            const truth = r.checkable ? truthOf(run.chat, r.dim as "intent") : null;
-            return (
-              <tr key={r.dim}>
-                <th scope="row" className={`${cell} font-medium text-muted`}>
-                  {r.label}
-                  {differs && <span className="ml-1 text-[color:var(--cx-warn)]" title="Judges disagree">•</span>}
-                </th>
-                {columns.map((c, i) => (
-                  <td key={c.id} className={`${cell} font-mono ${c.current ? "bg-accent-soft" : ""}`}>
-                    <span className="inline-flex items-center gap-1">
-                      {truth !== null && <Mark ok={values[i] === truth} label={values[i] === truth ? "matches ground truth" : "differs from ground truth"} />}
-                      <span className="break-all">{values[i]}</span>
-                    </span>
-                  </td>
+    <TryThis
+      question="Try the stricter rubric"
+      explain="Version 2 of the rubric makes the judge point to the exact position of each required button before deciding. The version in use is v1."
+    >
+      {!v1 || !v2 ? (
+        <p className="text-sm text-muted">This chat has not been re-scored with version 2 yet.</p>
+      ) : show ? (
+        <div className="space-y-3">
+          <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+            <table className="w-full text-xs">
+              <caption className="sr-only">Verdicts under rubric v1 and v2, checked against the facts</caption>
+              <thead className="bg-surface-muted text-soft">
+                <tr>
+                  <th scope="col" className={`${cell} font-normal`}>
+                    <span className="sr-only">Question</span>
+                  </th>
+                  <th scope="col" className={`${cell} font-medium text-text`}>
+                    v1 (in use)
+                  </th>
+                  <th scope="col" className={`${cell} font-medium text-text`}>
+                    v2 (stricter)
+                  </th>
+                  <th scope="col" className={`${cell} font-medium text-text`}>
+                    Truth
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[color:var(--border)]">
+                {rows.map((r) => (
+                  <tr key={r.label}>
+                    <th scope="row" className={`${cell} font-medium text-muted`}>
+                      {r.label}
+                    </th>
+                    <td className={cell}>{verdict(v1.output, r)}</td>
+                    <td className={cell}>{verdict(v2.output, r)}</td>
+                    <td className={`${cell} break-all font-mono text-muted`}>{r.truth}</td>
+                  </tr>
                 ))}
-                <td className={`${cell} font-mono text-muted`}>{truth ?? (r.dim === "cxi" ? "" : "judgement")}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-soft">
+            Both answers are from {MODELS[0].short} on the original chat
+            {run.model !== base || run.useAlt ? ", whatever you picked in the stages above" : ""}.
+          </p>
+          <TextButton onClick={() => setShow(false)}>Back to v1 only</TextButton>
+        </div>
+      ) : (
+        <button type="button" className="pill-link" onClick={() => setShow(true)}>
+          Compare v1 and v2 on this chat
+        </button>
+      )}
+    </TryThis>
   );
 }
 
-function MetricsStage({ run, columns, onLive }: { run: RunView; columns: CompareColumn[]; onLive?: () => void }) {
+function MetricsStage({ run }: { run: RunView }) {
   const j = run.judge;
-  if (!j) return <NoJudge run={run} onLive={onLive} />;
-  if (!j.output) return <Banner tone="bad">An invalid reply produces no scores, so this chat is left out of the metrics and counted in pipeline health instead.</Banner>;
+  if (!j) return <MissingJudge run={run} />;
+  if (!j.output) return <Banner tone="bad">An invalid reply produces no scores, so this chat is left out of the metrics and counted as a pipeline error instead.</Banner>;
   const e = run.chat.enrich;
   const { parts, total, identityNa } = cxiBreakdown(j.output, e.efficiency);
-  const agreement: { label: string; judged: string; truth: string }[] = [
-    { label: "Intent", judged: j.output.intent, truth: e.trueFlow },
-    { label: "Identity", judged: j.output.identity_verification, truth: e.gtIdentity },
-    { label: "Policy", judged: j.output.policy_adherence, truth: e.gtPolicy },
-  ];
-  const right = agreement.filter((a) => a.judged === a.truth).length;
+  const right = [j.output.intent === e.trueFlow, j.output.identity_verification === e.gtIdentity, j.output.policy_adherence === e.gtPolicy].filter(Boolean).length;
   return (
     <div>
       <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
         <div>
-          <H>CX Index for this chat</H>
+          <H>Quality score for this chat</H>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-semibold tabular-nums tracking-tight text-text">{total.toFixed(1)}</span>
             <span className="text-sm text-soft">/ 100</span>
           </div>
           <table className="mt-3 w-full text-xs">
-            <caption className="sr-only">CXI calculation</caption>
+            <caption className="sr-only">How the quality score is calculated</caption>
             <thead className="text-soft">
               <tr>
-                <th className="py-1 text-left font-normal">Dimension</th>
                 <th className="py-1 text-left font-normal">Verdict</th>
+                <th className="py-1 text-left font-normal">Value</th>
                 <th className="py-1 text-right font-normal">Points</th>
                 <th className="py-1 text-right font-normal">Weight</th>
                 <th className="py-1 text-right font-normal">= </th>
@@ -784,78 +1038,48 @@ function MetricsStage({ run, columns, onLive }: { run: RunView; columns: Compare
               ))}
               <tr className="font-semibold">
                 <td className="py-1.5" colSpan={4}>
-                  CXI
+                  Score
                 </td>
                 <td className="py-1.5 text-right">{total.toFixed(1)}</td>
               </tr>
             </tbody>
           </table>
           <Note>
-            pass = 100, fail = 0; resolved / partial / unresolved = 100 / 50 / 0; 1–5 scales map to (s − 1) ÷ 4 × 100.
-            {identityNa ? " Identity is not applicable here, so its 20% is spread over the other weights." : ""}
+            pass = 100, fail = 0; resolved / partial / unresolved = 100 / 50 / 0; 1–5 scales map to 0–100.
+            {identityNa ? " No identity check was needed here, so its 20% is spread over the other weights." : ""}
           </Note>
         </div>
         <div>
           <H>Was the judge right? ({right} of 3 checkable)</H>
-          <ul className="space-y-1.5">
-            {agreement.map((a) => (
-              <li key={a.label} className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm">
-                <Mark ok={a.judged === a.truth} />
-                <span className="w-16 text-muted">{a.label}</span>
-                <span className="min-w-0 truncate font-mono text-xs text-text">
-                  {a.judged}
-                  {a.judged !== a.truth && <span className="text-soft"> · truth {a.truth}</span>}
-                </span>
-              </li>
-            ))}
-            <li className="flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-sm">
-              <Mark ok={null} />
-              <span className="text-muted">Resolution and empathy are judgement calls: checked against human labels instead.</span>
-            </li>
-          </ul>
-          {e.csat != null && <Note>Customer&apos;s (synthetic) CSAT: {e.csat} / 5.</Note>}
+          <TruthCheck chat={run.chat} output={j.output} />
+          <p className="mt-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-sm text-muted">
+            Resolution and empathy are judgement calls, so they have no automatic truth to check against.
+          </p>
+          {e.csat != null && <Note>This customer&apos;s (simulated) satisfaction rating: {e.csat} / 5.</Note>}
         </div>
       </div>
-      {columns.length > 1 && (
-        <>
-          <H>Same chat, other judges</H>
-          <CompareTable run={run} columns={columns} />
-          <Note>Every column is a stored output for this exact conversation and prompt context. • marks rows where the judges disagree.</Note>
-        </>
-      )}
+      <RubricTry run={run} />
     </div>
   );
 }
 
-export function StageDetail({
-  stage,
-  run,
-  columns,
-  onLive,
-}: {
-  stage: StageKey;
-  run: RunView;
-  columns: CompareColumn[];
-  onLive?: () => void;
-}) {
+export function StageDetail({ stage, run, actions }: { stage: StageKey; run: RunView; actions: DemoActions }) {
   switch (stage) {
     case "ingest":
       return <IngestStage run={run} />;
     case "validate":
-      return <ValidateStage run={run} />;
+      return <ValidateStage run={run} actions={actions} />;
     case "enrich":
       return <EnrichStage run={run} />;
     case "prompt":
-      return <PromptStage run={run} />;
+      return <PromptStage run={run} actions={actions} />;
     case "judge":
-      return <JudgeStage run={run} onLive={onLive} />;
+      return <JudgeStage run={run} actions={actions} />;
     case "check":
-      return <CheckStage run={run} onLive={onLive} />;
+      return <CheckStage run={run} />;
     case "store":
-      return <StoreStage run={run} onLive={onLive} />;
+      return <StoreStage run={run} />;
     case "metrics":
-      return <MetricsStage run={run} columns={columns} onLive={onLive} />;
+      return <MetricsStage run={run} />;
   }
 }
-
-export type { CompareColumn };

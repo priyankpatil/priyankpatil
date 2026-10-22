@@ -101,76 +101,28 @@ export function Code({ children, className = "", label }: { children: ReactNode;
   );
 }
 
-export function Segmented<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-  disabled = false,
-}: {
-  label: string;
-  value: T;
-  options: { value: T; label: string; hint?: string }[];
-  onChange: (v: T) => void;
-  disabled?: boolean;
-}) {
+/**
+ * A small experiment at the bottom of a stage panel: a plain question, one
+ * sentence on what will happen, then the controls (and a way to undo).
+ */
+export function TryThis({ question, explain, children }: { question: string; explain: ReactNode; children: ReactNode }) {
+  const id = useId();
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-full border border-border bg-surface-muted p-0.5">
-      {options.map((o) => {
-        const active = o.value === value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            title={o.hint}
-            disabled={disabled}
-            onClick={() => onChange(o.value)}
-            className={`rounded-full px-3 py-1 text-xs font-medium disabled:opacity-50 ${
-              active ? "bg-surface text-text shadow-sm" : "text-muted hover:text-text"
-            }`}
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
+    <aside aria-labelledby={id} className="mt-6 rounded-2xl border border-dashed border-border-strong bg-surface-muted p-4 sm:p-5">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-accent">Try this</p>
+      <h4 id={id} className="mt-1 text-base font-semibold leading-snug text-text">
+        {question}
+      </h4>
+      <p className="mt-1 text-sm leading-relaxed text-muted">{explain}</p>
+      <div className="mt-3">{children}</div>
+    </aside>
   );
 }
 
-export function Toggle({
-  checked,
-  onChange,
-  children,
-  hint,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  children: ReactNode;
-  hint?: string;
-}) {
+/** A plain text-style button used for "undo" and "go to stage" links. */
+export function TextButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      title={hint}
-      onClick={() => onChange(!checked)}
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium ${
-        checked
-          ? "border-[color:var(--cx-bad-line)] bg-[color:var(--cx-bad-soft)] text-[color:var(--cx-bad)]"
-          : "border-border bg-surface text-muted hover:border-border-strong hover:text-text"
-      }`}
-    >
-      <span
-        aria-hidden
-        className={`relative inline-block h-3.5 w-6 rounded-full transition-colors ${checked ? "bg-[color:var(--cx-bad)]" : "bg-border-strong"}`}
-      >
-        <span
-          className={`absolute top-0.5 h-2.5 w-2.5 rounded-full bg-white transition-transform ${checked ? "translate-x-3" : "translate-x-0.5"}`}
-        />
-      </span>
+    <button type="button" onClick={onClick} className="rounded text-sm font-medium text-accent underline underline-offset-4 hover:no-underline">
       {children}
     </button>
   );

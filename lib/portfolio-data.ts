@@ -24,7 +24,7 @@ export const projectItems: ProjectItem[] = [
   },
   {
     id: "cx-eval",
-    title: "CX Auto-Evaluation Pipeline",
+    title: "Customer Support Evaluation using an LLM",
     summary:
       "End-to-end data pipeline that prepares 10,000 support chats for an LLM judge, validates what it returns, and turns the scores into CX metrics, drift monitoring and root cause analysis.",
     outcome:

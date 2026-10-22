@@ -47,14 +47,19 @@ ABCD has no timestamps, agents, channels or survey scores. The pipeline adds:
 
 ## Architecture
 
+The pipeline is **ELT**: scripts only move data (load raw data in, call the LLM), and all business logic (validation, enrichment, ground truth, prompt context, marts) runs as SQL inside Supabase. This mirrors the common Snowflake pattern of raw landing tables plus in-warehouse SQL transforms, and keeps every rule readable and runnable by hand in the SQL editor.
+
 ```
  ABCD (support system stand-in)
-   │  daily batch
+   │  daily batch (load script: download, split, insert raw jsonb; no logic)
    ▼
- [1 Extract + validate] ──► raw_batches, raw_conversations (jsonb)
-   │                    └──► quarantine (record, reason)
+ raw_batches, raw_conversations (jsonb)
+   │
+   ▼  ── inside Supabase, SQL functions scheduled with pg_cron ──
+ [1 Validate] cx_eval.validate_batch(date) ──► quarantine (record, reason)
+   │
    ▼
- [2 Transform + enrich] ──► conversations (metadata, ground-truth flags), turns, csat_responses
+ [2 Transform + enrich] cx_eval.transform_batch(date) ──► conversations (metadata, ground-truth flags), turns, csat_responses
    │
    ▼
  [3 Prompt assembly] ──► scoring_requests (rubric version, prompt hash, token estimate)
@@ -83,9 +88,9 @@ Built on the stack the site already uses. Tools named in the role map onto it as
 | Concern | Choice | Notes |
 |---|---|---|
 | Warehouse | Supabase Postgres, schema `cx_eval` | Stands in for Snowflake. SQL kept to portable constructs. |
-| Transforms | SQL migrations and views, layered staging → enriched → marts | Same layering as dbt, without the tool. |
-| Pipeline code | TypeScript scripts run with `tsx` | Same language as the site; reuses `pg` and the patterns in `lib/nl-sql/`. |
-| Orchestration | GitHub Actions on a schedule | Vercel functions time out at 60s, which is too short for scoring batches. |
+| Transforms | SQL functions and views inside Supabase, layered raw → enriched → marts | ELT. Same layering as dbt, without the tool. |
+| Pipeline code | Thin TypeScript scripts run with `tsx`: the raw loader and the judge client | Extraction can't run in Supabase: a 121 MB JSON parse exceeds the Edge Function free-tier CPU limit (~2s). |
+| Orchestration | GitHub Actions on a schedule (load, judge); `pg_cron` inside Supabase (validate, transform, mart refresh) | Vercel functions time out at 60s, which is too short for scoring batches. |
 | LLM judge | NVIDIA API Catalog, `openai/gpt-oss-20b` | See [Model selection](#model-selection). |
 | Alerting | Post-run checks that open GitHub issues | Free and visible. |
 | Dashboard | Next.js page on priyankpatil.com | Reads marts through a read-only database role. |
@@ -160,7 +165,7 @@ Each incident is detected by the pipeline's own monitoring, then diagnosed in a 
 | # | Stage | Builds | Status |
 |---|---|---|---|
 | 0 | Profile data, draft rubric and schema, select judge model | This plan | ✅ done |
-| 1 | **ETL:** extract ABCD → validate and quarantine → transform and enrich → load | `cx_eval` migration, `extract`, `transform` scripts, synthetic metadata, ground-truth flags | ⬜ |
+| 1 | **ELT:** load raw ABCD batches → validate and quarantine (SQL) → transform and enrich (SQL) | `cx_eval` migration, raw loader script, `validate_batch` / `transform_batch` SQL functions, synthetic metadata, ground-truth flags | ⬜ |
 | 2 | **Rubric:** written definitions, decision rules, anchors; prompt generated from it; human calibration | `RUBRIC.md`, `rubric_versions` | ⬜ |
 | 3 | **Judge:** prompt assembly → LLM → JSON validation and retry | `scoring_requests`, judge client | ⬜ |
 | 4 | **Store outputs:** append-only, versioned | `scores`, `scoring_runs` | ⬜ |

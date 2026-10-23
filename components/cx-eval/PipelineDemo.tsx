@@ -239,7 +239,7 @@ export default function PipelineDemo() {
         signal: ctrl.signal,
       });
       if (!res.ok || !res.body) {
-        finish({ phase: "fallback", notice: `the server said no (${(await res.text()) || res.status}).` });
+        finish({ phase: "fallback", notice: `the server returned an error (${(await res.text()) || res.status}).` });
         return;
       }
       const reader = res.body.getReader();
@@ -477,7 +477,7 @@ export default function PipelineDemo() {
                   <p className="text-sm text-soft">Scroll here to replay the run.</p>
                 ) : statusOf(selected) === "skipped" ? (
                   <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-soft">
-                    Never reached: the record was quarantined at validation, so this stage has nothing to show. That is the point.
+                    Not reached: the record was quarantined at validation, so this stage did not run.
                   </p>
                 ) : (
                   <StageDetail stage={stage.key} run={run} actions={actions} />

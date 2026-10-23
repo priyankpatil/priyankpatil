@@ -28,7 +28,7 @@ const BLURBS: Record<string, string> = {
   "abcd-8971": "Logged as a refund, really a return. The wrong label pulls the wrong rules into the prompt.",
   "abcd-8256": "A washing question answered from the FAQ. No account access, so no identity check is needed.",
   "abcd-2642": "A slow website. The judge's first answer was badly formatted and was sent back once to fix.",
-  "abcd-7598": "55 messages over a disputed bill, no refund, and the customer rated it 1 out of 5. A low score, as it should be.",
+  "abcd-7598": "55 messages over a disputed bill, no refund, and the customer rated it 1 out of 5.",
   "abcd-726": "The agent ran the wrong identity check and the judge missed it. The stricter rubric in stage 8 catches it.",
 };
 export const blurbOf = (chat: DemoChat) => BLURBS[chat.id] ?? chat.blurb;

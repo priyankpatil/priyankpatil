@@ -8,6 +8,7 @@ import { RUBRIC_V1 } from "@/pipelines/cx-eval/src/rubric/v1.ts";
 import { cxiBreakdown, estimateTokens, MODELS, shortModel, type ModelId } from "@/lib/cx-eval/demo";
 import { explainIdentity, explainPolicy } from "@/lib/cx-eval/ground-truth";
 import type { DemoChat, RawRecord, RubricId, StoredRun } from "@/lib/cx-eval/types";
+import { LOADER_SNIPPET, TRANSFORM_SNIPPET, VALIDATE_SNIPPET } from "@/lib/cx-eval/snippets";
 import type { CheckResult } from "@/lib/cx-eval/validate";
 import { Badge, Code, Collapsible, Fact, Mark, TextButton, TryThis, verdictTone } from "./ui";
 
@@ -211,33 +212,77 @@ function ChatBubbles({ turns }: { turns: JudgeContext["turns"] }) {
   );
 }
 
-function IngestStage({ run }: { run: RunView }) {
-  const [view, setView] = useState<"json" | "chat">("json");
+/** Small view switcher at the top of a stage; the last view is usually the code that does the work. */
+function ViewTabs({ label, views, aside }: { label: string; views: { key: string; label: string; content: ReactNode }[]; aside?: ReactNode }) {
+  const [view, setView] = useState(views[0].key);
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-soft">
-          <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-[#3a2f12] align-middle ring-1 ring-[#e5c07b]" aria-hidden /> synthetic fields added by
-          the simulated source system. The transcript is the original public chat.
-        </p>
-        <div className="flex gap-1 text-xs" role="tablist" aria-label="Record view">
-          {(["json", "chat"] as const).map((v) => (
+        <div className="min-w-0 text-xs text-soft">{aside}</div>
+        <div className="flex gap-1 text-xs" role="tablist" aria-label={label}>
+          {views.map((v) => (
             <button
-              key={v}
+              key={v.key}
               type="button"
               role="tab"
-              aria-selected={view === v}
-              onClick={() => setView(v)}
-              className={`rounded-full px-2.5 py-1 ${view === v ? "bg-accent-soft text-accent" : "text-muted hover:text-text"}`}
+              aria-selected={view === v.key}
+              onClick={() => setView(v.key)}
+              className={`rounded-full px-2.5 py-1 ${view === v.key ? "bg-accent-soft text-accent" : "text-muted hover:text-text"}`}
             >
-              {v === "json" ? "Raw JSON" : "Read the chat"}
+              {v.label}
             </button>
           ))}
         </div>
       </div>
-      {view === "json" ? <RecordJson record={run.record} renamed={run.renamed} /> : <ChatBubbles turns={run.context.turns} />}
-      <Note>Landed as-is in cx_eval.raw_conversations. The loader moves data only; every rule after this point is SQL in the warehouse.</Note>
+      {views.find((v) => v.key === view)?.content}
     </div>
+  );
+}
+
+function CodeView({ description, code, label }: { description: ReactNode; code: string; label: string }) {
+  return (
+    <div>
+      <p className="mb-2 text-sm leading-relaxed text-muted">{description}</p>
+      <Code label={label}>{code}</Code>
+    </div>
+  );
+}
+
+function IngestStage({ run }: { run: RunView }) {
+  return (
+    <ViewTabs
+      label="Record view"
+      aside={
+        <>
+          <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-[#3a2f12] align-middle ring-1 ring-[#e5c07b]" aria-hidden /> synthetic fields added by
+          the simulated source system. The transcript is the original public chat.
+        </>
+      }
+      views={[
+        {
+          key: "json",
+          label: "Raw JSON",
+          content: (
+            <>
+              <RecordJson record={run.record} renamed={run.renamed} />
+              <Note>Stored unchanged in cx_eval.raw_conversations. The loader only copies data; all later rules run as SQL in the database.</Note>
+            </>
+          ),
+        },
+        { key: "chat", label: "Read the chat", content: <ChatBubbles turns={run.context.turns} /> },
+        {
+          key: "code",
+          label: "Loader script",
+          content: (
+            <CodeView
+              label="Loader script"
+              description="A TypeScript script writes each day's batch to the database as raw JSON in one transaction, then calls the SQL functions. Loading a day again replaces its rows, so a failed run can be repeated safely."
+              code={LOADER_SNIPPET}
+            />
+          ),
+        },
+      ]}
+    />
   );
 }
 
@@ -248,36 +293,60 @@ function ValidateStage({ run, actions }: { run: RunView; actions: DemoActions })
   const failed = checks.filter((c) => !c.passed && c.severity === "error");
   return (
     <div>
-      <ul className="divide-y divide-[color:var(--border)] rounded-xl border border-border">
-        {checks.map((c) => (
-          <li key={c.name} className="flex items-start gap-2.5 px-3 py-2 text-sm">
-            <Mark ok={c.passed} warn={c.severity === "warn"} label={`${c.name}: ${c.passed ? "passed" : c.severity === "warn" ? "warning" : "failed"}`} />
-            <div className="min-w-0 flex-1">
-              <span className="text-text">{c.rule}</span>
-              {c.detail && <span className="ml-2 font-mono text-xs text-[color:var(--cx-bad)]">{c.detail}</span>}
-            </div>
-            <span className="hidden font-mono text-[0.68rem] text-soft sm:inline">
-              {c.name}
-              {c.severity === "warn" ? " · warn" : ""}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <div className="mt-3">
-        {quarantined ? (
-          <Banner tone="bad">
-            <strong>Held back (quarantined).</strong> {failed.map((c) => `${c.name} (${c.detail})`).join("; ")}. The record is set aside with the
-            reason and stops here: nothing downstream sees it, so no score or metric is computed from a broken record. The raw record is kept, so it can
-            be re-run once the source is fixed.
-          </Banner>
-        ) : (
-          <Banner tone="good">
-            <strong>Valid.</strong> All error checks pass{checks.some((c) => !c.passed) ? " (warnings are recorded, not blocking)" : ""}; the record moves on to
-            transformation.
-          </Banner>
-        )}
-      </div>
-      <Note>These checks run as SQL inside the warehouse. This page runs a copy of the same rules in your browser, so you can break the record below.</Note>
+      <ViewTabs
+        label="Validation view"
+        views={[
+          {
+            key: "checks",
+            label: "Checks",
+            content: (
+              <>
+              <ul className="divide-y divide-[color:var(--border)] rounded-xl border border-border">
+                {checks.map((c) => (
+                  <li key={c.name} className="flex items-start gap-2.5 px-3 py-2 text-sm">
+                    <Mark ok={c.passed} warn={c.severity === "warn"} label={`${c.name}: ${c.passed ? "passed" : c.severity === "warn" ? "warning" : "failed"}`} />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-text">{c.rule}</span>
+                      {c.detail && <span className="ml-2 font-mono text-xs text-[color:var(--cx-bad)]">{c.detail}</span>}
+                    </div>
+                    <span className="hidden font-mono text-[0.68rem] text-soft sm:inline">
+                      {c.name}
+                      {c.severity === "warn" ? " · warn" : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3">
+                {quarantined ? (
+                  <Banner tone="bad">
+                    <strong>Held back (quarantined).</strong> {failed.map((c) => `${c.name} (${c.detail})`).join("; ")}. The record is stored in
+                    quarantine with the reason and goes no further, so no score or metric uses it. The raw record is kept and can be processed again once the
+                    source is fixed.
+                  </Banner>
+                ) : (
+                  <Banner tone="good">
+                    <strong>Valid.</strong> All error checks pass{checks.some((c) => !c.passed) ? " (warnings are recorded, not blocking)" : ""}; the record continues to
+                    transformation.
+                  </Banner>
+                )}
+              </div>
+              <Note>In the pipeline these checks run as SQL. This page runs the same rules in your browser so you can test them below.</Note>
+              </>
+            ),
+          },
+          {
+            key: "code",
+            label: "validate_batch()",
+            content: (
+              <CodeView
+                label="validate_batch()"
+                description="One SQL function checks all of a day's records. Each failed check writes a row with the reason to a quarantine table, and records with an error are excluded from scoring and reports."
+                code={VALIDATE_SNIPPET}
+              />
+            ),
+          },
+        ]}
+      />
       <TryThis
         question="What if the source system renames a field?"
         explain={
@@ -340,67 +409,89 @@ function EnrichStage({ run }: { run: RunView }) {
   const logged = run.context.contactReason;
   const tagRight = logged === e.trueSubflow;
   return (
-    <div>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-        <Fact label="Turns">
-          {e.nTurns} <span className="text-xs text-soft">({e.nCustomerTurns} customer · {e.nAgentTurns} agent · {e.nActions} actions)</span>
-        </Fact>
-        <Fact label="Team (from agent)">
-          {e.teamId} <span className="text-xs text-soft">synthetic</span>
-        </Fact>
-        <Fact label="Logged reason">
-          <span className="font-mono text-xs">{logged}</span>
-        </Fact>
-        <Fact label="True reason">
-          <span className="font-mono text-xs">{e.trueSubflow}</span> <Mark ok={tagRight} label={tagRight ? "tag correct" : "tag wrong"} />
-        </Fact>
-      </dl>
+    <ViewTabs
+      label="Enrichment view"
+      views={[
+        {
+          key: "result",
+          label: "Result",
+          content: (
+            <>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+              <Fact label="Turns">
+                {e.nTurns} <span className="text-xs text-soft">({e.nCustomerTurns} customer · {e.nAgentTurns} agent · {e.nActions} actions)</span>
+              </Fact>
+              <Fact label="Team (from agent)">
+                {e.teamId} <span className="text-xs text-soft">synthetic</span>
+              </Fact>
+              <Fact label="Logged reason">
+                <span className="font-mono text-xs">{logged}</span>
+              </Fact>
+              <Fact label="True reason">
+                <span className="font-mono text-xs">{e.trueSubflow}</span> <Mark ok={tagRight} label={tagRight ? "tag correct" : "tag wrong"} />
+              </Fact>
+            </dl>
 
-      <H>Actions the agent took (button ids from the log)</H>
-      <StepChips actions={e.actions} steps={e.truePolicySteps} />
+            <H>Actions the agent took (button ids from the log)</H>
+            <StepChips actions={e.actions} steps={e.truePolicySteps} />
 
-      <H>Policy for the true intent ({e.trueSubflow})</H>
-      <PolicyChips steps={e.truePolicySteps} done={e.actions} />
+            <H>Policy for the true intent ({e.trueSubflow})</H>
+            <PolicyChips steps={e.truePolicySteps} done={e.actions} />
 
-      {run.useAlt || !tagRight ? (
-        <div className="mt-3">
-          <Banner tone="warn">
-            The prompt follows the <em>logged</em> reason, <span className="font-mono text-xs">{logged}</span>
-            {run.context.policySteps.length ? (
-              <>
-                , whose policy is <span className="font-mono text-xs">{run.context.policySteps.join(" → ")}</span>.
-              </>
-            ) : (
-              ": an FAQ intent with no policy steps."
-            )}{" "}
-            Ground truth still uses the true reason. A wrong tag is a realistic upstream data-quality problem the judge has to see through.
-          </Banner>
-        </div>
-      ) : null}
+            {run.useAlt || !tagRight ? (
+              <div className="mt-3">
+                <Banner tone="warn">
+                  The prompt follows the <em>logged</em> reason, <span className="font-mono text-xs">{logged}</span>
+                  {run.context.policySteps.length ? (
+                    <>
+                      , whose policy is <span className="font-mono text-xs">{run.context.policySteps.join(" → ")}</span>.
+                    </>
+                  ) : (
+                    ": an FAQ intent with no policy steps."
+                  )}{" "}
+                  Ground truth still uses the true reason. Wrong tags are a common data-quality problem in real support data.
+                </Banner>
+              </div>
+            ) : null}
 
-      <H>Ground truth (computed in SQL from the logged actions)</H>
-      <ul className="space-y-2 text-sm">
-        <li className="flex gap-2">
-          <Badge tone={verdictTone(e.gtIdentity)}>identity {e.gtIdentity}</Badge>
-          <span className="text-muted">{explainIdentity(e.actions, e.truePolicySteps)}</span>
-        </li>
-        <li className="flex gap-2">
-          <Badge tone={verdictTone(e.gtPolicy)}>policy {e.gtPolicy}</Badge>
-          <span className="text-muted">{explainPolicy(e.actions, e.truePolicySteps, e.isFaq)}</span>
-        </li>
-        <li className="flex gap-2">
-          <Badge tone={e.efficiency >= 4 ? "good" : e.efficiency >= 3 ? "warn" : "bad"}>efficiency {e.efficiency}/5</Badge>
-          <span className="text-muted">
-            {e.nTurns} turns against a median of {e.medianTurns} for this intent ({(e.nTurns / e.medianTurns).toFixed(2)}×). Scored in code, not by the LLM.
-          </span>
-        </li>
-        <li className="flex gap-2">
-          <Badge tone="neutral">CSAT {e.csat ?? "–"}</Badge>
-          <span className="text-muted">{e.csat ? "Synthetic post-chat survey (about 1 in 4 customers answer)." : "This customer did not answer the (synthetic) survey."}</span>
-        </li>
-      </ul>
-      <Note>Ground truth and CSAT are kept out of the prompt: they are what the judge is measured against.</Note>
-    </div>
+            <H>Ground truth (computed in SQL from the logged actions)</H>
+            <ul className="space-y-2 text-sm">
+              <li className="flex gap-2">
+                <Badge tone={verdictTone(e.gtIdentity)}>identity {e.gtIdentity}</Badge>
+                <span className="text-muted">{explainIdentity(e.actions, e.truePolicySteps)}</span>
+              </li>
+              <li className="flex gap-2">
+                <Badge tone={verdictTone(e.gtPolicy)}>policy {e.gtPolicy}</Badge>
+                <span className="text-muted">{explainPolicy(e.actions, e.truePolicySteps, e.isFaq)}</span>
+              </li>
+              <li className="flex gap-2">
+                <Badge tone={e.efficiency >= 4 ? "good" : e.efficiency >= 3 ? "warn" : "bad"}>efficiency {e.efficiency}/5</Badge>
+                <span className="text-muted">
+                  {e.nTurns} turns against a median of {e.medianTurns} for this intent ({(e.nTurns / e.medianTurns).toFixed(2)}×). Scored in code, not by the LLM.
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <Badge tone="neutral">CSAT {e.csat ?? "–"}</Badge>
+                <span className="text-muted">{e.csat ? "Synthetic post-chat survey (about 1 in 4 customers answer)." : "This customer did not answer the (synthetic) survey."}</span>
+              </li>
+            </ul>
+            <Note>Ground truth and CSAT are not in the prompt, because the judge is measured against them.</Note>
+            </>
+          ),
+        },
+        {
+          key: "code",
+          label: "transform_batch()",
+          content: (
+            <CodeView
+              label="transform_batch()"
+              description="Valid records are split into one row per message and one row per chat. Each chat gets the policy for its real contact reason, and helper functions such as gt_identity() compute the ground truth from the agent's button clicks."
+              code={TRANSFORM_SNIPPET}
+            />
+          ),
+        },
+      ]}
+    />
   );
 }
 
@@ -461,7 +552,7 @@ function PromptStage({ run, actions }: { run: RunView; actions: DemoActions }) {
           <Code label="Transcript sent to the judge">{run.prompt.user}</Code>
         </Collapsible>
       </div>
-      <Note>Built in your browser by the pipeline&apos;s own rubric code from the stored facts, so every prompt can be rebuilt exactly.</Note>
+      <Note>This page builds the prompt with the pipeline&apos;s rubric code from the stored data, so every prompt can be reproduced.</Note>
 
       <TryThis
         question={fixing ? "What if the agent had logged the right contact reason?" : "What if the agent logged the wrong contact reason?"}
@@ -490,12 +581,11 @@ function PromptStage({ run, actions }: { run: RunView; actions: DemoActions }) {
               </div>
             </dl>
             <p className="text-sm text-muted">
-              The changed lines are highlighted in &ldquo;Facts about this chat&rdquo; above. The transcript is untouched: the agent did exactly the same
-              things.
+              The changed lines are highlighted in &ldquo;Facts about this chat&rdquo; above. The transcript is unchanged.
             </p>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <button type="button" className="pill-link primary" onClick={() => actions.goTo(4)}>
-                Was the judge fooled? See stage 5 →
+                See the judge&apos;s answer in stage 5 →
               </button>
               <TextButton onClick={() => actions.setUseAlt(false)}>Restore the logged reason</TextButton>
             </div>
@@ -598,8 +688,8 @@ function LiveCompare({ recorded, live }: { recorded: JudgeView | null; live: Jud
   if (!l) {
     return (
       <Banner tone="warn">
-        The model answered in {seconds(live.latencyMs)}, but the answer did not pass the format check (the job of stage 6), so the pipeline would store it as
-        invalid rather than guess. The recorded answer above is unchanged.
+        The model answered in {seconds(live.latencyMs)}, but the answer did not pass the format check (stage 6), so the pipeline would store it as
+        invalid. The recorded answer above is unchanged.
       </Banner>
     );
   }
@@ -609,7 +699,7 @@ function LiveCompare({ recorded, live }: { recorded: JudgeView | null; live: Jud
     <div>
       <p className="mb-2 text-sm text-text">
         {!r
-          ? "No recorded answer to compare with, so here is the live answer on its own."
+          ? "There is no recorded answer to compare with, so only the live answer is shown."
           : diffs === 0
             ? "Same verdicts as the recorded answer, on every question."
             : `${diffs} of ${DIMS.length} verdicts came out differently this time (highlighted).`}
@@ -800,8 +890,8 @@ function CheckStage({ run }: { run: RunView }) {
       {j.repaired && (
         <div className="mb-3">
           <Banner tone="warn">
-            <strong>Repair round.</strong> The judge&apos;s first reply failed this check. The pipeline sent the exact validation error back once, and the
-            corrected reply below passed. Without the repair it would have been stored as invalid, never as a guessed label.
+            <strong>Repair round.</strong> The judge&apos;s first reply failed this check. The pipeline sent the validation error back once, and the
+            corrected reply below passed. Without that retry it would have been stored as invalid.
           </Banner>
         </div>
       )}
@@ -819,8 +909,8 @@ function CheckStage({ run }: { run: RunView }) {
         </Banner>
       )}
       <Note>
-        Checked in your browser by the pipeline&apos;s own parser. Coercion is limited to unambiguous variants (case, &quot;N/A&quot;, a quoted integer);
-        anything else is rejected, so a bad label never reaches cx_eval.scores.
+        Checked in your browser by the pipeline&apos;s own parser. Only unambiguous variants are corrected (letter case, &quot;N/A&quot;, a number in quotes);
+        anything else is rejected and never written to cx_eval.scores.
       </Note>
     </div>
   );
@@ -913,7 +1003,7 @@ function StoreStage({ run }: { run: RunView }) {
       </div>
       <Note>
         Evidence is stored in each row too (hidden here). Rows are never overwritten: re-scoring with another model or rubric adds new rows next to the
-        old ones, and a dated config table says which pair was in use on each day.
+        old ones, and a dated config table records which model and rubric were in use each day.
       </Note>
     </div>
   );
@@ -984,7 +1074,7 @@ function RubricTry({ run }: { run: RunView }) {
           </div>
           <p className="text-xs text-soft">
             Both answers are from {MODELS[0].short} on the original chat
-            {run.model !== base || run.useAlt ? ", whatever you picked in the stages above" : ""}.
+            {run.model !== base || run.useAlt ? ", regardless of the options chosen above" : ""}.
           </p>
           <TextButton onClick={() => setShow(false)}>Back to v1 only</TextButton>
         </div>
@@ -1053,7 +1143,7 @@ function MetricsStage({ run }: { run: RunView }) {
           <H>Was the judge right? ({right} of 3 checkable)</H>
           <TruthCheck chat={run.chat} output={j.output} />
           <p className="mt-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-sm text-muted">
-            Resolution and empathy are judgement calls, so they have no automatic truth to check against.
+            Resolution and empathy are subjective, so there is no computed answer to check them against.
           </p>
           {e.csat != null && <Note>This customer&apos;s (simulated) satisfaction rating: {e.csat} / 5.</Note>}
         </div>

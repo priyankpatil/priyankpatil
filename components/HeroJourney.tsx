@@ -220,9 +220,10 @@ export default function HeroJourney({ articles }: { articles: ArticleTeaser[] })
 
             <div className="mt-6 grid gap-3">
               {projectItems.slice(0, 2).map((project) => (
-                <article
+                <Link
                   key={project.id}
-                  className="rounded-2xl border p-4 border-border bg-surface"
+                  href={`/projects/${project.id}`}
+                  className="block rounded-2xl border border-border bg-surface p-4 text-inherit no-underline transition hover:-translate-y-0.5 hover:border-border-strong"
                 >
                   <p className="text-xs uppercase tracking-[0.16em] text-soft">
                     {project.org} · {project.year}
@@ -233,7 +234,7 @@ export default function HeroJourney({ articles }: { articles: ArticleTeaser[] })
                   <p className="mt-2 text-sm leading-7 text-muted">
                     {project.outcome}
                   </p>
-                </article>
+                </Link>
               ))}
             </div>
 

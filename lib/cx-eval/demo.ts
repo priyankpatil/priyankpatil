@@ -11,14 +11,27 @@ import type { DemoChat, DemoData, RubricId } from "./types";
 export const demo = demoJson as unknown as DemoData;
 
 export const MODELS = [
-  { id: NVIDIA_MODELS.primary, short: "gpt-oss-20b", note: "production judge (Sep 23 – Oct 9)" },
-  { id: NVIDIA_MODELS.secondary, short: "nemotron-3-ultra", note: "production judge from Oct 10" },
+  { id: NVIDIA_MODELS.primary, short: "gpt-oss-20b", note: "The original judge, in use Sep 23 – Oct 9." },
+  { id: NVIDIA_MODELS.secondary, short: "nemotron-3-ultra", note: "The replacement, in use from Oct 10." },
 ] as const;
 export type ModelId = (typeof MODELS)[number]["id"];
 
 export const RUBRICS = { v1: rubricV1, v2: rubricV2 } as const;
 
 export const shortModel = (id: string) => MODELS.find((m) => m.id === id)?.short ?? id.split("/").pop() ?? id;
+
+/** Plain-language one-liners for the picker (the exported blurbs predate the page rewrite). */
+const BLURBS: Record<string, string> = {
+  "abcd-1501": "Every required step, in the right order. The judge and the facts agree on everything.",
+  "abcd-9039": "Username recovery needs an identity check; the agent ran a purchase check instead. The judge catches it.",
+  "abcd-9434": "A return where the agent changes the order before taking the customer's address. The judge catches it.",
+  "abcd-8971": "Logged as a refund, really a return. The wrong label pulls the wrong rules into the prompt.",
+  "abcd-8256": "A washing question answered from the FAQ. No account access, so no identity check is needed.",
+  "abcd-2642": "A slow website. The judge's first answer was badly formatted and was sent back once to fix.",
+  "abcd-7598": "55 messages over a disputed bill, no refund, and the customer rated it 1 out of 5.",
+  "abcd-726": "The agent ran the wrong identity check and the judge missed it. The stricter rubric in stage 8 catches it.",
+};
+export const blurbOf = (chat: DemoChat) => BLURBS[chat.id] ?? chat.blurb;
 
 export function findChat(id: string): DemoChat | undefined {
   return demo.chats.find((c) => c.id === id);

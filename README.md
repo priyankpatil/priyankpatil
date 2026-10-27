@@ -1,6 +1,6 @@
 # Priyank Patil — Portfolio
 
-Personal portfolio site: project case studies, a career timeline, MDX articles, and two live demos (natural language → SQL, and customer segmentation).
+Personal portfolio site: project case studies, a career timeline, MDX articles, and interactive demos (natural language → SQL, customer segmentation, CX evaluation, and Wikipedia streaming).
 
 Built with Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, framer-motion and Recharts.
 
@@ -65,6 +65,7 @@ lib/
   site.ts               Site URL, name and description
   og.tsx                Shared layout for generated social preview images
 pipelines/cx-eval/      CX auto-evaluation pipeline (ETL → LLM judge → scores → marts); see PLAN.md
+pipelines/wiki-stream/  Wikipedia → Aiven Kafka → bounded Supabase → live feed; see README.md
 public/images/          Static images
 scripts/                nl-sql-ingest.mts (knowledge base loader)
 supabase/               Migration (demo data, pgvector store, app role) and the embedding Edge Function
@@ -140,3 +141,7 @@ Theme colors are CSS variables in `app/globals.css` (light and dark), exposed as
 ## Deployment
 
 Designed for Vercel: import the repo, set `GROQ_API_KEY` (and ideally the Upstash variables), and deploy. Pages are statically generated; only `/api/nl-sql` runs per request. Visitor analytics use Vercel Web Analytics (`@vercel/analytics`); enable **Analytics** in the Vercel project dashboard for data to appear.
+
+## Wikipedia Live (cloud Kafka)
+
+The new project at `/projects/wiki-stream` includes a recording of real Kafka-processed Wikipedia events and a live mode backed by Aiven Kafka. See [setup, budgets, worker deployment and verification](pipelines/wiki-stream/README.md). Initialize storage with `npm run wiki:db:check` then `npm run wiki:db:apply`, add Aiven credentials to ignored `.env.local`, and run `npm run wiki:topics` and `npm run wiki:worker`. The site uses a separate restricted read connection. No local Kafka installation is required.

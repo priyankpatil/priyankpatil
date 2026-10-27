@@ -32,3 +32,6 @@ next-env.d.ts
 
 # cx-eval: downloaded ABCD dataset cache
 /pipelines/cx-eval/.data/
+
+# Aiven client certificate, key and CA mounts
+/pipelines/wiki-stream/.secrets/

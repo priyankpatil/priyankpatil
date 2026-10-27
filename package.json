@@ -8,7 +8,16 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "nl-sql:ingest": "tsx scripts/nl-sql-ingest.mts"
+    "nl-sql:ingest": "tsx scripts/nl-sql-ingest.mts",
+    "wiki:profile": "node --import tsx pipelines/wiki-stream/scripts/profile.mts",
+    "wiki:topics": "node --import tsx pipelines/wiki-stream/scripts/setup.mts",
+    "wiki:worker": "node --import tsx pipelines/wiki-stream/scripts/worker.mts",
+    "wiki:health": "node --import tsx pipelines/wiki-stream/scripts/health.mts",
+    "wiki:export-worker": "node --import tsx pipelines/wiki-stream/scripts/export-worker.mts",
+    "wiki:verify": "node --import tsx pipelines/wiki-stream/scripts/verify.mts",
+    "wiki:test": "node --import tsx --test pipelines/wiki-stream/tests/*.test.mts",
+    "wiki:db:check": "node --import tsx pipelines/wiki-stream/scripts/bootstrap.mts",
+    "wiki:db:apply": "node --import tsx pipelines/wiki-stream/scripts/bootstrap.mts --apply"
   },
   "dependencies": {
     "@ai-sdk/groq": "^3.0.39",
@@ -17,6 +26,7 @@
     "ai": "^6.0.180",
     "framer-motion": "^11.15.0",
     "gray-matter": "^4.0.3",
+    "kafkajs": "^2.2.4",
     "next": "^15.5.27",
     "next-mdx-remote": "^6.0.0",
     "next-themes": "^0.4.6",

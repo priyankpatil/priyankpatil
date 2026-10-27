@@ -1,0 +1,740 @@
+{
+  "capturedAt": "2026-10-27T21:35:19.009Z",
+  "frame": {
+    "at": 1793136917004,
+    "edits": [
+      {
+        "id": "jawiki:182628198",
+        "bot": false,
+        "kind": "edit",
+        "wiki": "jawiki",
+        "delta": 30,
+        "title": "旗多様体",
+        "offset": "3137",
+        "partition": 1,
+        "timestamp": 1793136904000,
+        "enrichedAt": 1793136909733,
+        "receivedAt": 1793136908441
+      },
+      {
+        "id": "nlwiki:149915135",
+        "bot": false,
+        "kind": "edit",
+        "wiki": "nlwiki",
+        "delta": 0,
+        "title": "Lijst van spelers van FC Cartagena",
+        "offset": "3138",
+        "partition": 1,
+        "timestamp": 1793136905000,
+        "enrichedAt": 1793136909733,
+        "receivedAt": 1793136908441
+      },
+      {
+        "id": "enwiki:2083692824",
+        "bot": false,
+        "kind": "edit",
+        "wiki": "enwiki",
+        "delta": 56,
+        "title": "Hajdú-Bihar County Assembly",
+        "offset": "3139",
+        "partition": 1,
+        "timestamp": 1793136903000,
+        "enrichedAt": 1793136909733,
+        "receivedAt": 1793136908647
+      },
+      {
+        "id": "itwiki:370895404",
+        "bot": false,
+        "kind": "edit",
+        "wiki": "itwiki",
+        "delta": -2,
+        "title": "Vittorio Gregotti",
+        "offset": "3140",
+        "partition": 1,
+        "timestamp": 1793136906000,
+        "enrichedAt": 1793136909733,
+        "receivedAt": 1793136908917
+      },
+      {
+        "id": "enwiki:2083692826",
+        "bot": false,
+        "kind": "edit",
+        "wiki": "enwiki",
+        "delta": 21,
+        "title": "Student List",
+        "offset": "3141",
+        "partition": 1,
+        "timestamp": 1793136901000,
+        "enrichedAt": 1793136909733,
+        "receivedAt": 1793136909341
+      },
+      {
+        "id": "afwiki:13164168",
+        "bot": true,
+        "kind": "edit",
+        "wiki": "afwiki",
+        "delta": 4,
+        "title": "Northeast Kingdom",
+        "offset": "3142",
+        "partition": 1,
+        "timestamp": 1793136905000,
+        "enrichedAt": 1793136909733,
+        "receivedAt": 1793136909375
+      },
+      {
+        "id": "jawiki:182628199",
+        "bot": false,
+        "kind": "edit",
+        "wiki": "jawiki",
+        "delta": 183,
+        "title": "イリュージョニスト",
+        "offset": "3143",
+        "partition": 1,
+        "timestamp": 1793136908000,
+        "enrichedAt": 1793136909733,
+        "receivedAt": 1793136909380
+      },
+      {
+        "id": "enwiki:2083692831",
+        "bot": false,
+        "kind": "edit",
+        "wiki": "enwiki",
+        "delta": -114,
+        "title": "EICAR test file",
+        "offset": "3144",
+        "partition": 1,
+        "timestamp": 1793136908000,
+        "enrichedAt": 1793136911332,
+        "receivedAt": 1793136910239
+      },
+      {
+        "id": "ruwiki:545957665",
+        "bot": false,
+        "kind": "edit",
+        "wiki": "ruwiki",
+        "delta": 0,
+        "title": "Ан-140",
+        "offset": "3145",
+        "partition": 1,
+        "timestamp": 1793136900000,
+        "enrichedAt": 1793136911332,
+        "receivedAt": 1793136910288
+      },
+      {
+        "id": "enwiki:2083692834",
+        "bot": false,
+        "kind": "edit",
+        "wiki": "enwiki",
+        "delta": 1,
+        "title": "Marin Karamarko",
+        "offset": "3146",
+        "partition": 1,
+        "timestamp": 1793136907000,
+        "enrichedAt": 1793136911332,
+        "receivedAt": 1793136910539
+      }
+    ],
+    "stats": {
+      "bots": 2151,
+      "late": 2416,
+      "bytes": 1741640,
+      "events": 6190,
+      "startedAt": 1793105907443,
+      "duplicates": 256
+    },
+    "activity": [
+      {
+        "count": 221,
+        "minute": 1793136660000
+      },
+      {
+        "count": 249,
+        "minute": 1793136720000
+      },
+      {
+        "count": 258,
+        "minute": 1793136780000
+      },
+      {
+        "count": 251,
+        "minute": 1793136840000
+      },
+      {
+        "count": 35,
+        "minute": 1793136900000
+      }
+    ],
+    "pipeline": {
+      "lag": 0,
+      "sourceToSinkMs": 10004
+    },
+    "trending": [
+      {
+        "wiki": "bnwiki",
+        "count": 12,
+        "title": "ইয়ামিনী নায়ার",
+        "previous": 0
+      },
+      {
+        "wiki": "eswiki",
+        "count": 3,
+        "title": "Fenerbahçe Spor Kulübü (fútbol)",
+        "previous": 0
+      },
+      {
+        "wiki": "enwiki",
+        "count": 3,
+        "title": "Sermersooq",
+        "previous": 0
+      }
+    ],
+    "languages": [
+      {
+        "wiki": "enwiki",
+        "count": 327
+      },
+      {
+        "wiki": "frwiki",
+        "count": 85
+      },
+      {
+        "wiki": "cewiki",
+        "count": 78
+      },
+      {
+        "wiki": "afwiki",
+        "count": 76
+      },
+      {
+        "wiki": "dewiki",
+        "count": 57
+      },
+      {
+        "wiki": "eswiki",
+        "count": 43
+      }
+    ]
+  },
+  "edits": [
+    {
+      "id": "enwiki:2083692772",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": 40,
+      "title": "Dhukal Wirrpanda",
+      "offset": "3084",
+      "partition": 1,
+      "timestamp": 1793136881000,
+      "enrichedAt": 1793136888930,
+      "receivedAt": 1793136888337
+    },
+    {
+      "id": "eswiki:354122778",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "eswiki",
+      "delta": -1,
+      "title": "Lino Barañao",
+      "offset": "3085",
+      "partition": 1,
+      "timestamp": 1793136886000,
+      "enrichedAt": 1793136888930,
+      "receivedAt": 1793136888440
+    },
+    {
+      "id": "glwiki:29118586",
+      "bot": false,
+      "kind": "new",
+      "wiki": "glwiki",
+      "delta": 595,
+      "title": "Le Bousquet-d'Orb",
+      "offset": "3086",
+      "partition": 1,
+      "timestamp": 1793136886000,
+      "enrichedAt": 1793136890373,
+      "receivedAt": 1793136888935
+    },
+    {
+      "id": "frwiki:585904588",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "frwiki",
+      "delta": 154,
+      "title": "Oscar Martínez (acteur)",
+      "offset": "3087",
+      "partition": 1,
+      "timestamp": 1793136886000,
+      "enrichedAt": 1793136890373,
+      "receivedAt": 1793136888956
+    },
+    {
+      "id": "enwiki:2083692779",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": 0,
+      "title": "Thomas O'Brien Butler",
+      "offset": "3088",
+      "partition": 1,
+      "timestamp": 1793136888000,
+      "enrichedAt": 1793136891206,
+      "receivedAt": 1793136890062
+    },
+    {
+      "id": "cewiki:102711929",
+      "bot": true,
+      "kind": "edit",
+      "wiki": "cewiki",
+      "delta": -52,
+      "title": "Кец Борнье (Валле д'Аоста)",
+      "offset": "3089",
+      "partition": 1,
+      "timestamp": 1793136885000,
+      "enrichedAt": 1793136891206,
+      "receivedAt": 1793136890131
+    },
+    {
+      "id": "enwiki:2083692780",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": 50,
+      "title": "Basílica of the Virgin of Monserrat",
+      "offset": "3090",
+      "partition": 1,
+      "timestamp": 1793136886000,
+      "enrichedAt": 1793136891206,
+      "receivedAt": 1793136890207
+    },
+    {
+      "id": "enwiki:2083692781",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": 234,
+      "title": "George Congdon Gorham",
+      "offset": "3091",
+      "partition": 1,
+      "timestamp": 1793136888000,
+      "enrichedAt": 1793136891206,
+      "receivedAt": 1793136890328
+    },
+    {
+      "id": "enwiki:2083692783",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": 6,
+      "title": "2026–27 EFL Championship",
+      "offset": "3092",
+      "partition": 1,
+      "timestamp": 1793136882000,
+      "enrichedAt": 1793136891206,
+      "receivedAt": 1793136890897
+    },
+    {
+      "id": "cawiki:144725894",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "cawiki",
+      "delta": 990,
+      "title": "Orde de la Rosa Blanca de Finlàndia",
+      "offset": "3093",
+      "partition": 1,
+      "timestamp": 1793136889000,
+      "enrichedAt": 1793136893535,
+      "receivedAt": 1793136891526
+    },
+    {
+      "id": "afwiki:13164163",
+      "bot": true,
+      "kind": "edit",
+      "wiki": "afwiki",
+      "delta": 4,
+      "title": "Nîmes",
+      "offset": "3096",
+      "partition": 1,
+      "timestamp": 1793136888000,
+      "enrichedAt": 1793136894621,
+      "receivedAt": 1793136893427
+    },
+    {
+      "id": "fawiki:107549351",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "fawiki",
+      "delta": 38,
+      "title": "ناهید (خواننده)",
+      "offset": "3097",
+      "partition": 1,
+      "timestamp": 1793136888000,
+      "enrichedAt": 1793136894621,
+      "receivedAt": 1793136893865
+    },
+    {
+      "id": "frwiki:585904596",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "frwiki",
+      "delta": -1,
+      "title": "Furudal",
+      "offset": "3098",
+      "partition": 1,
+      "timestamp": 1793136893000,
+      "enrichedAt": 1793136896100,
+      "receivedAt": 1793136895187
+    },
+    {
+      "id": "dewiki:385983865",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "dewiki",
+      "delta": -540,
+      "title": "Badersdorf",
+      "offset": "3099",
+      "partition": 1,
+      "timestamp": 1793136892000,
+      "enrichedAt": 1793136896100,
+      "receivedAt": 1793136895196
+    },
+    {
+      "id": "cewiki:102711933",
+      "bot": true,
+      "kind": "edit",
+      "wiki": "cewiki",
+      "delta": -52,
+      "title": "Кец Лез Бланц (Валле д'Аоста)",
+      "offset": "3100",
+      "partition": 1,
+      "timestamp": 1793136891000,
+      "enrichedAt": 1793136896100,
+      "receivedAt": 1793136895363
+    },
+    {
+      "id": "enwiki:2083692800",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": -100,
+      "title": "Dre Kirkpatrick Jr",
+      "offset": "3101",
+      "partition": 1,
+      "timestamp": 1793136891000,
+      "enrichedAt": 1793136896967,
+      "receivedAt": 1793136895935
+    },
+    {
+      "id": "plwiki:165482610",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "plwiki",
+      "delta": -135,
+      "title": "Bambi (raperka)",
+      "offset": "3102",
+      "partition": 1,
+      "timestamp": 1793136888000,
+      "enrichedAt": 1793136896967,
+      "receivedAt": 1793136896130
+    },
+    {
+      "id": "dewiki:385983866",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "dewiki",
+      "delta": 0,
+      "title": "Chan Seyha",
+      "offset": "3103",
+      "partition": 1,
+      "timestamp": 1793136895000,
+      "enrichedAt": 1793136896967,
+      "receivedAt": 1793136896158
+    },
+    {
+      "id": "ruwiki:545957658",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "ruwiki",
+      "delta": 67,
+      "title": "Кубок Европейской конфедерации волейбола среди женщин 2001/2002",
+      "offset": "3104",
+      "partition": 1,
+      "timestamp": 1793136893000,
+      "enrichedAt": 1793136896968,
+      "receivedAt": 1793136896166
+    },
+    {
+      "id": "ruwiki:545957662",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "ruwiki",
+      "delta": 947,
+      "title": "Чемпионат Ленинграда по футболу 1933",
+      "offset": "3105",
+      "partition": 1,
+      "timestamp": 1793136893000,
+      "enrichedAt": 1793136900069,
+      "receivedAt": 1793136897815
+    },
+    {
+      "id": "enwiki:2083692811",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": -33,
+      "title": "Geography of Taiwan",
+      "offset": "3114",
+      "partition": 1,
+      "timestamp": 1793136893000,
+      "enrichedAt": 1793136903840,
+      "receivedAt": 1793136902559
+    },
+    {
+      "id": "cawiki:144725895",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "cawiki",
+      "delta": -19,
+      "title": "Xóvar",
+      "offset": "3115",
+      "partition": 1,
+      "timestamp": 1793136896000,
+      "enrichedAt": 1793136903840,
+      "receivedAt": 1793136902812
+    },
+    {
+      "id": "afwiki:13164166",
+      "bot": true,
+      "kind": "edit",
+      "wiki": "afwiki",
+      "delta": 4,
+      "title": "Krugerhuis",
+      "offset": "3116",
+      "partition": 1,
+      "timestamp": 1793136899000,
+      "enrichedAt": 1793136903840,
+      "receivedAt": 1793136903134
+    },
+    {
+      "id": "frwiki:585904602",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "frwiki",
+      "delta": -1,
+      "title": "Boda (commune de Rättvik)",
+      "offset": "3117",
+      "partition": 1,
+      "timestamp": 1793136901000,
+      "enrichedAt": 1793136903840,
+      "receivedAt": 1793136903312
+    },
+    {
+      "id": "eswiki:354122786",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "eswiki",
+      "delta": 8,
+      "title": "El Komanche",
+      "offset": "3118",
+      "partition": 1,
+      "timestamp": 1793136897000,
+      "enrichedAt": 1793136903840,
+      "receivedAt": 1793136903312
+    },
+    {
+      "id": "glwiki:29118592",
+      "bot": false,
+      "kind": "new",
+      "wiki": "glwiki",
+      "delta": 35,
+      "title": "Lo Bosquet d'Òrb",
+      "offset": "3119",
+      "partition": 1,
+      "timestamp": 1793136902000,
+      "enrichedAt": 1793136903840,
+      "receivedAt": 1793136903515
+    },
+    {
+      "id": "bnwiki:21615355",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "bnwiki",
+      "delta": 4,
+      "title": "ইয়ামিনী নায়ার",
+      "offset": "3120",
+      "partition": 1,
+      "timestamp": 1793136898000,
+      "enrichedAt": 1793136904782,
+      "receivedAt": 1793136903792
+    },
+    {
+      "id": "dewiki:385983872",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "dewiki",
+      "delta": 29,
+      "title": "Lexicon technicum",
+      "offset": "3121",
+      "partition": 1,
+      "timestamp": 1793136903000,
+      "enrichedAt": 1793136904782,
+      "receivedAt": 1793136904293
+    },
+    {
+      "id": "cewiki:102711939",
+      "bot": true,
+      "kind": "edit",
+      "wiki": "cewiki",
+      "delta": -52,
+      "title": "Кец Энри (Валле д'Аоста)",
+      "offset": "3122",
+      "partition": 1,
+      "timestamp": 1793136899000,
+      "enrichedAt": 1793136904782,
+      "receivedAt": 1793136904483
+    },
+    {
+      "id": "afwiki:13164167",
+      "bot": true,
+      "kind": "edit",
+      "wiki": "afwiki",
+      "delta": 4,
+      "title": "TSV Aindling",
+      "offset": "3123",
+      "partition": 1,
+      "timestamp": 1793136901000,
+      "enrichedAt": 1793136904782,
+      "receivedAt": 1793136904615
+    },
+    {
+      "id": "jawiki:182628198",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "jawiki",
+      "delta": 30,
+      "title": "旗多様体",
+      "offset": "3137",
+      "partition": 1,
+      "timestamp": 1793136904000,
+      "enrichedAt": 1793136909733,
+      "receivedAt": 1793136908441
+    },
+    {
+      "id": "nlwiki:149915135",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "nlwiki",
+      "delta": 0,
+      "title": "Lijst van spelers van FC Cartagena",
+      "offset": "3138",
+      "partition": 1,
+      "timestamp": 1793136905000,
+      "enrichedAt": 1793136909733,
+      "receivedAt": 1793136908441
+    },
+    {
+      "id": "enwiki:2083692824",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": 56,
+      "title": "Hajdú-Bihar County Assembly",
+      "offset": "3139",
+      "partition": 1,
+      "timestamp": 1793136903000,
+      "enrichedAt": 1793136909733,
+      "receivedAt": 1793136908647
+    },
+    {
+      "id": "itwiki:370895404",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "itwiki",
+      "delta": -2,
+      "title": "Vittorio Gregotti",
+      "offset": "3140",
+      "partition": 1,
+      "timestamp": 1793136906000,
+      "enrichedAt": 1793136909733,
+      "receivedAt": 1793136908917
+    },
+    {
+      "id": "enwiki:2083692826",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": 21,
+      "title": "Student List",
+      "offset": "3141",
+      "partition": 1,
+      "timestamp": 1793136901000,
+      "enrichedAt": 1793136909733,
+      "receivedAt": 1793136909341
+    },
+    {
+      "id": "afwiki:13164168",
+      "bot": true,
+      "kind": "edit",
+      "wiki": "afwiki",
+      "delta": 4,
+      "title": "Northeast Kingdom",
+      "offset": "3142",
+      "partition": 1,
+      "timestamp": 1793136905000,
+      "enrichedAt": 1793136909733,
+      "receivedAt": 1793136909375
+    },
+    {
+      "id": "jawiki:182628199",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "jawiki",
+      "delta": 183,
+      "title": "イリュージョニスト",
+      "offset": "3143",
+      "partition": 1,
+      "timestamp": 1793136908000,
+      "enrichedAt": 1793136909733,
+      "receivedAt": 1793136909380
+    },
+    {
+      "id": "enwiki:2083692831",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": -114,
+      "title": "EICAR test file",
+      "offset": "3144",
+      "partition": 1,
+      "timestamp": 1793136908000,
+      "enrichedAt": 1793136911332,
+      "receivedAt": 1793136910239
+    },
+    {
+      "id": "ruwiki:545957665",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "ruwiki",
+      "delta": 0,
+      "title": "Ан-140",
+      "offset": "3145",
+      "partition": 1,
+      "timestamp": 1793136900000,
+      "enrichedAt": 1793136911332,
+      "receivedAt": 1793136910288
+    },
+    {
+      "id": "enwiki:2083692834",
+      "bot": false,
+      "kind": "edit",
+      "wiki": "enwiki",
+      "delta": 1,
+      "title": "Marin Karamarko",
+      "offset": "3146",
+      "partition": 1,
+      "timestamp": 1793136907000,
+      "enrichedAt": 1793136911332,
+      "receivedAt": 1793136910539
+    }
+  ]
+}

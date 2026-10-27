@@ -1,0 +1,67 @@
+{
+  "checkedAt": "2026-10-27T21:35:19.009Z",
+  "processedEvents": 6190,
+  "revision": 134,
+  "frameBytes": 3011,
+  "stateBytes": 39221,
+  "schemaBytes": 598016,
+  "databaseBytes": 125712051,
+  "frames": 45,
+  "minutes": 17,
+  "duplicatesSuppressed": 256,
+  "lateEvents": 2416,
+  "groups": [
+    {
+      "groupId": "wiki-enrich-v1",
+      "partitions": [
+        {
+          "partition": 0,
+          "nextOffset": "3053",
+          "lag": 0
+        },
+        {
+          "partition": 1,
+          "nextOffset": "3057",
+          "lag": 0
+        }
+      ],
+      "lag": 0
+    },
+    {
+      "groupId": "wiki-display-v1",
+      "partitions": [
+        {
+          "partition": 0,
+          "nextOffset": "3246",
+          "lag": 15
+        },
+        {
+          "partition": 1,
+          "nextOffset": "3078",
+          "lag": 20
+        }
+      ],
+      "lag": 35
+    }
+  ],
+  "topics": [
+    {
+      "name": "wiki.edits.dlq",
+      "partitions": 2
+    },
+    {
+      "name": "wiki.edits.raw",
+      "partitions": 2
+    },
+    {
+      "name": "wiki.edits.enriched",
+      "partitions": 2
+    }
+  ],
+  "sourceToStorageMs": 10004,
+  "recovery": {
+    "beforeEvents": 2844,
+    "afterEvents": 6190,
+    "offsetsPreserved": true
+  }
+}

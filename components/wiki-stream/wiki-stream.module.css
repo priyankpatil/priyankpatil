@@ -1,0 +1,47 @@
+.dashboard { --wiki-green: #168557; --wiki-warm: #c25135; }
+:global(.dark) .dashboard { --wiki-green: #5bd5a3; --wiki-warm: #f2a18a; }
+.status { display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--muted); }
+.status > span { width:7px; height:7px; border-radius:50%; background:var(--soft); }
+.live { color:var(--wiki-green); }
+.live > span { background:var(--wiki-green); box-shadow:0 0 0 4px color-mix(in srgb,var(--wiki-green) 12%,transparent); }
+.stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-block:1px solid var(--border); margin-bottom:26px; }
+.stats > div { padding:24px 28px; border-right:1px solid var(--border); }
+.stats > div:first-child { padding-left:0; }.stats > div:last-child { border:0; }
+.stats p { color:var(--muted); font-size:12px; margin-bottom:8px; }
+.stats strong { display:block; font-size:clamp(26px,4vw,40px); letter-spacing:-.04em; font-weight:500; font-variant-numeric:tabular-nums; line-height:1.2; }
+.stats small { font-size:16px; letter-spacing:0; }.stats i { font-style:normal; color:var(--soft); font-weight:300; }
+.stats span { display:block; color:var(--soft); font-size:11px; margin-top:8px; line-height:1.6; }
+.mainGrid { display:grid; grid-template-columns:minmax(0,1.8fr) minmax(260px,1fr); gap:20px; align-items:start; }
+.feedPanel,.sidePanel,.trace { border:1px solid var(--border); background:var(--surface); border-radius:18px; overflow:hidden; }
+.sidePanel,.trace { padding:24px; }
+.panelHeader { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:24px; }
+.count { font-size:10px; color:var(--soft); font-family:var(--font-mono),monospace; white-space:nowrap; }
+.filters { display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding:12px 20px; border-block:1px solid var(--border); background:var(--surface-muted); }
+.filters select { border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:6px; padding:6px 8px; font-size:12px; max-width:150px; }
+.filters input { accent-color:var(--accent); }
+.feed { height:510px; overflow:auto; overscroll-behavior:contain; }
+.edit { width:100%; display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:12px; text-align:left; padding:16px 20px; border-bottom:1px solid var(--border); animation:arrive .35s ease both; }
+.edit:hover,.selected { background:var(--accent-soft); }
+.languageCode { display:grid; place-items:center; width:32px; height:34px; border:1px solid var(--border); border-radius:9px; color:var(--soft); font-family:var(--font-mono),monospace; font-size:10px; text-transform:uppercase; }
+.articleTitle { font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.editMeta { display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; color:var(--soft); font-size:10px; }
+.delta { color:var(--wiki-green); font-size:12px; text-align:right; font-family:var(--font-mono),monospace; white-space:nowrap; }
+.delta small { display:block; color:var(--soft); font-size:9px; margin-top:3px; }.negative { color:var(--wiki-warm); }
+.newBadge { flex-shrink:0; font-size:8px; letter-spacing:.04em; color:var(--wiki-green); padding:2px 4px; border:1px solid var(--border); border-radius:4px; }
+.feedFooter { display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; padding:14px 20px; font-size:9px; color:var(--soft); border-top:1px solid var(--border); }
+.languageRow { margin-bottom:15px; }.languageRow > div:first-child { display:flex; justify-content:space-between; font-size:12px; margin-bottom:7px; }.languageRow > div:first-child > span:last-child { color:var(--soft); font-variant-numeric:tabular-nums; }
+.track { height:5px; background:var(--surface-muted); border-radius:4px; overflow:hidden; }.track > div { height:100%; border-radius:4px; background:var(--accent); transition:width 1s ease; }
+.trending { display:flex; flex-direction:column; gap:5px; padding-block:10px; border-bottom:1px solid var(--border); font-size:13px; }.trending small { color:var(--soft); font-size:11px; }
+.traceSteps { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-top:24px; }
+.traceSteps > div { border-top:2px solid var(--border); padding-top:12px; }.traceSteps span { font-family:var(--font-mono),monospace; font-size:10px; color:var(--accent); }.traceSteps strong { display:block; font-size:12px; margin-block:8px 6px; }.traceSteps small { display:block; color:var(--soft); font-size:11px; overflow-wrap:anywhere; }
+.sparkline { height:90px; display:flex; gap:5px; align-items:end; }.sparkline > div { flex:1; max-width:36px; background:var(--accent); border-radius:4px 4px 0 0; opacity:.7; }
+.replay { padding:28px; border:1px solid var(--border); border-radius:18px; background:linear-gradient(145deg,var(--surface),var(--surface-muted)); }
+.replayGrid { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:28px; margin-top:28px; }
+.partitions { display:flex; flex-direction:column; gap:20px; }.partition { min-width:0; }
+.recordTrack { display:flex; gap:3px; height:24px; }.recordTrack > span { flex:1; background:var(--border-strong); border-radius:3px; transition:background .2s ease; }.recordTrack > .consumed { background:var(--accent); }
+.replayOutput { padding:20px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+@media(max-width:650px) { .replayGrid { grid-template-columns:1fr; gap:20px; }.replay { padding:20px; } }
+@keyframes arrive { from { opacity:0; transform:translateY(-7px); } to { opacity:1; transform:translateY(0); } }
+@media(max-width:850px) { .mainGrid { grid-template-columns:1fr; }.mainGrid aside { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }.stats > div { padding-inline:16px; } }
+@media(max-width:560px) { .mainGrid aside { grid-template-columns:1fr; }.stats { gap:0; }.stats > div { padding:18px 10px; }.stats p { font-size:10px; }.stats strong { font-size:26px; }.stats small { font-size:11px; }.stats span { font-size:9px; }.edit { padding:14px 12px; gap:8px; grid-template-columns:28px minmax(0,1fr) auto; }.languageCode { width:26px; height:30px; font-size:9px; }.articleTitle { font-size:12px; }.delta { font-size:10px; }.traceSteps { grid-template-columns:repeat(2,minmax(0,1fr)); }.filters { padding-inline:12px; }.filters > span { display:none; }.panelHeader,.sidePanel,.trace { padding:20px; } }
+@media(prefers-reduced-motion:reduce) { .edit { animation:none; }.track > div { transition:none; } }

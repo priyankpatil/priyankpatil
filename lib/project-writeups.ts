@@ -21,6 +21,20 @@ export interface ProjectWriteup {
 
 export const projectWriteups: ProjectWriteup[] = [
   {
+    id: "wiki-stream",
+    tagline: "A live window into Wikipedia, with the streaming pipeline visible beneath it.",
+    problem: "Build an engaging real-time experience that makes Kafka concepts observable while keeping storage and delivery within a small, explicit budget.",
+    approach: [
+      { title: "Capture real edits", body: "Project Wikipedia article changes from Wikimedia EventStreams into small events. Preserve a stable event ID and checkpoint after Kafka acknowledgement." },
+      { title: "Process independently", body: "Separate enrichment and display consumers maintain their own offsets. The sink persists aggregate state and offsets together before committing to Kafka." },
+      { title: "Bound the footprint", body: "Use fixed database slots for ten minutes of sampled feed batches and 24 hours of minute summaries. Enforce schema, database and read-response budgets." },
+    ],
+    outcomes: [ { value: "5 seconds", label: "Display batch interval" }, { value: "4 KiB", label: "Maximum wire frame" }, { value: "120 slots", label: "Bounded recent feed" } ],
+    reflection: "A live feed alone does not demonstrate reliable streaming. The important behavior is how events resume, how consumers recover, and how retries interact with counters. Recorded playback is clearly distinguished from fresh live output.",
+    architectureNodes: [ { label: "Wikimedia", sublabel: "Public SSE" }, { label: "Aiven Kafka", sublabel: "Raw edits" }, { label: "Enrichment", sublabel: "Independent consumer" }, { label: "Supabase", sublabel: "Bounded display state" }, { label: "Browser", sublabel: "Sampled live feed" } ],
+    architectureCaption: "Real events → cloud Kafka → enrichment → aggregate and display consumer → bounded Supabase state → cached five-second API responses.",
+  },
+  {
     id: "genai-analytics-agent",
     tagline: "Exploring how LLM-powered interfaces can eliminate the gap between a business question and a data answer.",
     problem:

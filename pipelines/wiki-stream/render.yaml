@@ -1,0 +1,23 @@
+# Blueprint creates a free WEB service (free background workers are unavailable).
+# Free Render web services sleep after 15 minutes without inbound traffic.
+# Deploy manually only after merging this code; never add secrets to this file.
+services:
+  - type: web
+    name: wikipedia-kafka-worker
+    runtime: docker
+    plan: free
+    dockerfilePath: ./pipelines/wiki-stream/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: KAFKA_BROKERS
+        sync: false
+      - key: KAFKA_CA
+        sync: false
+      - key: KAFKA_CERT
+        sync: false
+      - key: KAFKA_KEY
+        sync: false
+      - key: WIKISTREAM_DATABASE_URL
+        sync: false

@@ -11,6 +11,18 @@ export interface ProjectItem {
 
 export const projectItems: ProjectItem[] = [
   {
+    id: "wiki-stream",
+    title: "Wikipedia Live",
+    summary:
+      "A live window into Wikipedia edits, built around a cloud Apache Kafka pipeline with independent consumers, event tracing and bounded Supabase storage.",
+    outcome:
+      "Explore the edit stream, language activity and processing path. A labelled recorded Kafka replay is available while the live pipeline is offline.",
+    year: "2026",
+    org: "Personal project",
+    tags: ["Apache Kafka", "Streaming", "TypeScript", "Supabase"],
+    demoUrl: "/projects/wiki-stream",
+  },
+  {
     id: "genai-analytics-agent",
     title: "GenAI Analytics Agent",
     summary:

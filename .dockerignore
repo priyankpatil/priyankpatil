@@ -1,0 +1,17 @@
+.git
+.env
+.env.*
+!.env.example
+node_modules
+.next
+**/.secrets
+**/*.pem
+**/*.key
+**/*.cert
+**/.data
+.claude
+.codex
+.agents
+supabase
+content
+public

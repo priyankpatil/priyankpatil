@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { articleUrl, type DisplayEdit, type WikiFrame, type WikiResponse } from "@/lib/wiki-stream/types";
 import { previewCapturedAt, previewEdits, previewFrame } from "@/lib/wiki-stream/preview";
 import styles from "./wiki-stream.module.css";
+import { shouldAutoWake } from "@/lib/wiki-stream/wake-policy";
 
 const editions: Record<string, string> = { en: "English", de: "German", fr: "French", es: "Spanish", ja: "Japanese", zh: "Chinese", ru: "Russian", ar: "Arabic", vi: "Vietnamese", ce: "Chechen", bg: "Bulgarian", pl: "Polish", ca: "Catalan", bn: "Bengali", nl: "Dutch", ko: "Korean", ta: "Tamil", cs: "Czech", fa: "Persian", it: "Italian", ceb: "Cebuano" };
 const language = (wiki: string) => { const code = wiki.replace(/wiki$/, ""); return editions[code] ?? code.toUpperCase(); };
@@ -25,6 +26,10 @@ export default function WikiStream() {
   const [edition, setEdition] = useState("all");
   const [humans, setHumans] = useState(false);
   const [now, setNow] = useState<number | null>(null);
+  const [wakeState, setWakeState] = useState<"idle" | "requesting" | "waiting" | "retry">("idle");
+  const wakeAttempted = useRef(false);
+  const wakeController = useRef<AbortController | null>(null);
+  const hasFreshFeed = useRef(false);
   const queue = useRef<DisplayEdit[]>([]);
   const known = useRef(new Set(previewFrame.edits.slice(0, 6).map((e) => e.id)));
   const previewIndex = useRef(6);
@@ -33,6 +38,28 @@ export default function WikiStream() {
   const recorded = !response.frame;
   const stale = Boolean(response.frame && (response.mode === "stale" || (now !== null && now - response.frame.at > 30_000)));
   const running = !paused && visible;
+
+  const startLiveFeed = useCallback(async () => {
+    if (wakeController.current) return;
+    wakeAttempted.current = true;
+    const controller = new AbortController();
+    wakeController.current = controller;
+    setWakeState("requesting");
+    const timeout = setTimeout(() => controller.abort(), 12_000);
+    try {
+      const result = await fetch("/api/wiki-stream/wake", { method: "POST", signal: controller.signal });
+      setWakeState(hasFreshFeed.current ? "idle" : result.ok ? "waiting" : "retry");
+    } catch { setWakeState(hasFreshFeed.current ? "idle" : "retry"); }
+    finally { clearTimeout(timeout); wakeController.current = null; }
+  }, []);
+
+  useEffect(() => () => { wakeController.current?.abort(); }, []);
+
+  useEffect(() => {
+    if (wakeState !== "waiting") return;
+    const timer = setTimeout(() => setWakeState("retry"), 90_000);
+    return () => clearTimeout(timer);
+  }, [wakeState]);
 
   useEffect(() => {
     const update = () => setVisible(!document.hidden);
@@ -55,6 +82,9 @@ export default function WikiStream() {
         if (contentMode.current !== currentMode) { queue.current = []; known.current.clear(); setFeed([]); }
         contentMode.current = currentMode;
         setResponse(next);
+        hasFreshFeed.current = Boolean(next.mode === "live" && next.frame && Date.now() - next.frame.at <= 30_000);
+        if (shouldAutoWake(next) && !wakeAttempted.current) void startLiveFeed();
+        else if (hasFreshFeed.current) setWakeState("idle");
         if (next.mode === "budget") return;
         if (next.frame) {
           for (const edit of next.frame.edits) if (!known.current.has(edit.id)) { known.current.add(edit.id); queue.current.push(edit); }
@@ -66,7 +96,7 @@ export default function WikiStream() {
     }
     void poll();
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [running]);
+  }, [running, startLiveFeed]);
 
   useEffect(() => {
     if (!running) return;
@@ -95,6 +125,15 @@ export default function WikiStream() {
       <button type="button" className="pill-link text-xs" onClick={() => setPaused((p) => !p)}>{paused ? "▶ Resume display" : "Ⅱ Pause display"}</button>
     </div>
     {recorded && response.mode !== "preview" && <p className="mb-4 rounded-xl border border-border bg-surface-muted px-4 py-3 text-sm text-muted">The live feed is resting. Explore a recorded Wikipedia sample below.</p>}
+    {!paused && (stale || response.mode === "unavailable" || wakeState !== "idle") && response.mode !== "budget" && (
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-muted px-4 py-3">
+        <p className="text-sm leading-6 text-muted" role="status">{wakeState === "requesting" || wakeState === "waiting"
+          ? "Starting the live feed… this can take about a minute. Fresh edits will appear automatically."
+          : wakeState === "retry" ? "The live feed hasn’t resumed yet. You can try starting it again."
+          : "The live stream is idle. Start it to bring in fresh Wikipedia edits."}</p>
+        <button type="button" className="pill-link text-xs disabled:cursor-wait disabled:opacity-60" disabled={wakeState === "requesting" || wakeState === "waiting"} onClick={() => void startLiveFeed()}>{wakeState === "requesting" || wakeState === "waiting" ? "Starting…" : "Start live feed"}</button>
+      </div>
+    )}
 
     <div className={styles.stats}>
       <div><p>Article edits observed</p><strong>{number(frame.stats.events)}</strong><span>{recorded ? "Pipeline total at the time of recording" : "Accepted edits across active capture windows"}</span></div>

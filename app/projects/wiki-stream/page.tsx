@@ -3,8 +3,8 @@ import WikiStream from "@/components/wiki-stream/WikiStream";
 import WikiDataCard from "@/components/wiki-stream/WikiDataCard";
 
 export const metadata = {
-  title: "Wikipedia Live · Kafka Streaming",
-  description: "Watch Wikipedia change through an Apache Kafka streaming pipeline: live edits, language activity, event tracing and bounded storage.",
+  title: "Wikipedia Data Streaming using Apache Kafka",
+  description: "A real-time data pipeline for processing Wikipedia edits with Apache Kafka: event capture, enrichment, aggregation, and a live dashboard with activity and processing metrics.",
 };
 
 export default function WikiStreamPage() {
@@ -14,10 +14,10 @@ export default function WikiStreamPage() {
       <main className="page-pad">
         <div className="shell">
           <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-            <header className="max-w-2xl">
-              <p className="kicker mb-4">A living encyclopedia · An Apache Kafka project</p>
-              <h1 className="heading-lg font-semibold tracking-tight">Wikipedia,<br /><span className="text-accent">as it happens.</span></h1>
-              <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted">Somewhere, someone is changing what we know. Follow the edits, watch languages light up, and trace a change through the stream.</p>
+            <header className="max-w-3xl">
+              <p className="kicker mb-3">Project · Real-time data pipeline</p>
+              <h1 className="heading-lg font-semibold">Wikipedia Data Streaming <span className="text-accent">using Apache Kafka</span></h1>
+              <p className="body-lg mt-4">A real-time data pipeline for processing Wikipedia edits with Apache Kafka. This project walks through building a producer that captures article changes, consumers that enrich and aggregate the events, and a live dashboard that displays the results. It also provides metrics to monitor activity, measure processing delay, and trace events through the pipeline.</p>
             </header>
             <a className="pill-link text-xs" href="https://github.com/priyankpatil/priyankpatil/tree/master/pipelines/wiki-stream" target="_blank" rel="noopener noreferrer">Explore the pipeline ↗</a>
           </div>

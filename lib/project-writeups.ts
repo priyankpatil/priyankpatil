@@ -22,7 +22,7 @@ export interface ProjectWriteup {
 export const projectWriteups: ProjectWriteup[] = [
   {
     id: "wiki-stream",
-    tagline: "A live window into Wikipedia, with the streaming pipeline visible beneath it.",
+    tagline: "A real-time data pipeline for processing Wikipedia edits with Apache Kafka, from event capture and enrichment to aggregation and a live dashboard.",
     problem: "Build an engaging real-time experience that makes Kafka concepts observable while keeping storage and delivery within a small, explicit budget.",
     approach: [
       { title: "Capture real edits", body: "Project Wikipedia article changes from Wikimedia EventStreams into small events. Preserve a stable event ID and checkpoint after Kafka acknowledgement." },

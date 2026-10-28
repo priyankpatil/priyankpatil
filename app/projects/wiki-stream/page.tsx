@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import WikiStream from "@/components/wiki-stream/WikiStream";
+import WikiDataCard from "@/components/wiki-stream/WikiDataCard";
 
 export const metadata = {
   title: "Wikipedia Live · Kafka Streaming",
@@ -20,6 +21,7 @@ export default function WikiStreamPage() {
             </header>
             <a className="pill-link text-xs" href="https://github.com/priyankpatil/priyankpatil/tree/master/pipelines/wiki-stream" target="_blank" rel="noopener noreferrer">Explore the pipeline ↗</a>
           </div>
+          <WikiDataCard />
           <WikiStream />
           <section className="mt-16 grid gap-8 border-t border-border pt-10 md:grid-cols-[1fr_2fr]">
             <div><p className="kicker mb-3">Under the surface</p><h2 className="text-2xl font-semibold tracking-tight">Every edit has a journey.</h2></div>

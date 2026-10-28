@@ -103,10 +103,14 @@ npm run build
 
 - Deploy the provided worker container using [DEPLOY.md](DEPLOY.md); no worker host account was available in this session.
 - Monitor full-broker ingress/egress and p50/p95 latency over a longer run.
-- The page includes an isolated browser replay of actual Kafka records with per-partition cursors. It does not change live consumer groups.
+- The page keeps recent edit activity below the live dashboard. Recorded Kafka events provide labelled fallback playback when the live pipeline is offline.
 
 Sources: [Wikimedia EventStreams](https://wikitech.wikimedia.org/wiki/EventStreams), [Aiven free Kafka](https://aiven.io/docs/products/kafka/free-tier/kafka-free-tier), [Supabase egress](https://supabase.com/docs/guides/platform/manage-your-usage/egress).
 
 ## Verified live run
 
-`verification.json` records a real cloud run: both consumer groups, real offsets, bounded frames/state and actual storage usage. `npm run wiki:verify -- --capture` refreshes it and the recorded Kafka sample. `npm run wiki:test` includes partition coalescing, failed-persistence acknowledgement isolation, replay cursors, long-idle resume policy and worst-case multilingual state sizes. The frontend replay runs entirely in the browser and consumes no extra Supabase queries.
+`verification.json` records a real cloud run: both consumer groups, real offsets, bounded frames/state and actual storage usage. `npm run wiki:verify -- --capture` refreshes it and the recorded Kafka sample. `npm run wiki:test` includes partition coalescing, failed-persistence acknowledgement isolation, replay cursors, long-idle resume policy and worst-case multilingual state sizes. Recorded fallback playback runs in the browser and consumes no extra Supabase queries.
+
+## Architecture card
+
+Below recent edit activity, an SVG diagram shows the source, producer, raw/enriched Kafka topics, consumers, Supabase and the cached website API. Slow moving segments illustrate direction; they do not represent measured live traffic or make additional API calls. A pause control and reduced-motion support are included, with a vertical layout on smaller screens.

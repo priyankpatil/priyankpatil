@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { articleUrl, type DisplayEdit, type WikiFrame, type WikiResponse } from "@/lib/wiki-stream/types";
 import { previewCapturedAt, previewEdits, previewFrame } from "@/lib/wiki-stream/preview";
 import styles from "./wiki-stream.module.css";
-import ReplayLab from "./ReplayLab";
 
 const editions: Record<string, string> = { en: "English", de: "German", fr: "French", es: "Spanish", ja: "Japanese", zh: "Chinese", ru: "Russian", ar: "Arabic", vi: "Vietnamese", ce: "Chechen", bg: "Bulgarian", pl: "Polish", ca: "Catalan", bn: "Bengali", nl: "Dutch", ko: "Korean", ta: "Tamil", cs: "Czech", fa: "Persian", it: "Italian", ceb: "Cebuano" };
 const language = (wiki: string) => { const code = wiki.replace(/wiki$/, ""); return editions[code] ?? code.toUpperCase(); };
@@ -25,7 +24,6 @@ export default function WikiStream() {
   const [visible, setVisible] = useState(true);
   const [edition, setEdition] = useState("all");
   const [humans, setHumans] = useState(false);
-  const [selected, setSelected] = useState<DisplayEdit | null>(null);
   const [now, setNow] = useState<number | null>(null);
   const queue = useRef<DisplayEdit[]>([]);
   const known = useRef(new Set(previewFrame.edits.slice(0, 6).map((e) => e.id)));
@@ -54,7 +52,7 @@ export default function WikiStream() {
         const next = await result.json() as WikiResponse;
         if (controller.signal.aborted) return;
         const currentMode = next.frame ? "pipeline" : "preview";
-        if (contentMode.current !== currentMode) { queue.current = []; known.current.clear(); setFeed([]); setSelected(null); }
+        if (contentMode.current !== currentMode) { queue.current = []; known.current.clear(); setFeed([]); }
         contentMode.current = currentMode;
         setResponse(next);
         if (next.mode === "budget") return;
@@ -87,7 +85,6 @@ export default function WikiStream() {
   const maxLanguage = Math.max(1, ...frame.languages.map((l) => l.count));
   const botPct = frame.stats.events ? Math.round(frame.stats.bots / frame.stats.events * 100) : 0;
   const status = paused ? "Display paused" : recorded ? "Recorded Kafka run" : stale ? "Last received batch" : "Live from the pipeline";
-  const selectedFromKafka = Boolean(selected && selected.partition >= 0);
 
   return <div className={styles.dashboard}>
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -112,17 +109,17 @@ export default function WikiStream() {
           <label className="sr-only" htmlFor="wiki-language">Language edition</label>
           <select id="wiki-language" value={edition} onChange={(e) => setEdition(e.target.value)}><option value="all">All editions</option>{editionOptions.map((wiki) => <option key={wiki} value={wiki}>{language(wiki)}</option>)}</select>
           <label className="flex cursor-pointer items-center gap-2 text-xs text-muted"><input type="checkbox" checked={humans} onChange={(e) => setHumans(e.target.checked)} /> Humans only</label>
-          <span className="ml-auto text-xs text-soft">Select an edit to trace it</span>
+          <span className="ml-auto text-xs text-soft">Open an article on Wikipedia ↗</span>
         </div>
         <div className={styles.feed} role="region" aria-label="Sampled Wikipedia edits" tabIndex={0}>
-          {filtered.slice(0, 12).map((edit) => <button type="button" key={edit.id} className={`${styles.edit} ${selected?.id === edit.id ? styles.selected : ""}`} onClick={() => setSelected(edit)} aria-label={`Trace ${edit.title}, ${language(edit.wiki)}`}>
+          {filtered.slice(0, 12).map((edit) => <a key={edit.id} className={styles.edit} href={articleUrl(edit)} target="_blank" rel="noopener noreferrer" aria-label={`Read ${edit.title} on ${language(edit.wiki)} Wikipedia (opens in a new tab)`}>
             <span className={styles.languageCode}>{edit.wiki.replace(/wiki$/, "").slice(0, 3)}</span>
             <span className="min-w-0"><span className="flex items-center gap-2"><span className={styles.articleTitle}>{edit.title}</span>{edit.kind === "new" && <span className={styles.newBadge}>NEW</span>}</span><span className={styles.editMeta}>{language(edit.wiki)} <span>·</span> {edit.bot ? "Bot" : "Human"} <span>·</span> {now ? time(edit.timestamp) : "Source timestamp"}</span></span>
             <span className={`${styles.delta} ${edit.delta < 0 ? styles.negative : ""}`}>{edit.delta >= 0 ? "+" : ""}{number(edit.delta)}<small> bytes</small></span>
-          </button>)}
+          </a>)}
           {!filtered.length && <p className="p-10 text-center text-sm text-muted">No sampled edits match this filter yet. Try another edition or all editors.</p>}
         </div>
-        <div className={styles.feedFooter}><span>Sampled article edits · titles link through the trace panel</span><span>{recorded ? "Recorded source data" : "Up to 10 edits / batch"}</span></div>
+        <div className={styles.feedFooter}><span>Sampled article edits · select an article to open Wikipedia</span><span>{recorded ? "Recorded source data" : "Up to 10 edits / batch"}</span></div>
       </section>
 
       <aside className="flex min-w-0 flex-col gap-5">
@@ -137,22 +134,8 @@ export default function WikiStream() {
       </aside>
     </div>
 
-    <section className={`${styles.trace} mt-5`} aria-labelledby="wiki-trace-heading">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="kicker mb-2">Follow the event</p><h2 id="wiki-trace-heading" className="text-xl font-semibold">{selected ? selected.title : "One edit. Every step."}</h2></div>{selected && <a className="pill-link text-xs" href={articleUrl(selected)} target="_blank" rel="noopener noreferrer">Read on Wikipedia ↗</a>}</div>
-      {selected ? <>
-        <div className={styles.traceSteps}>
-          <div><span>01</span><strong>Wikipedia</strong><small>{now ? time(selected.timestamp) : "Event time"}</small></div>
-          <div><span>02</span><strong>Producer</strong><small>{now ? time(selected.receivedAt) : "Captured at source"}</small></div>
-          <div><span>03</span><strong>Kafka → enrich</strong><small>{selectedFromKafka ? time(selected.enrichedAt) : "Not part of this capture"}</small></div>
-          <div><span>04</span><strong>Display consumer</strong><small>{selectedFromKafka ? `Partition ${selected.partition} · offset ${selected.offset}` : "Recorded source preview"}</small></div>
-        </div>
-        <p className="mt-4 break-all font-mono text-xs text-soft">Event {selected.id}{selectedFromKafka ? " · enriched-topic offset" : " · no Kafka processing claimed"}</p>
-      </> : <p className="mt-4 text-sm leading-6 text-muted">Select any edit in the feed to inspect its source timestamp and processing path.</p>}
-    </section>
-
     <section className={`${styles.sidePanel} mt-5 grid gap-6 md:grid-cols-[1fr_2fr]`}>
       <div><p className="kicker mb-2">The stream’s pulse</p><h2 className="text-lg font-semibold">Recent edit activity</h2><p className="mt-2 text-xs leading-5 text-soft">Event-time minute buckets; events over one minute late remain in totals. Tallies cover accepted Wikipedia article edits.</p></div><Sparkline frame={frame} />
     </section>
-    <ReplayLab />
   </div>;
 }

@@ -17,7 +17,7 @@ export default function WikiStreamPage() {
             <header className="max-w-3xl">
               <p className="kicker mb-3">Project · Real-time data pipeline</p>
               <h1 className="heading-lg font-semibold">Wikipedia Data Streaming <span className="text-accent">using Apache Kafka</span></h1>
-              <p className="body-lg mt-4">A real-time data pipeline for processing Wikipedia edits with Apache Kafka. This project walks through building a producer that captures article changes, consumers that enrich and aggregate the events, and a live dashboard that displays the results. It also provides metrics to monitor activity, measure processing delay, and trace events through the pipeline.</p>
+              <p className="body-lg mt-4">A real-time data pipeline for processing Wikipedia edits with Apache Kafka. This project walks through building a producer that captures article changes, consumers that enrich and aggregate the events, and a live dashboard that displays the results. It also provides metrics to monitor activity, measure processing delay, and compare activity across language editions.</p>
             </header>
             <a className="pill-link text-xs" href="https://github.com/priyankpatil/priyankpatil/tree/master/pipelines/wiki-stream" target="_blank" rel="noopener noreferrer">Explore the pipeline ↗</a>
           </div>

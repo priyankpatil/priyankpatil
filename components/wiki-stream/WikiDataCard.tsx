@@ -45,7 +45,7 @@ function SampleEvent() {
       <div className="space-y-4 text-sm leading-relaxed text-muted">
         <div><h3 className="font-semibold text-text">One real article edit</h3><p className="mt-2">A human edited <strong className="font-medium text-text">{sample.title}</strong> on English Wikipedia. The article grew from {sample.oldLength.toLocaleString("en-US")} to {sample.newLength.toLocaleString("en-US")} bytes: a change of <strong className="font-medium text-text">+{sample.newLength - sample.oldLength} bytes</strong>.</p></div>
         <div><h3 className="font-semibold text-text">Source fields, kept small</h3><p className="mt-2"><code className="text-xs">timestamp</code> is the source time in milliseconds. The ID combines the wiki name and Wikimedia&apos;s change ID. This trimmed event keeps the fields used by this project.</p></div>
-        <div><h3 className="font-semibold text-text">Then the pipeline takes over</h3><p className="mt-2">Our producer recorded arrival at <time dateTime={new Date(receivedAt).toISOString()}>{new Date(receivedAt).toISOString().slice(11, 23)} UTC</time>. Kafka positions and the enrichment timestamp are added later. Select an edit in the live feed below to see its processing path.</p></div>
+        <div><h3 className="font-semibold text-text">Then the pipeline takes over</h3><p className="mt-2">Our producer recorded arrival at <time dateTime={new Date(receivedAt).toISOString()}>{new Date(receivedAt).toISOString().slice(11, 23)} UTC</time>. Kafka positions and the enrichment timestamp are added later. The live feed below links each sampled edit to its Wikipedia article.</p></div>
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ Existing database usage before initialization was approximately 125 MB. The live
 | Frontend and cached read API | Live API and recorded Kafka replay implemented; HTTP/build checks pass; browser visual QA unavailable |
 | Always-on worker host | Container, health endpoint, minimal secret export and free Render deployment guide ready; account deployment pending |
 | Failure/recovery exercise and longer-run profiling | Recovery/counters and cloud resource caps checked; ongoing monitoring remains |
-| Isolated replay demonstration | Complete: isolated browser replay with real per-partition offsets; live groups unaffected |
+| Supporting dashboard tiles | Recent edit activity retained; event-tracing and isolated replay tiles removed from the page |
 
 Setup and precise guarantees/limitations are in [README.md](README.md).
 

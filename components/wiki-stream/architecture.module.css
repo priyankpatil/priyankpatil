@@ -6,20 +6,22 @@
 .connection { fill:none; stroke:var(--border-strong); stroke-width:1.5; }
 .packet { fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-dasharray:4 96; opacity:.6; animation:travel 9s linear infinite; }
 .rejected { fill:none; stroke:var(--soft); stroke-width:1; stroke-dasharray:4 5; opacity:.5; }
-.node { fill:var(--surface); stroke:var(--border-strong); stroke-width:1; }
-.kafkaNode { fill:var(--surface); stroke:var(--accent); stroke-width:1; }
 .nodeHost { fill:var(--soft); font-family:var(--font-mono),monospace; font-size:10px; }
 .nodeTitle { fill:var(--text); font-family:var(--font-sans),sans-serif; font-size:16px; font-weight:600; }
 .nodeDetail { fill:var(--muted); font-family:var(--font-sans),sans-serif; font-size:11px; }
-.deadLetter { fill:var(--surface-muted); stroke:var(--border-strong); stroke-width:1; }
-.deadLetterTitle { fill:var(--muted); font-family:var(--font-sans),sans-serif; font-size:12px; font-weight:500; }
 .caption { display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding:14px 18px; border-top:1px solid var(--border); font-size:11px; line-height:1.7; color:var(--soft); }
 .caption > span:first-child { flex-shrink:0; font-family:var(--font-mono),monospace; }
 .explanation { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; margin-top:26px; }
 .mobileDiagram { display:none; }
-.mobileNode { display:flex; align-items:flex-start; gap:16px; padding:16px; border:1px solid var(--border-strong); border-radius:12px; background:var(--surface); }
-.stageNumber { padding-top:3px; font-family:var(--font-mono),monospace; color:var(--accent); font-size:11px; }
-.mobileLink { position:relative; height:24px; width:1px; margin-left:29px; background:var(--border-strong); overflow:hidden; }
+.mobileNode { display:flex; align-items:center; gap:18px; padding:12px; }
+.brandIcon { color:var(--text); }.processingIcon { color:var(--accent); }.supabaseIcon { color:#239d70; }.rejectionIcon { color:var(--soft); }
+:global(.dark) .supabaseIcon { color:#3ecf8e; }
+.mobileIcon { width:42px; height:42px; flex-shrink:0; }
+.divider { fill:none; stroke:var(--border-strong); stroke-width:1; stroke-dasharray:2 8; }
+.groupTitle { fill:var(--text); font-family:var(--font-sans),sans-serif; font-size:12px; font-weight:600; letter-spacing:1.2px; }
+.edgeLabel { fill:var(--soft); font-family:var(--font-sans),sans-serif; font-size:11px; }
+.mobileGroup { margin:14px 0 10px 12px; font-size:10px; letter-spacing:.15em; text-transform:uppercase; font-weight:600; color:var(--soft); }
+.mobileLink { position:relative; height:24px; width:1px; margin-left:33px; background:var(--border-strong); overflow:hidden; }
 .mobileLink > span { position:absolute; top:-6px; left:0; width:1px; height:6px; background:var(--accent); opacity:.6; animation:travelDown 4s linear infinite; }
 .card[data-paused="true"] .packet,.card[data-paused="true"] .mobileLink > span { animation-play-state:paused; }
 @keyframes travel { from { stroke-dashoffset:100; } to { stroke-dashoffset:0; } }

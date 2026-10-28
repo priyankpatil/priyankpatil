@@ -31,6 +31,10 @@ test("wake route denies cross-origin calls and rate-limits repeated public healt
     }));
     assert.equal(limited.status, 429); assert.ok(Number(limited.headers.get("retry-after")) > 0);
     assert.equal(calls, 3);
+    const proxied = await POST(new Request("http://localhost:3001/api/wiki-stream/wake", {
+      method: "POST", headers: { Origin: "https://example.com", "x-forwarded-host": "example.com", Host: "internal:3001", "x-forwarded-for": "203.0.113.22" },
+    }));
+    assert.equal(proxied.status, 202); assert.equal(calls, 4);
   } finally {
     globalThis.fetch = original;
     if (redisUrl !== undefined) process.env.UPSTASH_REDIS_REST_URL = redisUrl;

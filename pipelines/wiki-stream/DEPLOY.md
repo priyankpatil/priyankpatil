@@ -61,8 +61,14 @@ redeploys; secret values are entered during setup.
 **Free instance behavior:** Render spins a free web service down after 15 minutes
 without inbound traffic. Outbound Kafka traffic does not guarantee it stays awake.
 This is a free demonstration deployment, not an always-on SLA. Opening its URL wakes
-it; startup may take time. The frontend labels old frames and provides a real,
-recorded Kafka replay while the worker is asleep. Do not promise continuous live
+it; startup may take time. The website now attempts one wake request when a visible,
+unpaused visit encounters a stale feed. A “Start live feed” control supports manual
+retry. Requests go through the rate-limited Vercel POST endpoint
+`/api/wiki-stream/wake` to the fixed public Render health URL; no Render API key or
+deploy hook is needed. Feed polling continues during startup and switches to fresh
+data automatically. No cron or continuous health-ping loop is used. This wakes an
+idle service; it does not force-restart or redeploy an unhealthy service. The frontend
+labels old frames and provides recorded events while the worker is asleep. Do not promise continuous live
 updates or add artificial keep-alive traffic to disguise the sleeping behavior.
 
 Free service outbound bandwidth and build allowances are separate from Aiven and

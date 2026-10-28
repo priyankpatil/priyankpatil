@@ -114,3 +114,7 @@ Sources: [Wikimedia EventStreams](https://wikitech.wikimedia.org/wiki/EventStrea
 ## Architecture card
 
 Below recent edit activity, an SVG diagram shows the source, producer, raw/enriched Kafka topics, consumers, Supabase and the cached website API. Slow moving segments illustrate direction; they do not represent measured live traffic or make additional API calls. A pause control and reduced-motion support are included, with a vertical layout on smaller screens.
+
+## Visitor-triggered worker wake
+
+A visible, unpaused page attempts one wake per visit when the API reports stale data, with a manual “Start live feed” retry. The server POST route calls only the fixed public Render health URL, waits at most eight seconds for that fetch and uses the existing rate limiter (three requests per minute per IP, shared when Upstash is configured; per-instance fallback otherwise). A cold-start timeout keeps the UI waiting for normal feed polls. Fresh data clears the startup notice. There is no scheduled keep-alive, no Render credential, and no new Supabase or worker configuration. Missing setup or exhausted read budgets do not trigger automatic wake requests.

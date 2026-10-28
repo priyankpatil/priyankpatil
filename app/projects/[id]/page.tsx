@@ -7,7 +7,10 @@ import { projectItems } from "@/lib/portfolio-data";
 import { projectWriteups } from "@/lib/project-writeups";
 
 export function generateStaticParams() {
-  return projectItems.map((p) => ({ id: p.id }));
+  // Dedicated project routes generate their own HTML/RSC. Generating the same
+  // paths here can overwrite those pages with a generic case study at build time.
+  const dedicatedRoutes = new Set(["wiki-stream", "cx-eval"]);
+  return projectItems.filter((p) => !dedicatedRoutes.has(p.id)).map((p) => ({ id: p.id }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {

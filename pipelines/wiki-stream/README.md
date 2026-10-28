@@ -110,3 +110,7 @@ Sources: [Wikimedia EventStreams](https://wikitech.wikimedia.org/wiki/EventStrea
 ## Verified live run
 
 `verification.json` records a real cloud run: both consumer groups, real offsets, bounded frames/state and actual storage usage. `npm run wiki:verify -- --capture` refreshes it and the recorded Kafka sample. `npm run wiki:test` includes partition coalescing, failed-persistence acknowledgement isolation, replay cursors, long-idle resume policy and worst-case multilingual state sizes. Recorded fallback playback runs in the browser and consumes no extra Supabase queries.
+
+## Architecture card
+
+Below recent edit activity, an SVG diagram shows the source, producer, raw/enriched Kafka topics, consumers, Supabase and the cached website API. Slow moving segments illustrate direction; they do not represent measured live traffic or make additional API calls. A pause control and reduced-motion support are included, with a vertical layout on smaller screens.

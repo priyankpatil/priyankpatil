@@ -8,10 +8,21 @@
 import { writeFileSync } from "node:fs";
 import pg from "pg";
 import { cap, nearest, scale, transform, type Scaler } from "../src/features.ts";
-import { rng } from "../src/kmeans.ts";
 import { SEGMENTS } from "../src/segments.ts";
 
 const OUT = "lib/customer-segments/segments.json";
+
+/** Seeded PRNG (mulberry32), so the scatter sample is the same on every export. */
+function rng(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 const SCATTER_POINTS = 900;
 
 const dbUrl = process.env.SUPABASE_DB_URL;
@@ -31,7 +42,7 @@ const num = (v: unknown) => Number(v);
 const [model] = await q<{ model_id: string; trained_on: string; features: string[]; k: number; scaler: Scaler; selection: { chosen: { set: string; k: number }; candidates: Record<string, number | string>[]; correlations: Record<string, Record<string, number>> }; stability: { mean_ari: number; min_ari: number; bootstraps: number }; baseline: { r2_next_revenue: number; r2_churn: number } }>(
   "select model_id, to_char(trained_on, 'YYYY-MM-DD') trained_on, features, k, scaler, selection, stability, baseline from customer_segments.model_runs where is_current",
 );
-if (!model) throw new Error("No current model; run model.mts first.");
+if (!model) throw new Error("No current model; run model/model.py first.");
 if (model.k !== SEGMENTS.length) throw new Error(`Model has k=${model.k} but segments.ts names ${SEGMENTS.length}; update the names.`);
 const asOf = model.trained_on;
 const nextAsOf = `${Number(asOf.slice(0, 4)) + 1}${asOf.slice(4)}`;

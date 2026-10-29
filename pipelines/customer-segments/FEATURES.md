@@ -1,6 +1,6 @@
 # Feature dictionary
 
-Built by `customer_segments.build_features(as_of)` (SQL) into `customer_features`, one row per customer per snapshot. Scaling lives in `src/features.ts` and is shared by the model script and the page.
+Built by `customer_segments.build_features(as_of)` (SQL) into `customer_features`, one row per customer per snapshot. Scaling is fitted in `model/model.py` and stored with the model; `src/features.ts` applies the same steps in the browser.
 
 ## Rules
 

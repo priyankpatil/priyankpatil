@@ -9,7 +9,7 @@ The project re-creates, on public data, the customer stratification model built 
 1. Learn the segments from data. Today the four segments, their names and their centroids are hand-picked, and the 220 "customers" are random points drawn around them.
 2. Show the modelling decisions in the open: which features, how they are scaled, how many segments, how stable they are.
 3. Tie segments to business value: revenue share, and whether a segment predicts next year's spend and churn.
-4. Use the existing stack only (Next.js on Vercel, Supabase Postgres, TypeScript scripts). Keep inference in the browser.
+4. Use the existing stack (Next.js on Vercel, Supabase Postgres, TypeScript scripts), plus Python with scikit-learn for the modelling step. Keep inference in the browser.
 
 ## What changes on the page
 
@@ -113,7 +113,7 @@ Features not used as inputs (`revenue`, `product_breadth`, `trend`, `country_uk`
 
 ## Model
 
-- **Algorithm:** k-means in TypeScript, k-means++ starts, 20 restarts, fixed seed. Small enough (~4K rows × 5 features) to run in a script in seconds.
+- **Algorithm:** k-means with scikit-learn (`KMeans`, k-means++ starts, 20 restarts, fixed seed), in `model/model.py`. Small enough (~4K rows × 5 features) to run in seconds per fit.
 - **Choosing k (3–8):** silhouette score and the elbow in within-cluster variance, then a sanity check: each segment must be large enough to act on (≥ 5% of customers) and describable in one sentence.
 - **Stability:** re-fit on 20 bootstrap samples; the adjusted Rand index against the main fit should stay high. Unstable segments are merged or the feature set is revisited.
 - **Baseline:** classic RFM quintile scores (a rule, no learning). The learned segments have to beat it on next-year prediction to justify themselves.
@@ -145,7 +145,7 @@ The page says plainly that this is a re-creation on public data, not Clarke Powe
 |---|---|---|
 | Storage and transforms | Supabase Postgres, schema `customer_segments`; SQL functions raw → clean → features | Own schema, not exposed through the public API |
 | Loader | TypeScript script with `tsx`: download the UCI zip, read the workbook, copy into a raw table | Needs an XLSX reader (open decision) |
-| Model | TypeScript script: k-means, k selection, bootstrap stability, validation | No Python, as with CX eval |
+| Model | Python: pandas, scikit-learn (`KMeans`, `silhouette_score`, `adjusted_rand_score`), psycopg; pinned in `model/requirements.txt` | Runs in `pipelines/customer-segments/.venv` |
 | Serving | Static JSON exported to `lib/customer-segments/` (centroids, scaler, sampled points, metrics) | The page needs no database at request time |
 | Orchestration | None: the data is historical, so the pipeline runs on demand | Monthly replay covers "change over time" |
 
@@ -166,22 +166,23 @@ Marts       mart_segment_profile · mart_segment_value · mart_migration · mart
 | 0 | Profile the data; write this plan | This plan | ✅ |
 | 1 | **Load and clean:** raw load, cleaning rules as SQL, cleaning log | migration, `load.mts`, `clean_transactions()` | ✅ 1,067,371 rows in, 776,577 kept |
 | 2 | **Features:** snapshots, transforms, feature dictionary | `build_features(as_of)`, `src/features.ts`, `FEATURES.md` | ✅ 13 snapshots (2010-12-01, 2011 month starts) |
-| 3 | **Model:** feature-set comparison, k selection, stability, RFM baseline | `model.mts`, `src/kmeans.ts`, `model_runs`, `centroids` | ✅ recency, orders, revenue · k = 4 |
+| 3 | **Model:** feature-set comparison, k selection, stability, RFM baseline | `model/model.py`, `model_runs`, `centroids` | ✅ recency, orders, revenue · k = 4 |
 | 4 | **Validate and name:** out-of-time check, migration, segment profiles, names and actions | marts, `src/segments.ts` | ✅ |
 | 5 | **Export:** JSON for the page | `export.mts` → `lib/customer-segments/segments.json` (69 KB) | ✅ |
 | 6 | **Page:** data card, feature walk-through, segments, classifier, results, architecture | `/projects/customer-segments` | ✅ |
 
-Re-run end to end (with `SUPABASE_DB_URL` set): `npm run segments:load`, `npm run segments:model -- --features`, `npm run segments:export`. `--explore` on the model step prints the full comparison without writing.
+Re-run end to end (with `SUPABASE_DB_URL` set): `npm run segments:load`, `npm run segments:setup` (once, creates the Python environment), `npm run segments:model -- --features`, `npm run segments:export`. `--explore` on the model step prints the full comparison without writing.
 
 ## Decisions made while building
 
+- **Modelling moved to Python (2026-10-29).** `model/model.py` replaced the TypeScript k-means. It reproduces the earlier results: same choice (recency, orders, spend, k = 4), silhouette 0.344 in both, stability 0.93 vs. 0.92, identical RFM baseline; 8 of 4,239 customers changed segment because scikit-learn's random starts differ. Scaling is fitted in Python and stored in `model_runs.scaler`; `src/features.ts` applies it in the browser. Each run replaces the previous model.
 - **XLSX reading:** `exceljs` (dev dependency) streams the workbook; no CSV conversion step.
 - **Storage:** raw rows are deleted after cleaning (`load.mts --keep-raw` keeps them); the cleaning log keeps the counts. The schema uses ~90 MB, the whole database ~200 MB of the free tier's 500 MB.
 - **Tenure dropped:** at the training snapshot the data is only a year old, so tenure is capped at ~365 days for everyone (left-censored).
 - **Inputs: recency, orders, revenue.** Comparison on the training snapshot (k = 4): silhouette 0.34 vs. 0.27 with average order value instead of revenue, 0.26 when return rate is also added, 0.29 with the wide set.
-- **k = 4:** best silhouette among 3–8 for the chosen inputs, smallest segment 18% of customers, adjusted Rand index 0.92 (min 0.84) over 20 bootstrap re-fits.
+- **k = 4:** best silhouette among 3–8 for the chosen inputs, smallest segment 18% of customers, adjusted Rand index 0.93 (min 0.84) over 20 bootstrap re-fits.
 - **The RFM score predicts next-year spend slightly better.** Segments explain 29% of the variance in next-year log spend (churn 18%); an RFM quintile score cut into 4 groups explains 31% (churn 20%). Stated on the page. The segments' value is in telling apart customers with similar scores who need different actions, not in ranking.
 - **One-time buyers** are clustered with everyone; they form most of "Gone quiet" without a special rule.
 - **Scatter axes:** two real features, orders (log) and days since last order (log, recent at the top), with a small sideways jitter because orders are whole numbers. Spend, the third input, isn't plotted; the page says so.
 - **Monthly replay** (13 snapshots) is computed and exported but not charted, to keep the page to a few results. Visible in it: Newcomers grow from October to December, the Christmas season.
-- **Names** were given after reading the profiles: Champions (18% of customers, 66% of revenue, 4% stopped buying the next year), Slowing regulars (27%, 23%, 27%), Newcomers (73% first bought in the previous six months; 36%), Gone quiet (one order, 169 days ago; 61%).
+- **Names** were given after reading the profiles: Champions (18% of customers, 65% of revenue, 4% stopped buying the next year), Slowing regulars (27%, 24%, 27%), Newcomers (about three in four first bought in the previous six months; 36%), Gone quiet (one order, 169 days ago; 61%).

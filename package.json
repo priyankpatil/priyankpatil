@@ -19,7 +19,8 @@
     "wiki:db:check": "node --import tsx pipelines/wiki-stream/scripts/bootstrap.mts",
     "wiki:db:apply": "node --import tsx pipelines/wiki-stream/scripts/bootstrap.mts --apply",
     "segments:load": "tsx pipelines/customer-segments/scripts/load.mts",
-    "segments:model": "tsx pipelines/customer-segments/scripts/model.mts",
+    "segments:setup": "python3 -m venv pipelines/customer-segments/.venv && pipelines/customer-segments/.venv/bin/pip install -r pipelines/customer-segments/model/requirements.txt",
+    "segments:model": "pipelines/customer-segments/.venv/bin/python pipelines/customer-segments/model/model.py",
     "segments:export": "tsx pipelines/customer-segments/scripts/export.mts"
   },
   "dependencies": {

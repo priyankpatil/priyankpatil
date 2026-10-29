@@ -7,7 +7,7 @@
 --   select customer_segments.clean_transactions();          -- raw → clean, logs each rule
 --   select customer_segments.build_features('2010-12-01');  -- one row per customer
 --
--- The model script (k-means in TypeScript) reads customer_features and writes
+-- The model script (model/model.py: k-means with scikit-learn) reads customer_features and writes
 -- model_runs, centroids and assignments. The page reads a JSON export of the marts.
 
 create schema if not exists customer_segments;

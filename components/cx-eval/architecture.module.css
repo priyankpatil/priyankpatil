@@ -1,0 +1,59 @@
+.card { padding:28px; border:1px solid var(--border); border-radius:18px; background:var(--surface); }
+.header { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
+.motionButton { flex-shrink:0; white-space:nowrap; }
+.figure { margin:26px 0 0; border:1px solid var(--border); border-radius:14px; background:linear-gradient(150deg,var(--surface),var(--surface-muted)); overflow:hidden; }
+
+/* Desktop and laptop: the SVG diagram. Text sizes are set for a ~880px render, the narrowest it is shown at. */
+.diagram { display:block; width:100%; height:auto; padding:8px; }
+.divider { fill:none; stroke:var(--border-strong); stroke-width:1; stroke-dasharray:2 8; }
+.groupTitle { fill:var(--text); font-family:var(--font-sans),sans-serif; font-size:13px; font-weight:600; letter-spacing:1.2px; }
+.groupNote { fill:var(--soft); font-family:var(--font-sans),sans-serif; font-size:12px; }
+.connection { fill:none; stroke:var(--border-strong); stroke-width:1.5; }
+.sideConnection { fill:none; stroke:var(--soft); stroke-width:1.2; stroke-dasharray:4 5; opacity:.6; }
+.packet { fill:none; stroke:var(--accent); stroke-width:3.5; stroke-linecap:round; stroke-dasharray:5 95; opacity:0; animation:batch 12s linear infinite; }
+.nodeTitle { fill:var(--text); font-family:var(--font-sans),sans-serif; font-size:18px; font-weight:600; }
+.nodeDetail { fill:var(--muted); font-family:var(--font-sans),sans-serif; font-size:13.5px; }
+.nodeHost { fill:var(--soft); font-family:var(--font-mono),monospace; font-size:12px; }
+.edgeLabel { fill:var(--soft); font-family:var(--font-sans),sans-serif; font-size:12.5px; }
+.brandIcon { color:var(--text); }
+.processingIcon { color:var(--accent); }
+.sideIcon { color:var(--soft); }
+.supabaseIcon { color:#239d70; }
+:global(.dark) .supabaseIcon { color:#3ecf8e; }
+
+/* Phones and tablets: the same flow as a list. Side outputs sit beside their step on tablets, below it on phones. */
+.flow { display:none; list-style:none; margin:0; padding:20px; }
+.group { margin:18px 0 10px; font-size:10px; letter-spacing:.15em; text-transform:uppercase; font-weight:600; color:var(--soft); }
+.group:first-child { margin-top:0; }
+.group span { margin-left:8px; letter-spacing:normal; text-transform:none; font-weight:400; }
+.row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:0 32px; align-items:center; }
+.node { display:flex; align-items:center; gap:16px; padding:12px; border-radius:12px; }
+.side { position:relative; border:1px dashed var(--border-strong); background:var(--surface); }
+.side::before { content:""; position:absolute; top:50%; right:100%; width:32px; border-top:1px dashed var(--border-strong); }
+.flowIcon { width:40px; height:40px; flex-shrink:0; }
+.link { height:22px; width:1px; margin-left:32px; background:var(--border-strong); }
+
+.caption { display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding:14px 18px; border-top:1px solid var(--border); font-size:11px; line-height:1.7; color:var(--soft); }
+.caption > span:first-child { flex-shrink:0; font-family:var(--font-mono),monospace; }
+.explanation { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; margin-top:26px; }
+
+.card[data-paused="true"] .packet { animation-play-state:paused; }
+/* One batch per run: the dash crosses each link once, in order, then the pipeline idles. */
+@keyframes batch { 0% { stroke-dashoffset:100; opacity:.75; } 9% { stroke-dashoffset:0; opacity:.75; } 9.5%,100% { stroke-dashoffset:0; opacity:0; } }
+
+@media(max-width:1023px) {
+  .diagram,.motionButton { display:none; }
+  .flow { display:block; }
+  .caption { flex-direction:column; gap:4px; }
+}
+@media(max-width:900px) { .explanation { grid-template-columns:1fr; gap:22px; } }
+@media(max-width:639px) {
+  .card { padding:20px; }
+  .header { flex-direction:column; gap:16px; }
+  .flow { padding:14px; }
+  .row { grid-template-columns:1fr; }
+  .side { margin:6px 0 0 32px; }
+  .side::before { top:-7px; right:auto; left:-1px; width:0; height:7px; border-top:0; border-left:1px dashed var(--border-strong); }
+  .node { gap:14px; }
+}
+@media(prefers-reduced-motion:reduce) { .packet,.motionButton { display:none; } }

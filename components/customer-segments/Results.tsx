@@ -15,11 +15,18 @@ const SET_LABEL: Record<string, string> = {
   wide: "Seven features",
 };
 
-function Group({ kicker, title, intro, tiles, chart }: { kicker: string; title: string; intro: ReactNode; tiles: ReactNode; chart: ReactNode }) {
+const MODEL_URL = "https://github.com/priyankpatil/priyankpatil/blob/master/pipelines/customer-segments/model/model.py";
+
+function Group({ kicker, title, intro, tiles, chart, link }: { kicker: string; title: string; intro: ReactNode; tiles: ReactNode; chart: ReactNode; link?: ReactNode }) {
   return (
     <article className="min-w-0 rounded-[22px] border border-border bg-surface-muted/60 p-5 sm:p-7">
-      <p className="kicker mb-2">{kicker}</p>
-      <h3 className="text-[clamp(1.2rem,2.2vw,1.5rem)] font-semibold leading-tight tracking-tight text-text">{title}</h3>
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="max-w-3xl">
+          <p className="kicker mb-2">{kicker}</p>
+          <h3 className="text-[clamp(1.2rem,2.2vw,1.5rem)] font-semibold leading-tight tracking-tight text-text">{title}</h3>
+        </div>
+        {link}
+      </div>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{intro}</p>
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">{tiles}</div>
       <div className="mt-5 min-w-0 rounded-2xl border border-border bg-surface p-4 sm:p-5">{chart}</div>
@@ -78,6 +85,11 @@ function ModelQuality() {
     <Group
       kicker="Model quality"
       title="Are the segments real, or an artefact of the method?"
+      link={
+        <a href={MODEL_URL} target="_blank" rel="noopener noreferrer" className="pill-link shrink-0 text-xs">
+          View the Python model ↗
+        </a>
+      }
       intro={<>k-means always returns segments, even from noise. These checks were run before choosing: several feature sets, 3 to 8 segments each, each re-fitted on resampled data.</>}
       tiles={
         <>

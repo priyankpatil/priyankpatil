@@ -24,7 +24,12 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
   );
 }
 
-const dateLabel = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+// Formatted by hand: Node and browsers disagree on short month names ("Sept" vs "Sep"), which breaks hydration.
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const dateLabel = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${d} ${MONTHS[m - 1]} ${y}`;
+};
 
 export default function FeatureWalkthrough() {
   const [index, setIndex] = useState(0);

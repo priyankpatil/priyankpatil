@@ -38,3 +38,4 @@ next-env.d.ts
 
 # customer-segments: downloaded Online Retail II cache
 /pipelines/customer-segments/.data/
+/pipelines/customer-segments/.venv/

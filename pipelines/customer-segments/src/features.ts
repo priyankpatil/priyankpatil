@@ -1,5 +1,6 @@
-// Feature transforms shared by the model script and the page, so a slider value
-// in the browser is scaled exactly as the training data was (FEATURES.md).
+// Applies the scaler that model/model.py fitted and stored (model_runs.scaler),
+// so a slider value in the browser is scaled exactly as the training data was
+// (FEATURES.md). Keep transform and cap in step with fit_scaler/scale in model.py.
 
 export type FeatureName =
   | "recency_days" | "orders" | "revenue" | "avg_order_value" | "tenure_days"
@@ -26,26 +27,6 @@ export const scaleOne = (e: ScalerEntry, x: number) => (cap(e, transform(e, x)) 
 
 export function scale(scaler: Scaler, raw: Record<string, number>): number[] {
   return scaler.map((e) => scaleOne(e, raw[e.feature]));
-}
-
-function quantile(sorted: number[], q: number): number {
-  const i = (sorted.length - 1) * q;
-  const lo = Math.floor(i);
-  return sorted[lo] + (sorted[Math.min(lo + 1, sorted.length - 1)] - sorted[lo]) * (i - lo);
-}
-
-/** Fit log → cap → z-score on the training snapshot only. */
-export function fitScaler(features: FeatureName[], rows: Record<string, number>[]): Scaler {
-  return features.map((feature) => {
-    const log = LOG_FEATURES.has(feature);
-    const t = rows.map((r) => transform({ log }, r[feature])).sort((a, b) => a - b);
-    const low = quantile(t, 0.01);
-    const high = quantile(t, 0.99);
-    const capped = t.map((v) => Math.min(Math.max(v, low), high));
-    const mean = capped.reduce((s, v) => s + v, 0) / capped.length;
-    const sd = Math.sqrt(capped.reduce((s, v) => s + (v - mean) ** 2, 0) / capped.length) || 1;
-    return { feature, log, low, high, mean, sd };
-  });
 }
 
 export function distance(a: readonly number[], b: readonly number[]): number {

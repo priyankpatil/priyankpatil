@@ -1,6 +1,6 @@
 // Names and actions for the current model's segments, written after reading
 // their profiles (mart_segment_profile, mart_segment_value). Segments are
-// numbered by average revenue, highest first (model.mts). Re-check these if the
+// numbered by average revenue, highest first (model/model.py). Re-check these if the
 // model is re-fitted with different features or k.
 
 export interface SegmentMeta {

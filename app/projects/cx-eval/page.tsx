@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Navigation from "@/components/Navigation";
+import CxArchitecture from "@/components/cx-eval/CxArchitecture";
 import DataCardTabs from "@/components/cx-eval/DataCardTabs";
 import Metrics from "@/components/cx-eval/Metrics";
 import PipelineDemo from "@/components/cx-eval/PipelineDemo";
@@ -143,6 +144,9 @@ export default function CxEvalPage() {
             </SectionHead>
             <Metrics />
           </section>
+
+          {/* Architecture */}
+          <CxArchitecture />
         </div>
       </main>
     </>

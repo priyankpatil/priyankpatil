@@ -17,7 +17,10 @@
     "wiki:verify": "node --import tsx pipelines/wiki-stream/scripts/verify.mts",
     "wiki:test": "node --import tsx --test pipelines/wiki-stream/tests/*.test.mts",
     "wiki:db:check": "node --import tsx pipelines/wiki-stream/scripts/bootstrap.mts",
-    "wiki:db:apply": "node --import tsx pipelines/wiki-stream/scripts/bootstrap.mts --apply"
+    "wiki:db:apply": "node --import tsx pipelines/wiki-stream/scripts/bootstrap.mts --apply",
+    "segments:load": "tsx pipelines/customer-segments/scripts/load.mts",
+    "segments:model": "tsx pipelines/customer-segments/scripts/model.mts",
+    "segments:export": "tsx pipelines/customer-segments/scripts/export.mts"
   },
   "dependencies": {
     "@ai-sdk/groq": "^3.0.39",
@@ -47,6 +50,7 @@
     "browserslist": "^4.28.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.27",
+    "exceljs": "^4.4.0",
     "postcss": "^8.5.30",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.15",

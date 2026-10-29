@@ -35,3 +35,6 @@ next-env.d.ts
 
 # Aiven client certificate, key and CA mounts
 /pipelines/wiki-stream/.secrets/
+
+# customer-segments: downloaded Online Retail II cache
+/pipelines/customer-segments/.data/

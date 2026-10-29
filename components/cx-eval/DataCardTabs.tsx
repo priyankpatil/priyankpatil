@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import type { DemoChat } from "@/lib/cx-eval/types";
 import CardTabs from "./CardTabs";
 
@@ -7,8 +7,8 @@ export default function DataCardTabs({ overview, chat }: { overview: ReactNode; 
     <CardTabs
       label="The data"
       tabs={[
-        { key: "overview", label: "About the data", content: overview },
-        { key: "sample", label: "Sample chat", content: <SampleChat chat={chat} /> },
+        { key: "overview", label: "About the data", content: <Fragment key="overview">{overview}</Fragment> },
+        { key: "sample", label: "Sample chat", content: <SampleChat key="sample" chat={chat} /> },
       ]}
     />
   );

@@ -6,7 +6,7 @@
 //   npx tsx pipelines/customer-segments/scripts/model.mts             # fit CHOSEN and write it
 //
 //   --features   (re)build the feature snapshots first: TRAIN_AS_OF and each 2011 month start
-//   SETS=rfm,core K_RANGE=3,4   limit the --explore comparison
+//   SETS=rfm,core K_RANGE=3,4   limit the comparison (for quick --explore runs)
 //
 // Connects with SUPABASE_DB_URL.
 
@@ -136,7 +136,6 @@ for (const [set, features] of Object.entries(FEATURE_SETS)) {
   const points = train.map((r) => scale(scaler, r));
   if (process.env.SETS && !process.env.SETS.split(",").includes(set)) continue;
   for (const k of K_RANGE) {
-    if (!explore && !(set === CHOSEN.set && k === CHOSEN.k)) continue;
     const { candidate } = evaluate(set, k, scaler, points);
     selection.push(candidate);
     console.log(set.padEnd(5), k, Object.entries(candidate).slice(2).map(([n, v]) => `${n}=${round(v as number)}`).join("  "));

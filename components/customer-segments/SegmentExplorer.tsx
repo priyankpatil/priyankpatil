@@ -63,9 +63,9 @@ export default function SegmentExplorer() {
   const you = [{ x: Math.min(values.orders, 60), y: Math.max(values.recency_days, 1) }];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5 rounded-[22px] border border-border bg-surface p-4 sm:p-7">
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_21rem]">
-        <figure className="m-0 rounded-[22px] border border-border bg-surface p-4 sm:p-6">
+        <figure className="m-0 min-w-0 rounded-2xl border border-border p-4 sm:p-5">
           <figcaption className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
             <span className="text-sm font-semibold text-text">{int(data.sample.length)} of {int(totalCustomers)} customers, 1 Dec 2010</span>
             <span className="flex flex-wrap gap-x-3 gap-y-1">
@@ -78,7 +78,7 @@ export default function SegmentExplorer() {
             </span>
           </figcaption>
           <div className="h-[300px] sm:h-[360px]" role="img" aria-label="Scatter of customers by number of orders and days since last order, coloured by segment, with your customer marked.">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer>
               <ScatterChart margin={{ top: 8, right: 8, bottom: 22, left: 2 }}>
                 <CartesianGrid strokeDasharray="2 6" stroke="var(--border)" />
                 <XAxis type="number" dataKey="x" scale="log" domain={[0.8, 60]} ticks={X_TICKS} allowDataOverflow
@@ -100,7 +100,7 @@ export default function SegmentExplorer() {
         </figure>
 
         <div className="flex flex-col gap-4">
-          <div className="rounded-[22px] border border-border bg-surface p-5">
+          <div className="rounded-2xl border border-border bg-surface-muted p-5">
             <p className="text-sm font-semibold text-text">Describe a customer</p>
             <div className="mt-4 flex flex-col gap-4">
               {data.model.features.map((f) => (
@@ -116,7 +116,7 @@ export default function SegmentExplorer() {
             </div>
           </div>
 
-          <div className="rounded-[22px] border bg-surface p-5" style={{ borderColor: `color-mix(in srgb, ${segmentColor(seg.segment)} 45%, transparent)` }} aria-live="polite">
+          <div className="rounded-2xl border bg-surface p-5" style={{ borderColor: `color-mix(in srgb, ${segmentColor(seg.segment)} 45%, transparent)` }} aria-live="polite">
             <p className="text-xs text-soft">Nearest segment</p>
             <p className="mt-1 text-2xl font-semibold tracking-tight" style={{ color: segmentColor(seg.segment) }}>{seg.name}</p>
             <p className="mt-1 text-sm text-muted">{seg.tagline}</p>
@@ -134,7 +134,7 @@ export default function SegmentExplorer() {
 
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {data.segments.map((s) => (
-          <li key={s.segment} className="rounded-[18px] border border-border bg-surface p-5">
+          <li key={s.segment} className="rounded-2xl border border-border bg-surface-muted/60 p-4 sm:p-5">
             <p className="flex items-center gap-2 text-base font-semibold text-text">
               <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: segmentColor(s.segment) }} />
               {s.name}

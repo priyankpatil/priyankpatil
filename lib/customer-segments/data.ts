@@ -45,6 +45,7 @@ export interface SegmentsData {
     silhouette: number;
     stability: { bootstraps: number; mean_ari: number; min_ari: number };
     r2: { segments: { next_revenue: number; churn: number }; rfm_score: { k: number; r2_next_revenue: number; r2_churn: number } };
+    candidates: { set: string; k: number; silhouette: number; smallest_share: number; stability: number; r2_next_revenue: number; r2_churn: number }[];
   };
   ranges: Record<string, { min: number; max: number; median: number }>;
   segments: SegmentProfile[];

@@ -27,7 +27,7 @@ const nodes = {
   clean: { title: "Clean", detail: "Five rules, each one logged", host: "Supabase · SQL", icon: "validate", tone: "processing", x: 530, y: 125 },
   features: { title: "Features", detail: "13 snapshots, no look-ahead", host: "Supabase · Postgres", icon: "supabase", tone: "supabase", x: 760, y: 125 },
   segment: { title: "Segment", detail: "k-means, stability, baseline", host: "Python · scikit-learn", icon: "cluster", tone: "processing", x: 760, y: 365 },
-  export: { title: "Export", detail: "Profiles, results, centroids", host: "JSON · 69 KB", icon: "file", tone: "processing", x: 530, y: 365 },
+  export: { title: "Export", detail: "Profiles, results, centroids", host: "JSON · 74 KB", icon: "file", tone: "processing", x: 530, y: 365 },
   log: { title: "Cleaning log", detail: "Rows removed, by rule", host: "Supabase · SQL", icon: "reject", tone: "side", x: 300, y: 365 },
   page: { title: "This page", detail: "Static, no database calls", host: "Vercel · Next.js", icon: "dashboard", tone: "brand", x: 1000, y: 140 },
   classifier: { title: "Classifier", detail: "Nearest segment centre", host: "Your browser", icon: "target", tone: "processing", x: 1000, y: 400 },
@@ -138,7 +138,7 @@ export default function SegmentsArchitecture() {
       <div className={styles.explanation}>
         <div><h3 className="text-sm font-semibold text-text">Load and clean</h3><p className="mt-2 text-sm leading-6 text-muted">A script downloads the workbook from UCI and lands every row in Postgres. Five SQL rules remove duplicates, rows with no customer, non-product lines and adjustments, and move cancellations aside for the return rate.</p></div>
         <div><h3 className="text-sm font-semibold text-text">Features and segments</h3><p className="mt-2 text-sm leading-6 text-muted">SQL builds one row per customer for each snapshot date, using only earlier orders. A Python script (scikit-learn) compares feature sets and segment counts, checks stability and next-year results, and stores the chosen model.</p></div>
-        <div><h3 className="text-sm font-semibold text-text">Export and serve</h3><p className="mt-2 text-sm leading-6 text-muted">The export writes profiles, results and the segment centres to a 69 KB file. The page is static; the classifier applies the same scaling as training and finds the nearest centre in your browser.</p></div>
+        <div><h3 className="text-sm font-semibold text-text">Export and serve</h3><p className="mt-2 text-sm leading-6 text-muted">The export writes profiles, results and the segment centres to a 74 KB file. The page is static; the classifier applies the same scaling as training and finds the nearest centre in your browser.</p></div>
       </div>
     </section>
   );

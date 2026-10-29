@@ -168,7 +168,7 @@ Marts       mart_segment_profile · mart_segment_value · mart_migration · mart
 | 2 | **Features:** snapshots, transforms, feature dictionary | `build_features(as_of)`, `src/features.ts`, `FEATURES.md` | ✅ 13 snapshots (2010-12-01, 2011 month starts) |
 | 3 | **Model:** feature-set comparison, k selection, stability, RFM baseline | `model/model.py`, `model_runs`, `centroids` | ✅ recency, orders, revenue · k = 4 |
 | 4 | **Validate and name:** out-of-time check, migration, segment profiles, names and actions | marts, `src/segments.ts` | ✅ |
-| 5 | **Export:** JSON for the page | `export.mts` → `lib/customer-segments/segments.json` (69 KB) | ✅ |
+| 5 | **Export:** JSON for the page | `export.mts` → `lib/customer-segments/segments.json` (74 KB) | ✅ |
 | 6 | **Page:** data card, feature walk-through, segments, classifier, results, architecture | `/projects/customer-segments` | ✅ |
 
 Re-run end to end (with `SUPABASE_DB_URL` set): `npm run segments:load`, `npm run segments:setup` (once, creates the Python environment), `npm run segments:model -- --features`, `npm run segments:export`. `--explore` on the model step prints the full comparison without writing.

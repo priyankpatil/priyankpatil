@@ -166,7 +166,7 @@ Each incident is detected by the pipeline's own monitoring, then diagnosed in a 
 |---|---|---|---|
 | 0 | Profile data, draft rubric and schema, select judge model | This plan | ✅ done |
 | 1 | **ELT:** load raw ABCD batches → validate and quarantine (SQL) → transform and enrich (SQL) | `cx_eval` migration, raw loader script, `validate_batch` / `transform_batch` SQL functions, synthetic metadata, ground-truth flags | ✅ 30 days loaded; day 26 quarantined 230 records |
-| 2 | **Rubric:** written definitions, decision rules, anchors; prompt generated from it; human calibration | `RUBRIC.md`, `rubric_versions` | ✅ rubric; ⬜ human calibration |
+| 2 | **Rubric:** written definitions, decision rules, anchors; prompt generated from it; human calibration | `RUBRIC.md`, `rubric_versions`, `calibration/sheet-1.csv` | ✅ rubric; ✅ calibration sheet 1 (AI-assisted, see Decisions) |
 | 3 | **Judge:** prompt assembly → LLM → JSON validation and retry | `scoring_requests`, `judge_config`, judge client | ✅ |
 | 4 | **Store outputs:** append-only, versioned | `judge_results`, `scores`, `scoring_runs` | ✅ |
 | 5 | **Combine:** inputs + outputs into marts; retraining export | mart views | ⬜ |
@@ -185,6 +185,7 @@ If time runs short, reduce the dashboard polish in stage 8, not stages 6–7.
   - FAQ intents pass policy when any search ran (95.3%), even if the agent also opened the account.
 - **Candidate rule for rubric v2:** opening a customer's account on an FAQ chat (226 chats, 10.7% of FAQ intents) is unnecessary access to personal data. v1 does not penalise it.
 - **The v1 judge applied the identity rule by its spirit, ground truth by its letter.** On days 1–7 it caught 3 of 13 real identity failures: it passed chats verified with the wrong gate button, without `pull-up-account`, or after a read-only policy step. **Rubric v2** keeps every rule but makes the judge cite the required buttons' positions before deciding. Backtest on the same 137 chats (gpt-oss-20b): identity failures caught 23% → 85%, identity accuracy 82.1% → 92.5%, correct passes kept 96.3% → 94.4%, policy unchanged, +12% tokens.
+- **Calibration sheet 1 is AI-assisted, not independent human labels (2026-10-30).** Claude scored the 15 chats blind from the transcripts and RUBRIC.md; Priyank accepted them without changes, and they are stored as rater `priyank` with that noted on every row. Results (`mart_human_agreement`, n = 45 judge verdicts across three setups): vs. ground truth 100% on intent, identity and policy, which mainly shows the written rules are consistent with the SQL; vs. judge, intent 93% (κ 0.92), identity 80% (κ 0.67), policy 78% (κ 0.25), resolution 93% (κ 0.00, almost all resolved), empathy 51% (κ 0.06). Empathy and resolution still need a genuinely human pass.
 - **Backtests before rollout:** `create_backtest()` re-scores already-scored chats with their stored inputs under another rubric or model, so a comparison changes exactly one variable. Backtest scores are never production.
 - **Model switch lives in `judge_config`**, a dated change log, so a root cause analysis can find it the way it would find a real deployment.
 

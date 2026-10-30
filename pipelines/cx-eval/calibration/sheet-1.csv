@@ -1,16 +1,16 @@
 convo_id,intent,identity_verification,policy_adherence,resolution,empathy,notes
-abcd-4585,,,,,,
-abcd-5686,,,,,,
-abcd-2112,,,,,,
-abcd-7815,,,,,,
-abcd-6468,,,,,,
-abcd-3643,,,,,,
-abcd-8803,,,,,,
-abcd-556,,,,,,
-abcd-130,,,,,,
-abcd-5315,,,,,,
-abcd-1390,,,,,,
-abcd-9380,,,,,,
-abcd-7884,,,,,,
-abcd-7890,,,,,,
-abcd-1448,,,,,,
+abcd-4585,troubleshoot_site,na,fail,resolved,4,"Scored by Claude, accepted by Priyank without changes. card declined at checkout. pull-up-account is not a step of credit_card, so policy fails. Agent apologised and thanked for patience."
+abcd-5686,account_access,na,pass,resolved,4,"Scored by Claude, accepted by Priyank without changes. password reset; steps in policy order, no gate. Agent waited while the customer tested the new password."
+abcd-2112,account_access,pass,pass,resolved,3,"Scored by Claude, accepted by Priyank without changes. username recovery; pull-up-account then verify-identity before giving the username. Polite but brief."
+abcd-7815,order_issue,fail,pass,resolved,4,"Scored by Claude, accepted by Priyank without changes. add an item to an order. pull-up-account (listed before the gate) never ran, so identity fails; skipping it does not fail policy. Warm, enthusiastic agent."
+abcd-6468,account_access,na,pass,resolved,3,"Scored by Claude, accepted by Priyank without changes. 2FA reset; pull-up-account, enter-details, send-link in order. Polite, neutral."
+abcd-3643,storewide_query,na,pass,resolved,4,"Scored by Claude, accepted by Priyank without changes. annual sale timing (FAQ); FAQ searched, pulling up the account does not matter for FAQ. Uses the customer's name, empathises about budget."
+abcd-8803,shipping_issue,fail,pass,resolved,4,"Scored by Claude, accepted by Priyank without changes. asks whether shipping cost is included (shipping cost cue). pull-up-account never ran before the gate, so identity fails. Courteous, good news delivered well."
+abcd-556,order_issue,pass,fail,resolved,4,"Scored by Claude, accepted by Priyank without changes. add jeans to an order. Verified before changes; validate-purchase and update-order are not manage_create steps, so policy fails. Friendly, recovered username unasked."
+abcd-130,manage_account,fail,pass,resolved,3,"Scored by Claude, accepted by Priyank without changes. wrong name on profile. record-reason (listed before the gate) never ran, so identity fails. Actions logged at the end but in order. Patient but mostly neutral."
+abcd-5315,storewide_query,na,pass,resolved,3,"Scored by Claude, accepted by Priyank without changes. refund policy question (FAQ); FAQ searched and answered. Polite, neutral."
+abcd-1390,single_item_query,na,pass,resolved,4,"Scored by Claude, accepted by Priyank without changes. jacket washing (FAQ); searched and answered, colour question redirected to the site. Warm and conversational."
+abcd-9380,troubleshoot_site,na,pass,resolved,4,"Scored by Claude, accepted by Priyank without changes. slow website, but tagged shopping_cart; judged by the real need, where try-again and instructions are plausible troubleshooting steps. Ambiguous: under the tag's steps 'instructions' is off-policy. Agent apologetic and reassuring."
+abcd-7884,single_item_query,na,pass,resolved,3,"Scored by Claude, accepted by Priyank without changes. removing gum from boots (FAQ); searched and answered. Polite, neutral."
+abcd-7890,single_item_query,na,pass,partial,2,"Scored by Claude, accepted by Priyank without changes. boot width; searched, gave general sizing but never answered regular vs wide, so partial. Terse, ended the chat abruptly."
+abcd-1448,purchase_dispute,fail,pass,resolved,2,"Scored by Claude, accepted by Priyank without changes. competitor price; promo code given. record-reason (listed before the gate) never ran, so identity fails. Did not acknowledge the customer's frustration; mechanical."

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { articleUrl, type DisplayEdit, type WikiFrame, type WikiResponse } from "@/lib/wiki-stream/types";
 import { previewCapturedAt, previewEdits, previewFrame } from "@/lib/wiki-stream/preview";
 import styles from "./wiki-stream.module.css";
@@ -10,11 +10,35 @@ const editions: Record<string, string> = { en: "English", de: "German", fr: "Fre
 const language = (wiki: string) => { const code = wiki.replace(/wiki$/, ""); return editions[code] ?? code.toUpperCase(); };
 const number = (value: number) => value.toLocaleString("en-US");
 const time = (value: number) => new Date(value).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 function Sparkline({ frame }: { frame: WikiFrame }) {
   const max = Math.max(1, ...frame.activity.map((m) => m.count));
   return <div className={styles.sparkline} aria-label="Article edits per minute over the recent window">
     {frame.activity.length ? frame.activity.map((m) => <div key={m.minute} style={{ height: `${Math.max(4, m.count / max * 100)}%` }} title={`${time(m.minute)} · ${m.count} edits`} />) : <p className="self-center text-xs text-soft">Activity builds as the Kafka consumer runs.</p>}
+  </div>;
+}
+
+// Placeholder rows shaped like edits while the worker wakes; real edits replace them as they arrive.
+function FeedLoading({ elapsed }: { elapsed: number }) {
+  return <div>
+    <div className={styles.loadingHead}>
+      <span className={styles.pulse} aria-hidden="true" />
+      <div role="status"><p className="text-sm font-medium">Starting the stream…</p><p className="mt-1 text-xs leading-5 text-muted">The server was asleep. New Wikipedia edits usually show up within a minute.</p></div>
+      <span className={styles.count} aria-hidden="true">{clock(elapsed)}</span>
+    </div>
+    {Array.from({ length: 6 }, (_, i) => <div key={i} className={styles.skeleton} style={{ "--i": i } as CSSProperties} aria-hidden="true">
+      <span /><span><i style={{ width: `${55 + (i * 37) % 35}%` }} /><i /></span><span />
+    </div>)}
+  </div>;
+}
+
+function FeedIdle({ retry, onStart }: { retry: boolean; onStart: () => void }) {
+  return <div className={styles.idle}>
+    <span className={styles.restingDot} aria-hidden="true" />
+    <p className="text-base font-semibold">{retry ? "The live feed hasn’t resumed yet" : "The live stream is resting"}</p>
+    <p className="max-w-sm text-sm leading-6 text-muted">{retry ? "Waking it can occasionally take longer. Try starting it again." : "Start it to pull fresh edits from Wikipedia’s public feed through the pipeline. It takes about a minute, then edits appear here on their own."}</p>
+    <button type="button" className="pill-link primary mt-2 text-sm" onClick={onStart}>{retry ? "Try again" : "▶ Start live feed"}</button>
   </div>;
 }
 
@@ -27,6 +51,9 @@ export default function WikiStream() {
   const [humans, setHumans] = useState(false);
   const [now, setNow] = useState<number | null>(null);
   const [wakeState, setWakeState] = useState<"idle" | "requesting" | "waiting" | "retry">("idle");
+  const [wakeStartedAt, setWakeStartedAt] = useState<number | null>(null);
+  // Dev only: ?feed=idle|loading|retry holds the empty feed in that state without polling or waking the pipeline.
+  const [forced, setForced] = useState<"idle" | "loading" | "retry" | null>(null);
   const wakeAttempted = useRef(false);
   const wakeController = useRef<AbortController | null>(null);
   const hasFreshFeed = useRef(false);
@@ -37,7 +64,7 @@ export default function WikiStream() {
   const frame = response.frame ?? previewFrame;
   const recorded = !response.frame;
   const stale = Boolean(response.frame && (response.mode === "stale" || (now !== null && now - response.frame.at > 30_000)));
-  const running = !paused && visible;
+  const running = !paused && visible && !forced;
 
   const startLiveFeed = useCallback(async () => {
     if (wakeController.current) return;
@@ -45,6 +72,7 @@ export default function WikiStream() {
     const controller = new AbortController();
     wakeController.current = controller;
     setWakeState("requesting");
+    setWakeStartedAt(Date.now());
     const timeout = setTimeout(() => controller.abort(), 12_000);
     try {
       const result = await fetch("/api/wiki-stream/wake", { method: "POST", signal: controller.signal });
@@ -54,6 +82,18 @@ export default function WikiStream() {
   }, []);
 
   useEffect(() => () => { wakeController.current?.abort(); }, []);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    const state = new URLSearchParams(window.location.search).get("feed");
+    if (state === "idle" || state === "loading" || state === "retry") { setForced(state); setFeed([]); setWakeStartedAt(Date.now()); }
+  }, []);
+
+  useEffect(() => {
+    if (forced !== "loading") return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [forced]);
 
   useEffect(() => {
     if (wakeState !== "waiting") return;
@@ -114,6 +154,11 @@ export default function WikiStream() {
   const editionOptions = [...new Set([...frame.languages.map((l) => l.wiki), ...feed.map((e) => e.wiki), ...(edition === "all" ? [] : [edition])])].sort();
   const maxLanguage = Math.max(1, ...frame.languages.map((l) => l.count));
   const botPct = frame.stats.events ? Math.round(frame.stats.bots / frame.stats.events * 100) : 0;
+  const wake = forced === "loading" ? "waiting" : forced ?? wakeState;
+  const starting = wake === "requesting" || wake === "waiting";
+  const canStart = Boolean(forced) || (!paused && response.mode !== "budget" && (stale || response.mode === "unavailable" || wake !== "idle"));
+  const start = () => { if (forced) { setForced("loading"); setWakeStartedAt(Date.now()); } else void startLiveFeed(); };
+  const elapsed = starting && wakeStartedAt && now ? Math.max(0, Math.floor((now - wakeStartedAt) / 1000)) : 0;
   const status = paused ? "Display paused" : recorded ? "Recorded Kafka run" : stale ? "Last received batch" : "Live from the pipeline";
 
   return <div className={styles.dashboard}>
@@ -124,16 +169,6 @@ export default function WikiStream() {
       </div>
       <button type="button" className="pill-link text-xs" onClick={() => setPaused((p) => !p)}>{paused ? "▶ Resume display" : "Ⅱ Pause display"}</button>
     </div>
-    {recorded && response.mode !== "preview" && <p className="mb-4 rounded-xl border border-border bg-surface-muted px-4 py-3 text-sm text-muted">The live feed is resting. Explore a recorded Wikipedia sample below.</p>}
-    {!paused && (stale || response.mode === "unavailable" || wakeState !== "idle") && response.mode !== "budget" && (
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-muted px-4 py-3">
-        <p className="text-sm leading-6 text-muted" role="status">{wakeState === "requesting" || wakeState === "waiting"
-          ? "Starting the live feed… this can take about a minute. Fresh edits will appear automatically."
-          : wakeState === "retry" ? "The live feed hasn’t resumed yet. You can try starting it again."
-          : "The live stream is idle. Start it to bring in fresh Wikipedia edits."}</p>
-        <button type="button" className="pill-link text-xs disabled:cursor-wait disabled:opacity-60" disabled={wakeState === "requesting" || wakeState === "waiting"} onClick={() => void startLiveFeed()}>{wakeState === "requesting" || wakeState === "waiting" ? "Starting…" : "Start live feed"}</button>
-      </div>
-    )}
 
     <div className={styles.stats}>
       <div><p>Article edits observed</p><strong>{number(frame.stats.events)}</strong><span>{recorded ? "Pipeline total at the time of recording" : "Accepted edits across active capture windows"}</span></div>
@@ -150,13 +185,25 @@ export default function WikiStream() {
           <label className="flex cursor-pointer items-center gap-2 text-xs text-muted"><input type="checkbox" checked={humans} onChange={(e) => setHumans(e.target.checked)} /> Humans only</label>
           <span className="ml-auto text-xs text-soft">Open an article on Wikipedia ↗</span>
         </div>
+        {feed.length > 0 && canStart && <div className={styles.notice}>
+          {starting ? <span className={styles.pulse} aria-hidden="true" /> : <span className={styles.restingDot} aria-hidden="true" />}
+          <p role="status">{starting ? "Starting the stream… New Wikipedia edits usually show up within a minute."
+            : wake === "retry" ? "The live feed hasn’t resumed yet."
+            : recorded ? "The live stream is resting, so this is a recorded sample." : "The live stream is resting. These are the last edits it received."}</p>
+          {starting ? <span className={styles.count} aria-hidden="true">{clock(elapsed)}</span>
+            : <button type="button" className="pill-link text-xs" onClick={start}>{wake === "retry" ? "Try again" : "▶ Start live feed"}</button>}
+        </div>}
         <div className={styles.feed} role="region" aria-label="Sampled Wikipedia edits" tabIndex={0}>
           {filtered.slice(0, 12).map((edit) => <a key={edit.id} className={styles.edit} href={articleUrl(edit)} target="_blank" rel="noopener noreferrer" aria-label={`Read ${edit.title} on ${language(edit.wiki)} Wikipedia (opens in a new tab)`}>
             <span className={styles.languageCode}>{edit.wiki.replace(/wiki$/, "").slice(0, 3)}</span>
             <span className="min-w-0"><span className="flex items-center gap-2"><span className={styles.articleTitle}>{edit.title}</span>{edit.kind === "new" && <span className={styles.newBadge}>NEW</span>}</span><span className={styles.editMeta}>{language(edit.wiki)} <span>·</span> {edit.bot ? "Bot" : "Human"} <span>·</span> {now ? time(edit.timestamp) : "Source timestamp"}</span></span>
             <span className={`${styles.delta} ${edit.delta < 0 ? styles.negative : ""}`}>{edit.delta >= 0 ? "+" : ""}{number(edit.delta)}<small> bytes</small></span>
           </a>)}
-          {!filtered.length && <p className="p-10 text-center text-sm text-muted">No sampled edits match this filter yet. Try another edition or all editors.</p>}
+          {!filtered.length && (feed.length
+            ? <div className="p-10 text-center text-sm text-muted"><p>No edits in this view yet.</p><button type="button" className="pill-link mt-4 text-xs" onClick={() => { setEdition("all"); setHumans(false); }}>Show all edits</button></div>
+            : starting ? <FeedLoading elapsed={elapsed} />
+            : canStart ? <FeedIdle retry={wake === "retry"} onStart={start} />
+            : <p className="p-10 text-center text-sm text-muted">{response.mode === "budget" ? "The live feed has used today’s free read budget. It returns tomorrow." : "Waiting for the next batch of edits…"}</p>)}
         </div>
         <div className={styles.feedFooter}><span>Sampled article edits · select an article to open Wikipedia</span><span>{recorded ? "Recorded source data" : "Up to 10 edits / batch"}</span></div>
       </section>

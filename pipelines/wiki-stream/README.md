@@ -101,7 +101,7 @@ npm run build
 
 ## Next increment
 
-- Deploy the provided worker container using [DEPLOY.md](DEPLOY.md); no worker host account was available in this session.
+- The worker runs on Render's free web-service tier (`priyankpatil.onrender.com`, see [DEPLOY.md](DEPLOY.md)). It sleeps after 15 minutes without inbound traffic; the project page wakes it.
 - Monitor full-broker ingress/egress and p50/p95 latency over a longer run.
 - The page keeps recent edit activity below the live dashboard. Recorded Kafka events provide labelled fallback playback when the live pipeline is offline.
 

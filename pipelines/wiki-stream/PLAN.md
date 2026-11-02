@@ -34,7 +34,7 @@ Existing database usage before initialization was approximately 125 MB. The live
 | Bounded state, counters, windows and display consumer | Verified against live Aiven and Supabase |
 | Supabase schema, dedicated roles and budget/permission checks | Initialized and checked |
 | Frontend and cached read API | Live API and recorded Kafka replay implemented; HTTP/build checks pass; browser visual QA unavailable |
-| Always-on worker host | Container, health endpoint, minimal secret export and free Render deployment guide ready; account deployment pending |
+| Worker host | Deployed on Render's free web-service tier (`priyankpatil.onrender.com`); sleeps after 15 idle minutes and is woken by visits to the project page |
 | Failure/recovery exercise and longer-run profiling | Recovery/counters and cloud resource caps checked; ongoing monitoring remains |
 | Supporting dashboard tiles | Recent edit activity retained; event-tracing and isolated replay tiles removed from the page |
 

@@ -143,14 +143,14 @@ Judge test on 12 labelled conversations (4 skipped identity checks, 4 clean, 4 F
 
 **Decisions:**
 - **Primary judge:** `openai/gpt-oss-20b`, about 820 tokens per conversation.
-- **Day-18 incident model:** `nvidia/nemotron-3-ultra-550b-a55b`. The 12-chat test suggested it catches fewer skipped checks. On ~260 production chats the opposite held: it was more accurate on every checkable dimension, and more generous on the judgment-only ones (empathy, resolution), which raised CXI by ~5 points while CSAT stayed flat. The drift is real either way; the 12-chat result was not. See the model-switch RCA.
+- **Day-18 incident model:** `nvidia/nemotron-3-ultra-550b-a55b`. The 12-chat test suggested it catches fewer skipped checks. On ~260 production chats the opposite held: it was more accurate on every checkable dimension, and more generous on the judgment-only ones (empathy, resolution), which raised CXI by ~5 points while CSAT stayed flat. The drift is real either way; the 12-chat result was not. See the "Judge model changed" charts in the Metrics section of the page.
 - **Throughput:** at most ~4 concurrent requests; back off and retry on 429. NVIDIA sends no rate-limit headers.
 - **Intent accuracy** was low for every model with bare flow labels. The fix belongs in the prompt (add flow descriptions from `guidelines.json`), and the before/after is reported as a telemetry result.
 - **Groq** stays the site's NL → SQL provider. Its free tier (8K tokens/min on `openai/gpt-oss-120b`) is too tight for batch scoring.
 
 ## Planted incidents
 
-Each incident is detected by the pipeline's own monitoring, then diagnosed in a written RCA.
+Each incident is detected by the pipeline's own monitoring, then diagnosed. The diagnosis is shown on the project page as charts annotated with the incident date (Metrics section).
 
 | Day | Incident | Type | Expected signal |
 |---|---|---|---|
@@ -169,10 +169,10 @@ Each incident is detected by the pipeline's own monitoring, then diagnosed in a 
 | 2 | **Rubric:** written definitions, decision rules, anchors; prompt generated from it; human calibration | `RUBRIC.md`, `rubric_versions`, `calibration/sheet-1.csv` | ✅ rubric; ✅ calibration sheet 1 (AI-assisted, see Decisions) |
 | 3 | **Judge:** prompt assembly → LLM → JSON validation and retry | `scoring_requests`, `judge_config`, judge client | ✅ |
 | 4 | **Store outputs:** append-only, versioned | `judge_results`, `scores`, `scoring_runs` | ✅ |
-| 5 | **Combine:** inputs + outputs into marts; retraining export | mart views | ⬜ |
-| 6 | **Orchestrate and alert:** scheduled workflow; post-run checks open GitHub issues | `.github/workflows/cx-eval.yml`, checks | ⬜ |
-| 7 | **Incidents and RCA:** plant, detect, diagnose, quantify | incident switches, RCA write-ups | ⬜ |
-| 8 | **Dashboard:** exec summary, early warnings, cohorts, judge health, RCA write-ups, pipeline diagram | `/projects/cx-eval`, project write-up | ⬜ |
+| 5 | **Combine:** inputs + outputs into marts; retraining export | mart views | ✅ 8 views: conversation scores, CXI daily, cohort daily, judge accuracy, drift, pipeline health, human agreement, retraining export |
+| 6 | **Orchestrate and alert:** scheduled workflow; post-run checks open GitHub issues | `.github/workflows/cx-eval.yml`, checks | ✅ daily workflow; `run_checks()` across data, model and business layers opens and closes GitHub issues; hourly `pg_cron` freshness watchdog |
+| 7 | **Incidents and RCA:** plant, detect, diagnose, quantify | incident switches, RCA write-ups | ✅ day 18 model switch (`judge_config`), day 22 team routing and day 26 renamed field (`source-sim.ts`) planted and detected; diagnosed as annotated before/after charts on the page rather than separate write-ups |
+| 8 | **Dashboard:** exec summary, early warnings, cohorts, judge health, RCA write-ups, pipeline diagram | `/projects/cx-eval`, project write-up | ✅ data card, interactive pipeline demo with live judge, metrics with incident annotations, architecture diagram |
 
 If time runs short, reduce the dashboard polish in stage 8, not stages 6–7.
 

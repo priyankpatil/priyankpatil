@@ -10,6 +10,7 @@ import { explainIdentity, explainPolicy } from "@/lib/cx-eval/ground-truth";
 import type { DemoChat, RawRecord, RubricId, StoredRun } from "@/lib/cx-eval/types";
 import { LOADER_SNIPPET, TRANSFORM_SNIPPET, VALIDATE_SNIPPET } from "@/lib/cx-eval/snippets";
 import type { CheckResult } from "@/lib/cx-eval/validate";
+import { RedactionReport } from "./RedactionReport";
 import { Badge, Code, Collapsible, Fact, Mark, TextButton, TryThis, verdictTone } from "./ui";
 
 // ── View model ──────────────────────────────────────────────────────────────
@@ -265,11 +266,12 @@ function IngestStage({ run }: { run: RunView }) {
           content: (
             <>
               <RecordJson record={run.record} renamed={run.renamed} />
-              <Note>Names, emails, phone numbers, IDs, addresses and secrets are replaced with placeholders such as [NAME_1] in the same transaction that lands the batch, so the original text is never stored. Measured against the profiles the crowdworkers role-played: 98.6% of personal values removed, 95.8% of masks on real personal data. Otherwise the record is stored as delivered; all later rules run as SQL in the database.</Note>
+              <Note>Names, emails, phone numbers, IDs, addresses and secrets are replaced with placeholders such as [NAME_1] in the same transaction that lands the batch, so the original text is never stored. How well that works, and where it misses, is under Redaction. Otherwise the record is stored as delivered; all later rules run as SQL in the database.</Note>
             </>
           ),
         },
         { key: "chat", label: "Read the chat", content: <ChatBubbles turns={run.context.turns} /> },
+        { key: "redaction", label: "Redaction", content: <RedactionReport /> },
         {
           key: "code",
           label: "Loader script",

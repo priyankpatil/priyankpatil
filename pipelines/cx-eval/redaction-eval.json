@@ -1,5 +1,5 @@
 {
- "evaluatedAt": "2026-11-06T19:52:08.663Z",
+ "evaluatedAt": "2026-11-06T20:07:17.254Z",
  "dataset": "ABCD v1.1 (sha256 2bdf53ac3595)",
  "conversations": 10042,
  "turns": 220983,
@@ -152,6 +152,71 @@
    "masked": 796,
    "personal": 517,
    "precisionPct": 64.9
+  }
+ ],
+ "missesByReason": [
+  {
+   "reason": "bare_reply",
+   "label": "Bare reply, but the question was earlier or unrecognised",
+   "missed": 339,
+   "byType": {
+    "name": 95,
+    "name_part": 201,
+    "password": 2,
+    "city": 9,
+    "zip_code": 3,
+    "security_answer": 13,
+    "account_id": 16
+   }
+  },
+  {
+   "reason": "passing_mention",
+   "label": "Mentioned in passing: no label, no question",
+   "missed": 227,
+   "byType": {
+    "city": 38,
+    "name_part": 173,
+    "name": 12,
+    "security_answer": 3,
+    "zip_code": 1
+   }
+  },
+  {
+   "reason": "packed",
+   "label": "Listed with other details, no label for this one",
+   "missed": 171,
+   "byType": {
+    "name": 35,
+    "name_part": 79,
+    "account_id": 4,
+    "city": 48,
+    "password": 4,
+    "zip_code": 1
+   }
+  },
+  {
+   "reason": "cue_unmatched",
+   "label": "Cue is there, sentence shape not covered",
+   "missed": 149,
+   "byType": {
+    "name": 29,
+    "name_part": 105,
+    "security_answer": 12,
+    "city": 2,
+    "account_id": 1
+   }
+  },
+  {
+   "reason": "action_line",
+   "label": "System line in a format the templates don't cover",
+   "missed": 35,
+   "byType": {
+    "name_part": 11,
+    "city": 14,
+    "name": 2,
+    "security_answer": 7,
+    "username": 1
+   }
   }
  ],
  "valuesByLayer": {

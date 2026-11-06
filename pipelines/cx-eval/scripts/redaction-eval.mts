@@ -43,6 +43,30 @@ function arg(name: string): string | undefined {
   return i === -1 ? undefined : process.argv[i + 1];
 }
 
+/**
+ * Why a value was missed, read from the turn's shape. Ordered: the first match wins.
+ * Rules work from cues (a label, the agent's question, a known line format), so
+ * each reason is a way the cue was absent or took a shape the rules don't cover.
+ */
+const MISS_REASONS = {
+  action_line: "System line in a format the templates don't cover",
+  packed: "Listed with other details, no label for this one",
+  bare_reply: "Bare reply, but the question was earlier or unrecognised",
+  cue_unmatched: "Cue is there, sentence shape not covered",
+  passing_mention: "Mentioned in passing: no label, no question",
+} as const;
+type MissReason = keyof typeof MISS_REASONS;
+const CUE = /\b(name|it'?s|this is|here|answer|security|maiden|password|passwork|p\/w|account|acct|id|user|zip|address|pin)\b/i;
+
+function missReason(t: Turn, redactedText: string, value: string): MissReason {
+  if (t.speaker === "action") return "action_line";
+  if (/\[[A-Z_]+(?:_\d+)?\]/.test(redactedText)) return "packed";
+  const rest = t.text.replace(new RegExp(escape(value), "ig"), "").replace(/[^A-Za-z]+/g, " ").trim();
+  if (rest.length <= 12) return "bare_reply";
+  if (CUE.test(t.text)) return "cue_unmatched";
+  return "passing_mention";
+}
+
 const escape = (v: string) => v.replace(/[.*+?^${}()|[\]\\/-]/g, "\\$&");
 const occurs = (text: string, value: string) =>
   new RegExp(`(?<![A-Za-z0-9])${escape(value)}(?![A-Za-z0-9])`, "i").test(text);
@@ -89,6 +113,7 @@ let verifiedExtra = 0;
 const byLayer = new Map<string, number>();
 const missWanted = process.argv.includes("--misses") ? { type: process.argv[process.argv.indexOf("--misses") + 1], n: Number(process.argv[process.argv.indexOf("--misses") + 2] ?? 10) } : null;
 const misses: string[] = [];
+const missesByReason = new Map<MissReason, { total: number; byType: Record<string, number> }>();
 const fpWanted = process.argv.includes("--fp") ? { kind: process.argv[process.argv.indexOf("--fp") + 1], n: Number(process.argv[process.argv.indexOf("--fp") + 2] ?? 10) } : null;
 const falsePositives: string[] = [];
 let turnsTotal = 0;
@@ -117,6 +142,11 @@ try {
           stat.present++;
           if (occurs(redacted[k].text, value)) {
             stat.missed++;
+            const reason = missReason(t, redacted[k].text, value);
+            const r = missesByReason.get(reason) ?? { total: 0, byType: {} };
+            r.total++;
+            r.byType[type] = (r.byType[type] ?? 0) + 1;
+            missesByReason.set(reason, r);
             if (missWanted && missWanted.type === type && misses.length < missWanted.n) {
               misses.push(`${type} "${value}" | prev: ${original[k - 1]?.text.slice(0, 70) ?? ""} | turn: ${t.text.slice(0, 90)}`);
             }
@@ -172,6 +202,9 @@ const report = {
   },
   recall: recallRows.sort((a, b) => b.present - a.present),
   precision: precisionRows.sort((a, b) => b.masked - a.masked),
+  missesByReason: [...missesByReason]
+    .sort((a, b) => b[1].total - a[1].total)
+    .map(([reason, r]) => ({ reason, label: MISS_REASONS[reason], missed: r.total, byType: r.byType })),
   valuesByLayer: Object.fromEntries([...byLayer].sort((a, b) => b[1] - a[1])),
   turnsWithEmailOrPhoneAfter: leakTurns,
   note: "Recall counts turns where a profile value appeared. Strict precision counts masked values that match a profile value; the second figure also counts well-formed contact details and agent-issued passwords that are not in the profile (a customer's new address, a second phone number). Profile values are ground truth only and are never used for redaction or stored.",
@@ -183,6 +216,8 @@ console.log("\nRecall by profile field");
 for (const r of report.recall) console.log(`  ${r.type.padEnd(16)} ${String(r.recallPct).padStart(5)}%   ${r.present - r.missed}/${r.present}`);
 console.log("\nPrecision by placeholder type");
 for (const r of report.precision) console.log(`  ${r.kind.padEnd(16)} ${String(r.precisionPct).padStart(5)}%   ${r.personal}/${r.masked}`);
+console.log("\nMisses by reason");
+for (const r of report.missesByReason) console.log(`  ${String(r.missed).padStart(4)}  ${r.label}  ${JSON.stringify(r.byType)}`);
 console.log(`\nValues by layer: ${JSON.stringify(report.valuesByLayer)}`);
 console.log(`Turns still containing an email or phone format: ${leakTurns}`);
 if (falsePositives.length) console.log(`\nNot in the profile (local debugging only):\n  ${falsePositives.join("\n  ")}`);

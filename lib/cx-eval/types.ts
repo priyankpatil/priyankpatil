@@ -65,7 +65,14 @@ export interface DemoChat {
   /** One line: what this chat shows. */
   blurb: string;
   batchDate: string;
+  /** Redacted record, as stored in cx_eval.raw_conversations. */
   raw: RawRecord;
+  /**
+   * Transcript as the support system delivered it, before redaction. Public ABCD
+   * text (role-played, fictional profiles), shown only to compare with `raw`;
+   * it is never written to the database.
+   */
+  delivered: RawTurn[];
   /** JudgeContext minus turns (turns = raw.transcript), as stored in cx_eval.scoring_requests. */
   context: { contactReason: string; policySteps: string[]; guideline: string; estTokens: number };
   enrich: {

@@ -270,8 +270,17 @@ function IngestStage({ run }: { run: RunView }) {
             </>
           ),
         },
-        { key: "chat", label: "Read the chat", content: <ChatBubbles turns={run.context.turns} /> },
-        { key: "redaction", label: "Redaction", content: <RedactionReport /> },
+        {
+          key: "chat",
+          label: "Read the chat",
+          content: (
+            <>
+              <ChatBubbles turns={run.chat.delivered as JudgeContext["turns"]} />
+              <Note>As the support system delivered it, before redaction. This version is never stored; Redaction shows what replaces it.</Note>
+            </>
+          ),
+        },
+        { key: "redaction", label: "Redaction", content: <RedactionReport delivered={run.chat.delivered} masked={run.context.turns} /> },
         {
           key: "code",
           label: "Loader script",

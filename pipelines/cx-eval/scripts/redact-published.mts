@@ -1,6 +1,7 @@
 // Applies PII redaction to snapshots committed to the repo, which were exported
 // from the database before redaction existed:
 //   lib/cx-eval/demo.json                       chats shown on the project page
+//                                               (`delivered` is the pre-redaction text, kept on purpose)
 //   pipelines/cx-eval/calibration/sheet-1.md    the human calibration sheet
 //
 //   SUPABASE_DB_URL=... npx tsx pipelines/cx-eval/scripts/redact-published.mts
@@ -67,7 +68,7 @@ async function redactDemo(): Promise<number> {
     const { turns, found } = await redact(transcript);
     if (chat.raw?.transcript) chat.raw.transcript = turns;
     else if (chat.raw?.messages) chat.raw.messages = turns;
-    await maskObject(chat, found, new Set(["transcript", "messages", "promptHash", "id"]));
+    await maskObject(chat, found, new Set(["transcript", "messages", "delivered", "promptHash", "id"]));
     values += found.length;
   }
   writeFileSync(DEMO, JSON.stringify(demo) + "\n");

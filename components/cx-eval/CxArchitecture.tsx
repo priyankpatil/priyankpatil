@@ -23,7 +23,7 @@ interface Node {
 
 const nodes = {
   chats: { title: "Support chats", detail: "ABCD dataset", host: "Simulated daily batches", icon: "chats", tone: "brand", x: 95, y: 250 },
-  load: { title: "Load", detail: "Land the day's raw batch", host: "GitHub Actions", hostIcon: "githubactions", icon: "ingest", tone: "processing", x: 300, y: 125 },
+  load: { title: "Load", detail: "Redact and land the day's batch", host: "GitHub Actions", hostIcon: "githubactions", icon: "ingest", tone: "processing", x: 300, y: 125 },
   validate: { title: "Validate & transform", detail: "Schema checks, enrichment", host: "Supabase · SQL", icon: "validate", tone: "processing", x: 530, y: 125 },
   judge: { title: "LLM judge", detail: "Scores against the rubric", host: "gpt-oss-20b", hostIcon: "nvidia", icon: "judge", tone: "processing", x: 760, y: 125 },
   scores: { title: "Scores & marts", detail: "Append-only, versioned", host: "Supabase · Postgres", icon: "supabase", tone: "supabase", x: 760, y: 365 },
@@ -87,7 +87,7 @@ export default function CxArchitecture() {
       <figure className={styles.figure} id={`${id}-diagram`}>
         <svg className={styles.diagram} viewBox="0 0 1120 540" role="img" aria-labelledby={`${id}-title ${id}-description`}>
           <title id={`${id}-title`}>CX evaluation pipeline architecture</title>
-          <desc id={`${id}-description`}>Grouped into data source, data pipeline and serving. Once a day a GitHub Actions job loads a batch of support chats. SQL in Supabase validates and transforms it, sending failed records to quarantine. An LLM judge (gpt-oss-20b on the NVIDIA API) scores each chat, and scores are stored append-only in Supabase with marts built on top. Checks on each run open or close GitHub issues. The dashboard on Vercel shows an exported snapshot of the marts.</desc>
+          <desc id={`${id}-description`}>Grouped into data source, data pipeline and serving. Once a day a GitHub Actions job loads a batch of support chats, masking personal data before it is stored. SQL in Supabase validates and transforms it, sending failed records to quarantine. An LLM judge (gpt-oss-20b on the NVIDIA API) scores each chat, and scores are stored append-only in Supabase with marts built on top. Checks on each run open or close GitHub issues. The dashboard on Vercel shows an exported snapshot of the marts.</desc>
           <defs>
             <marker id={`${id}-arrow`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9" fill="none" stroke="var(--soft)" strokeWidth="1.5" /></marker>
           </defs>
@@ -138,7 +138,7 @@ export default function CxArchitecture() {
       </figure>
 
       <div className={styles.explanation}>
-        <div><h3 className="text-sm font-semibold text-text">Load and check</h3><p className="mt-2 text-sm leading-6 text-muted">A GitHub Actions job lands one day of chats. SQL in Postgres checks each record against the expected fields; records that fail are held in quarantine instead of reaching the judge. The rest are cleaned and enriched.</p></div>
+        <div><h3 className="text-sm font-semibold text-text">Load and check</h3><p className="mt-2 text-sm leading-6 text-muted">A GitHub Actions job lands one day of chats, with names, contact details and IDs masked in the same transaction so personal data is never stored. SQL in Postgres checks each record against the expected fields; records that fail are held in quarantine instead of reaching the judge. The rest are cleaned and enriched.</p></div>
         <div><h3 className="text-sm font-semibold text-text">Score with an LLM</h3><p className="mt-2 text-sm leading-6 text-muted">For each chat, the job builds a prompt from the rubric, sends it to gpt-oss-20b and checks the JSON reply. Failed calls are retried on the next run. Scores are only ever added, each tagged with its rubric and model.</p></div>
         <div><h3 className="text-sm font-semibold text-text">Watch and serve</h3><p className="mt-2 text-sm leading-6 text-muted">Checks look for judge drift, volume drops and quarantine spikes. Each new problem opens a GitHub issue that closes itself when the check clears. This page shows an exported snapshot of the marts.</p></div>
       </div>

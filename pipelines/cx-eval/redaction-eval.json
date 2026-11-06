@@ -1,0 +1,165 @@
+{
+ "evaluatedAt": "2026-11-06T19:52:08.663Z",
+ "dataset": "ABCD v1.1 (sha256 2bdf53ac3595)",
+ "conversations": 10042,
+ "turns": 220983,
+ "overall": {
+  "recallPct": 98.6,
+  "precisionPct": 95.8,
+  "precisionInclVerifiedPct": 97.7,
+  "present": 67702,
+  "missed": 921,
+  "masked": 42526,
+  "verifiedExtra": 837
+ },
+ "recall": [
+  {
+   "type": "name_part",
+   "present": 31348,
+   "missed": 569,
+   "recallPct": 98.2
+  },
+  {
+   "type": "name",
+   "present": 14268,
+   "missed": 173,
+   "recallPct": 98.8
+  },
+  {
+   "type": "username",
+   "present": 4680,
+   "missed": 1,
+   "recallPct": 100
+  },
+  {
+   "type": "order_id",
+   "present": 4601,
+   "missed": 0,
+   "recallPct": 100
+  },
+  {
+   "type": "account_id",
+   "present": 3067,
+   "missed": 21,
+   "recallPct": 99.3
+  },
+  {
+   "type": "email",
+   "present": 2615,
+   "missed": 0,
+   "recallPct": 100
+  },
+  {
+   "type": "zip_code",
+   "present": 2358,
+   "missed": 5,
+   "recallPct": 99.8
+  },
+  {
+   "type": "city",
+   "present": 1864,
+   "missed": 111,
+   "recallPct": 94
+  },
+  {
+   "type": "street_address",
+   "present": 1746,
+   "missed": 0,
+   "recallPct": 100
+  },
+  {
+   "type": "phone",
+   "present": 608,
+   "missed": 0,
+   "recallPct": 100
+  },
+  {
+   "type": "pin",
+   "present": 319,
+   "missed": 0,
+   "recallPct": 100
+  },
+  {
+   "type": "security_answer",
+   "present": 207,
+   "missed": 35,
+   "recallPct": 83.1
+  },
+  {
+   "type": "password",
+   "present": 21,
+   "missed": 6,
+   "recallPct": 71.4
+  }
+ ],
+ "precision": [
+  {
+   "kind": "NAME",
+   "masked": 22087,
+   "personal": 21725,
+   "precisionPct": 98.4
+  },
+  {
+   "kind": "ORDER_ID",
+   "masked": 4478,
+   "personal": 4450,
+   "precisionPct": 99.4
+  },
+  {
+   "kind": "USERNAME",
+   "masked": 3768,
+   "personal": 3603,
+   "precisionPct": 95.6
+  },
+  {
+   "kind": "ACCOUNT_ID",
+   "masked": 2874,
+   "personal": 2753,
+   "precisionPct": 95.8
+  },
+  {
+   "kind": "EMAIL",
+   "masked": 2780,
+   "personal": 2699,
+   "precisionPct": 97.1
+  },
+  {
+   "kind": "ZIP",
+   "masked": 2675,
+   "personal": 2552,
+   "precisionPct": 95.4
+  },
+  {
+   "kind": "ADDRESS",
+   "masked": 1099,
+   "personal": 955,
+   "precisionPct": 86.9
+  },
+  {
+   "kind": "SECRET",
+   "masked": 1011,
+   "personal": 543,
+   "precisionPct": 53.7
+  },
+  {
+   "kind": "CITY",
+   "masked": 958,
+   "personal": 927,
+   "precisionPct": 96.8
+  },
+  {
+   "kind": "PHONE",
+   "masked": 796,
+   "personal": 517,
+   "precisionPct": 64.9
+  }
+ ],
+ "valuesByLayer": {
+  "pattern": 18133,
+  "spread": 14533,
+  "context": 8794,
+  "template": 1066
+ },
+ "turnsWithEmailOrPhoneAfter": 0,
+ "note": "Recall counts turns where a profile value appeared. Strict precision counts masked values that match a profile value; the second figure also counts well-formed contact details and agent-issued passwords that are not in the profile (a customer's new address, a second phone number). Profile values are ground truth only and are never used for redaction or stored."
+}

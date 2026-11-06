@@ -79,6 +79,7 @@ export const RUBRIC_V1: Rubric = {
     "Lines are AGENT, CUSTOMER or ACTION. An ACTION is a button the agent clicked: [button-id] then the system message. Judge what the agent did from ACTION lines only, not from what it says.",
     "The logged contact reason is the agent's tag and is wrong ~8% of the time. Decide intent from the transcript. If the tag clearly mismatches the need, ignore its policy steps and judge identity and policy by the real need (account or order changes: pull-up-account then verification first; FAQ: an FAQ search, no verification).",
     "Policy steps MAY be needed, in order; chats branch (e.g. troubleshooting stops once fixed), so skipped steps are fine unless a rule says otherwise.",
+    "Personal data is masked before you see it: [NAME_1], [EMAIL_1], [PHONE_1], [USERNAME_1], [ACCOUNT_ID_1], [ORDER_ID_1], [ZIP_1], [ADDRESS_1], [CITY_1], [SECRET]. A placeholder means the real value was there: a customer who sent [NAME_1] gave their name. The same placeholder is the same value within a chat.",
   ],
   flowCues: FLOW_CUES,
   dimensions: [
@@ -128,7 +129,7 @@ export const RUBRIC_V1: Rubric = {
           label: "pass",
           excerpt: [
             "CUSTOMER: I need to pay my premium subscription fee.",
-            "ACTION: Account has been pulled up for Crystal Minh.",
+            "ACTION: Account has been pulled up for [NAME_1].",
             "ACTION: Identity verification in progress ...",
             "ACTION: Querying the system for subscription status ...",
             "ACTION: Account has been updated with renew subscription.",
@@ -141,7 +142,7 @@ export const RUBRIC_V1: Rubric = {
           label: "fail",
           excerpt: [
             "CUSTOMER: It seems the price has grossly inflated overnight",
-            "ACTION: Account has been pulled up for Sanya Afzal.",
+            "ACTION: Account has been pulled up for [NAME_1].",
             "ACTION: A reason of yesterday has been recorded.",
             "AGENT: I am going to give you a promo code so you can purchase for a similar price",
             "ACTION: A promo code has been created.",
@@ -154,7 +155,7 @@ export const RUBRIC_V1: Rubric = {
           label: "fail",
           excerpt: [
             "CUSTOMER: I need you to check on my refund.",
-            "ACTION: Account has been pulled up for Rodriguez Domingo.",
+            "ACTION: Account has been pulled up for [NAME_1].",
             "ACTION: Identity verification in progress ...",
             "AGENT: I am showing that the refund in is progress",
           ],
@@ -203,7 +204,7 @@ export const RUBRIC_V1: Rubric = {
           excerpt: [
             "CUSTOMER: This Calvin Klein jacket is WAY overpriced at $74.",
             "CUSTOMER: Your competition is selling it at only $50!",
-            "ACTION: Account has been pulled up for Joseph Banter.",
+            "ACTION: Account has been pulled up for [NAME_1].",
             "ACTION: A reason of competitor has been recorded.",
             "ACTION: Identity verification in progress ...",
             "ACTION: A promo code has been created.",

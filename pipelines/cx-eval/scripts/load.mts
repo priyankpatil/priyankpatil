@@ -1,5 +1,8 @@
 // Extract + load: lands ABCD conversations in cx_eval as daily raw batches.
-// No business logic here; validation and transforms run as SQL in Supabase.
+// No business logic here; redaction, validation and transforms run as SQL in
+// Supabase. Each batch is staged in a temporary table, redacted there by
+// cx_eval.redact_batch(), and only the redacted records reach
+// raw_conversations: personal data is never persisted.
 //
 //   npx tsx pipelines/cx-eval/scripts/load.mts --days 1-30 --process
 //
@@ -65,7 +68,8 @@ async function loadReference(data: Awaited<ReturnType<typeof extractAbcd>>) {
   return subflows;
 }
 
-async function loadBatch(batch: Batch, checksum: string) {
+async function loadBatch(batch: Batch, checksum: string): Promise<number> {
+  let masked = 0;
   const { rows: [run] } = await client.query(
     "INSERT INTO cx_eval.pipeline_runs (stage, batch_date) VALUES ('load', $1) RETURNING run_id",
     [batch.date]
@@ -79,16 +83,30 @@ async function loadBatch(batch: Batch, checksum: string) {
          loaded_at = now(), row_count = excluded.row_count, incident = excluded.incident`,
       [batch.date, `abcd_v1.1 sha256:${checksum.slice(0, 12)}`, batch.records.length, batch.incident]
     );
+    // Stage → redact → land, all in this transaction. The staging table is
+    // dropped on commit (or rollback), so unredacted text never persists.
+    await client.query(
+      "CREATE TEMPORARY TABLE cx_staged_conversations (convo_id text PRIMARY KEY, payload jsonb NOT NULL) ON COMMIT DROP"
+    );
     for (let i = 0; i < batch.records.length; i += CHUNK) {
       const records = batch.records.slice(i, i + CHUNK);
-      const labels = batch.labels.slice(i, i + CHUNK);
       await client.query(
-        `INSERT INTO cx_eval.raw_conversations (convo_id, batch_date, payload)
-         SELECT id, $2::date, p FROM unnest($1::text[], $3::jsonb[]) AS u(id, p)
-         ON CONFLICT (convo_id) DO UPDATE SET batch_date = excluded.batch_date, payload = excluded.payload,
-           loaded_at = now(), validation_status = 'pending', validated_at = NULL`,
-        [records.map((r) => r.conversation_id), batch.date, records.map((r) => JSON.stringify(r))]
+        `INSERT INTO cx_staged_conversations (convo_id, payload)
+         SELECT * FROM unnest($1::text[], $2::jsonb[])`,
+        [records.map((r) => r.conversation_id), records.map((r) => JSON.stringify(r))]
       );
+    }
+    const { rows: [redacted] } = await client.query("SELECT cx_eval.redact_batch($1) AS r", [batch.date]);
+    masked = redacted.r.values_masked;
+    await client.query(
+      `INSERT INTO cx_eval.raw_conversations (convo_id, batch_date, payload)
+       SELECT convo_id, $1::date, payload FROM cx_staged_conversations
+       ON CONFLICT (convo_id) DO UPDATE SET batch_date = excluded.batch_date, payload = excluded.payload,
+         loaded_at = now(), validation_status = 'pending', validated_at = NULL`,
+      [batch.date]
+    );
+    for (let i = 0; i < batch.labels.length; i += CHUNK) {
+      const labels = batch.labels.slice(i, i + CHUNK);
       await client.query(
         `INSERT INTO cx_eval.labels (convo_id, true_flow, true_subflow)
          SELECT * FROM unnest($1::text[], $2::text[], $3::text[])
@@ -99,9 +117,10 @@ async function loadBatch(batch: Batch, checksum: string) {
     await client.query("COMMIT");
     await client.query(
       `UPDATE cx_eval.pipeline_runs SET finished_at = now(), status = 'ok', rows_in = $2, rows_out = $2,
-         detail = jsonb_build_object('incident', $3::text) WHERE run_id = $1`,
-      [run.run_id, batch.records.length, batch.incident]
+         detail = jsonb_build_object('incident', $3::text, 'values_masked', $4::int) WHERE run_id = $1`,
+      [run.run_id, batch.records.length, batch.incident, masked]
     );
+    return masked;
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     await client.query(
@@ -122,8 +141,8 @@ try {
 
   for (const day of days) {
     const batch = batches[day - 1];
-    await loadBatch(batch, data.checksum);
-    let line = `day ${String(day).padStart(2)} ${batch.date}: loaded ${batch.records.length}${batch.incident ? ` [${batch.incident}]` : ""}`;
+    const masked = await loadBatch(batch, data.checksum);
+    let line = `day ${String(day).padStart(2)} ${batch.date}: loaded ${batch.records.length}, masked ${masked} values${batch.incident ? ` [${batch.incident}]` : ""}`;
     if (process.argv.includes("--process")) {
       const { rows } = await client.query("SELECT cx_eval.process_batch($1) AS r", [batch.date]);
       const r = rows[0].r;

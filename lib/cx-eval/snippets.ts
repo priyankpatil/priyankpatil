@@ -13,14 +13,27 @@ for (const day of days) {
      ON CONFLICT (batch_date) DO UPDATE SET row_count = excluded.row_count\`,
     [batch.date, source, batch.records.length]
   );
-  // Each record is stored as raw JSON, exactly as it arrived.
+  // Stage → redact → land, in one transaction. The staging table is
+  // dropped on commit, so unredacted text is never stored.
+  await db.query(
+    \`CREATE TEMPORARY TABLE cx_staged_conversations
+       (convo_id text PRIMARY KEY, payload jsonb NOT NULL) ON COMMIT DROP\`
+  );
+  await db.query(
+    \`INSERT INTO cx_staged_conversations
+     SELECT * FROM unnest($1::text[], $2::jsonb[])\`,
+    [ids, records.map((r) => JSON.stringify(r))]
+  );
+  // Names, emails, phones, IDs, addresses and secrets become typed
+  // placeholders ([NAME_1], [EMAIL_1] …), consistent within a chat.
+  await db.query("SELECT cx_eval.redact_batch($1)", [batch.date]);
   // Re-loading a day replaces its rows instead of duplicating them.
   await db.query(
     \`INSERT INTO cx_eval.raw_conversations (convo_id, batch_date, payload)
-     SELECT id, $2, p FROM unnest($1::text[], $3::jsonb[]) AS u(id, p)
+     SELECT convo_id, $1, payload FROM cx_staged_conversations
      ON CONFLICT (convo_id) DO UPDATE
        SET payload = excluded.payload, validation_status = 'pending'\`,
-    [ids, batch.date, records.map((r) => JSON.stringify(r))]
+    [batch.date]
   );
   await db.query("COMMIT");
 

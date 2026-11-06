@@ -10,6 +10,7 @@ import { explainIdentity, explainPolicy } from "@/lib/cx-eval/ground-truth";
 import type { DemoChat, RawRecord, RubricId, StoredRun } from "@/lib/cx-eval/types";
 import { LOADER_SNIPPET, TRANSFORM_SNIPPET, VALIDATE_SNIPPET } from "@/lib/cx-eval/snippets";
 import type { CheckResult } from "@/lib/cx-eval/validate";
+import { RedactionReport } from "./RedactionReport";
 import { Badge, Code, Collapsible, Fact, Mark, TextButton, TryThis, verdictTone } from "./ui";
 
 // ── View model ──────────────────────────────────────────────────────────────
@@ -73,7 +74,7 @@ export interface DemoActions {
 export type StageKey = "ingest" | "validate" | "enrich" | "prompt" | "judge" | "check" | "store" | "metrics";
 
 export const STAGES: { key: StageKey; name: string; group: string; does: string; where: string }[] = [
-  { key: "ingest", name: "Ingest", group: "Input", does: "The record exactly as the support system delivers it.", where: "Loader script → raw_conversations (jsonb, no logic)" },
+  { key: "ingest", name: "Ingest", group: "Input", does: "The record as the support system delivers it, with personal data masked before it is stored.", where: "Loader script → cx_eval.redact_batch() → raw_conversations (jsonb)" },
   { key: "validate", name: "Validate", group: "ETL + synthetic data", does: "Format checks. A record that fails one is held back, with the reason.", where: "SQL · cx_eval.validate_batch()" },
   { key: "enrich", name: "Enrich", group: "ETL + synthetic data", does: "Actions extracted, policy attached, ground truth computed. The judge never sees the ground truth.", where: "SQL · cx_eval.transform_batch()" },
   { key: "prompt", name: "Rubric + prompt", group: "LLM evaluator + rubric", does: "The written rubric and this chat's facts are turned into the prompt the judge reads.", where: "SQL assembles context · rubric renders prompt" },
@@ -265,18 +266,19 @@ function IngestStage({ run }: { run: RunView }) {
           content: (
             <>
               <RecordJson record={run.record} renamed={run.renamed} />
-              <Note>Stored unchanged in cx_eval.raw_conversations. The loader only copies data; all later rules run as SQL in the database.</Note>
+              <Note>Names, emails, phone numbers, IDs, addresses and secrets are replaced with placeholders such as [NAME_1] in the same transaction that lands the batch, so the original text is never stored. How well that works, and where it misses, is under Redaction. Otherwise the record is stored as delivered; all later rules run as SQL in the database.</Note>
             </>
           ),
         },
         { key: "chat", label: "Read the chat", content: <ChatBubbles turns={run.context.turns} /> },
+        { key: "redaction", label: "Redaction", content: <RedactionReport /> },
         {
           key: "code",
           label: "Loader script",
           content: (
             <CodeView
               label="Loader script"
-              description="A TypeScript script writes each day's batch to the database as raw JSON in one transaction, then calls the SQL functions. Loading a day again replaces its rows, so a failed run can be repeated safely."
+              description="A TypeScript script stages each day's batch in a temporary table, redacts it in SQL and writes only the masked records as raw JSON, all in one transaction, then calls the SQL functions. Loading a day again replaces its rows, so a failed run can be repeated safely."
               code={LOADER_SNIPPET}
             />
           ),

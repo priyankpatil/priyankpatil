@@ -51,9 +51,12 @@ The pipeline is **ELT**: scripts only move data (load raw data in, call the LLM)
 
 ```
  ABCD (support system stand-in)
-   │  daily batch (load script: download, split, insert raw jsonb; no logic)
+   │  daily batch (load script: download, split, stage in a temp table; no logic)
    ▼
- raw_batches, raw_conversations (jsonb)
+ [0 Redact] cx_eval.redact_batch(date), same transaction ──► redaction_log (counts only)
+   │  only masked records are written; the staging table drops on commit
+   ▼
+ raw_batches, raw_conversations (jsonb, already redacted)
    │
    ▼  ── inside Supabase, SQL functions scheduled with pg_cron ──
  [1 Validate] cx_eval.validate_batch(date) ──► quarantine (record, reason)
@@ -98,7 +101,7 @@ Built on the stack the site already uses. Tools named in the role map onto it as
 ## Schema (`cx_eval`)
 
 ```
-Landing      raw_batches · raw_conversations (jsonb) · quarantine
+Landing      raw_batches · raw_conversations (jsonb, redacted) · quarantine · redaction_log
 Enriched     conversations · turns · csat_responses
 LLM I/O      rubric_versions · scoring_requests · scores (long format)
 Telemetry    pipeline_runs · scoring_runs · alerts
@@ -165,6 +168,7 @@ Each incident is detected by the pipeline's own monitoring, then diagnosed. The 
 | # | Stage | Builds | Status |
 |---|---|---|---|
 | 0 | Profile data, draft rubric and schema, select judge model | This plan | ✅ done |
+| 1a | **Redact:** mask personal data before anything is stored; measure it against ground truth | `20261106000000_cx_eval_redaction.sql` (`pii_redact`, `redact_batch`, `redact_backfill`, `pii_leaks`), `redaction-eval.mts`, `redaction-eval.json` | ✅ recall 98.6%, precision 95.8% (97.7% counting verified extras); misses labelled by reason; leak check in `run_checks()`; backfill of live data runs with the migration |
 | 1 | **ELT:** load raw ABCD batches → validate and quarantine (SQL) → transform and enrich (SQL) | `cx_eval` migration, raw loader script, `validate_batch` / `transform_batch` SQL functions, synthetic metadata, ground-truth flags | ✅ 30 days loaded; day 26 quarantined 230 records |
 | 2 | **Rubric:** written definitions, decision rules, anchors; prompt generated from it; human calibration | `RUBRIC.md`, `rubric_versions`, `calibration/sheet-1.csv` | ✅ rubric; ✅ calibration sheet 1 (AI-assisted, see Decisions) |
 | 3 | **Judge:** prompt assembly → LLM → JSON validation and retry | `scoring_requests`, `judge_config`, judge client | ✅ |
@@ -186,6 +190,14 @@ If time runs short, reduce the dashboard polish in stage 8, not stages 6–7.
 - **Candidate rule for rubric v2:** opening a customer's account on an FAQ chat (226 chats, 10.7% of FAQ intents) is unnecessary access to personal data. v1 does not penalise it.
 - **The v1 judge applied the identity rule by its spirit, ground truth by its letter.** On days 1–7 it caught 3 of 13 real identity failures: it passed chats verified with the wrong gate button, without `pull-up-account`, or after a read-only policy step. **Rubric v2** keeps every rule but makes the judge cite the required buttons' positions before deciding. Backtest on the same 137 chats (gpt-oss-20b): identity failures caught 23% → 85%, identity accuracy 82.1% → 92.5%, correct passes kept 96.3% → 94.4%, policy unchanged, +12% tokens.
 - **Calibration sheet 1 is AI-assisted, not independent human labels (2026-10-30).** Claude scored the 15 chats blind from the transcripts and RUBRIC.md; Priyank accepted them without changes, and they are stored as rater `priyank` with that noted on every row. Results (`mart_human_agreement`, n = 45 judge verdicts across three setups): vs. ground truth 100% on intent, identity and policy, which mainly shows the written rules are consistent with the SQL; vs. judge, intent 93% (κ 0.92), identity 80% (κ 0.67), policy 78% (κ 0.25), resolution 93% (κ 0.00, almost all resolved), empathy 51% (κ 0.06). Empathy and resolution still need a genuinely human pass.
+- **Personal data is redacted before it is stored, not after (2026-11-06).** The loader stages each batch in a temporary table, `cx_eval.redact_batch()` masks it in SQL in the same transaction, and only masked records reach `raw_conversations`; the staging table drops on commit or rollback. Redacting later (raw keeps PII, transforms mask it) would leave the most sensitive copy in the warehouse and in every backup.
+  - **Four layers, all from the text alone:** *pattern* (emails, phones, addresses, ZIPs, order and account IDs, usernames, labelled passwords), *context* (the agent's question just before: "Can I get your full name?" → the reply is a name), *template* (machine action lines such as "Account has been pulled up for …"), *spread* (a name found once is masked everywhere in that chat, including its parts; an email's local part masks the matching username).
+  - **Typed, consistent placeholders per chat** (`[NAME_1]`, `[EMAIL_1]`, `[ORDER_ID_1]`, …; credentials become `[SECRET]`), so the judge can still tell that the customer gave their name, or gave the same email twice. The rubric tells the judge what a placeholder means; v1's anchor examples were masked to match.
+  - **Idempotent.** Re-redacting masked text changes nothing. A first version read its own `[ACCOUNT_ID_1]` as a new value and nested placeholders in 17K turns on a second pass; `pii_add` now rejects placeholders, and the backfill was re-run to prove it (2 genuine leftovers, no corruption).
+  - **Measured, not assumed.** ABCD ships the profile each crowdworker role-played. `redaction-eval.mts` uses it only to score the output, never to redact, and saves aggregates only. Over all 10,042 chats: recall 98.6% (921 of 67,702 occurrences missed), strict precision 95.8%, 97.7% counting well-formed contact details and agent-issued passwords that are not in the profile.
+  - **Rules stop here on purpose; misses are explained, not chased.** Each miss is labelled by why the rules let it through: a bare reply to a question phrased differently or asked earlier (339), a passing mention with no label or question (227), a value listed beside others without its own label (171), a cue in a sentence shape no rule covers (149), an untemplated system line (35). Every one is a missing cue, which is what a named-entity model handles and rules cannot without a new rule per phrasing. The project page shows these reasons with made-up examples. The evaluation is independent of how redaction works, so a model can be scored on the same values, field by field, before it replaces the rules.
+  - **Detected in production too:** `run_checks()` raises a critical `pii_leak` alert if any landed turn still holds an email, a phone number or an unmasked name on an action line.
+  - **Existing data was cleaned in place.** The migration ends with `redact_backfill()`, which masks raw payloads, turns, prompt contexts, raw judge output, evidence and human notes. The committed snapshots (`lib/cx-eval/demo.json`, `calibration/sheet-1.md`) were masked with `redact-published.mts`. Older `judge_results` keep their prompt hash, which now describes the prompt as originally sent. Validation, quarantine (230 on day 26) and ground-truth pass rates are identical before and after.
 - **Backtests before rollout:** `create_backtest()` re-scores already-scored chats with their stored inputs under another rubric or model, so a comparison changes exactly one variable. Backtest scores are never production.
 - **Model switch lives in `judge_config`**, a dated change log, so a root cause analysis can find it the way it would find a real deployment.
 
@@ -198,6 +210,7 @@ If time runs short, reduce the dashboard polish in stage 8, not stages 6–7.
 | Telemetry on model performance, scoring accuracy and concept drift | Stages 4, 5 |
 | Orchestration with reliable, timely delivery | Stage 6 |
 | Data quality checks and validation at ingestion | Stage 1 |
+| Privacy: personal data handled before it reaches models or storage | Stage 1a (redaction, evaluation, leak alert) |
 | Monitoring and alerting: pipeline health, freshness, scoring latency, load failures | Stages 5, 6 |
 | Upstream sources and downstream consumers | ABCD as the support system and Postgres as the warehouse (simulated); dashboard, exec summary, retraining export (stages 5, 8) |
 | RCA: data-driven vs. model-driven vs. real change | Stage 7 |

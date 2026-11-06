@@ -10,8 +10,8 @@ Score blind: don't look up the judge's or ground truth's answers first. Then imp
 
 ```
 AGENT: Hello, how may I help you today?
-CUSTOMER: Hello, my name is Joyce Wu
-ACTION: [pull-up-account] Account has been pulled up for Joyce Wu.
+CUSTOMER: Hello, my name is [NAME_1]
+ACTION: [pull-up-account] Account has been pulled up for [NAME_1].
 CUSTOMER: I'm trying to buy jeans for myself but my card keeps declining.
 CUSTOMER: It says it is invalid.
 AGENT: I am so sorry to hear that. Please give me a moment to look into that for you.
@@ -44,22 +44,22 @@ CUSTOMER: Hi! I need to check my shopping histry
 CUSTOMER: But I can't get into my account! I forgot my password
 CUSTOMER: Can you help?
 AGENT: Hello, I can help you with that. What is your name?
-CUSTOMER: Rodriguez Domingo
+CUSTOMER: [NAME_1]
 AGENT: Thank you, do you know your username?
-ACTION: [pull-up-account] Account has been pulled up for Rodriguez Domingo.
+ACTION: [pull-up-account] Account has been pulled up for [NAME_1].
 CUSTOMER: ummm
-CUSTOMER: rodriguezd228
+CUSTOMER: [USERNAME_1]
 CUSTOMER: I do remember that!
-ACTION: [enter-details] Details of rodriguezd228 have been entered.
+ACTION: [enter-details] Details of [USERNAME_1] have been entered.
 AGENT: Perfect, thanks! I cannot recover your password but I can create a new, temporary password for you to use.
 CUSTOMER: Okay
 CUSTOMER: That would be fine
 AGENT: To do so, I will need either your pin number or answer to your security question.
 CUSTOMER: Okay
 CUSTOMER: I have my pin written down
-CUSTOMER: It's 225776
+CUSTOMER: It's [SECRET]
 ACTION: [make-password] A password has been generated.
-AGENT: Here is your new password: oupyq5hh4xn
+AGENT: Here is your new password: [SECRET]
 CUSTOMER: Okay
 AGENT: Is there anything else I can help you with today?
 CUSTOMER: Can you wait while I try it? I want to make sure I can log in
@@ -80,12 +80,12 @@ AGENT: You have a nice day
 AGENT: Hi, what can I do for you?
 CUSTOMER: I want to log into my account, but I forgot my username. Can you help me?
 AGENT: Sure, can I have your name please
-CUSTOMER: My name is Rodriguez Domingo.
-ACTION: [pull-up-account] Account has been pulled up for Rodriguez Domingo.
+CUSTOMER: My name is [NAME_1].
+ACTION: [pull-up-account] Account has been pulled up for [NAME_1].
 AGENT: Okay, I need to verify your identity, can I have your zip code and phone number please
-CUSTOMER: My zip code is 47733. Phone# is 011 189 5099
+CUSTOMER: My zip code is [ZIP_1]. Phone# is [PHONE_1]
 ACTION: [verify-identity] Identity verification in progess ...
-AGENT: Thank you, your username is rdomingo1
+AGENT: Thank you, your username is [USERNAME_1]
 AGENT: What else can I do for you?
 CUSTOMER: Nope, that's it. Thank you so much.
 AGENT: Have a good day
@@ -107,9 +107,9 @@ CUSTOMER: Great!   I forgot to add it to my cart earlier
 CUSTOMER: It's a Guess Shirt
 AGENT: Not a problem, I understand.
 AGENT: I am going to need your full name, account ID, and order ID, so I can pull all of this up.
-CUSTOMER: Sanya Afzal
-CUSTOMER: IME4G5NC13 is my account id
-CUSTOMER: Order ID: 3592052485
+CUSTOMER: [NAME_1]
+CUSTOMER: [ACCOUNT_ID_1] is my account id
+CUSTOMER: Order ID: [ORDER_ID_1]
 ACTION: [verify-identity] Identity verification in progress ...
 AGENT: Fantastic.
 AGENT: What is the shipping status?
@@ -143,11 +143,11 @@ CUSTOMER: Hello, I cannot access my account because I have lost my phone and nee
 CUSTOMER: can you help me?
 AGENT: Ok, I can help with that
 AGENT: What is your name?
-CUSTOMER: Crystal Minh
-ACTION: [pull-up-account] Account has been pulled up for Crystal Minh.
+CUSTOMER: [NAME_1]
+ACTION: [pull-up-account] Account has been pulled up for [NAME_1].
 AGENT: Can I have your email address
-CUSTOMER: crystalming45@email.com
-ACTION: [enter-details] Details of crystalming45@email.com have been entered.
+CUSTOMER: [EMAIL_1]
+ACTION: [enter-details] Details of [EMAIL_1] have been entered.
 AGENT: I have sent you an email. It will include a code and all the information you need to get back into your accound
 ACTION: [send-link] A link will be sent.
 AGENT: I have also sent a link about account security
@@ -167,9 +167,9 @@ AGENT: Hello, how can I help you today?
 CUSTOMER: Hi I have a quick question
 CUSTOMER: I was wondering when your annual sale will begin this year? Not sure if it's been delayed because of the coronavirus
 AGENT: Alright, may I ask who I am speaking with?
-CUSTOMER: Sanya Afzal
-ACTION: [pull-up-account] Account has been pulled up for Sanya Afzal.
-AGENT: Let me pull up that information for you Sanya.
+CUSTOMER: [NAME_1]
+ACTION: [pull-up-account] Account has been pulled up for [NAME_1].
+AGENT: Let me pull up that information for you [NAME_1].
 ACTION: [search-faq] Searching the FAQ pages ...
 ACTION: [search-timing] System Action: search timing
 CUSTOMER: thanks
@@ -179,7 +179,7 @@ CUSTOMER: yeah ok thanks.
 CUSTOMER: I have to find ways to stretch out my dollar
 AGENT: I can certainly understand that! Is there anything else you need help with today?
 CUSTOMER: that's it thanks
-AGENT: Thanks Sanya. Have a great day and stay safe!
+AGENT: Thanks [NAME_1]. Have a great day and stay safe!
 ```
 
 ## 7. abcd-8803
@@ -191,13 +191,13 @@ AGENT: Thanks Sanya. Have a great day and stay safe!
 AGENT: Hi, thanks for contacting Acme client support. How can I help you today?
 CUSTOMER: Hello, I would like to make sure the shipping cost is included in my order as I got an email saying otherwise
 AGENT: I'm happy to check that out for you. May I please have your full name?
-CUSTOMER: Sanya Afzal
-AGENT: One moment, Ms. Afzal.
+CUSTOMER: [NAME_1]
+AGENT: One moment, Ms. [NAME_1].
 AGENT: Can I have your Account ID and your Order ID?
-CUSTOMER: Z5HMMSWGXY, 7991328292
+CUSTOMER: [ACCOUNT_ID_1], [ORDER_ID_1]
 ACTION: [verify-identity] Identity verification in progress ...
 AGENT: Great. I'll also need your Username and email address and to access that order. Do you have that information available?
-CUSTOMER:  safzal96, safzal96@email.com, 7991328292
+CUSTOMER:  [USERNAME_1], [EMAIL_1], [ORDER_ID_1]
 ACTION: [validate-purchase] Purchase validation in progress ...
 AGENT: Just a minute while I search our system for you.
 CUSTOMER: ok
@@ -218,12 +218,12 @@ AGENT: Thanks for shopping with Acme. Have a great day!
 AGENT: Hello, thank you for contacting us. What can I help you with today?
 CUSTOMER: Hi. I just placed an order, but I have one more item I forgot to add to the shopping cart. Can I still add it?
 AGENT: I'll do my best to help with the issue. Can I please have your first and last name to pull up your account?
-CUSTOMER: Sanya Afzal
-ACTION: [pull-up-account] Account has been pulled up for Sanya Afzal.
+CUSTOMER: [NAME_1]
+ACTION: [pull-up-account] Account has been pulled up for [NAME_1].
 CUSTOMER: Do you need my account ID?
 AGENT: Yes, I'm goign to need your Account ID and Order ID as well
-CUSTOMER: The account ID is 5P7CSAI7PJ.
-CUSTOMER: The order ID is 4302829760
+CUSTOMER: The account ID is [ACCOUNT_ID_1].
+CUSTOMER: The order ID is [ORDER_ID_1]
 AGENT: thank you very much, And we're addind an item to your order correct?
 CUSTOMER: Yes. I want to add some Calvin Klein jeans to the order.
 AGENT: Alright no problem one second
@@ -233,13 +233,13 @@ AGENT: do you have your username and email address handy?
 CUSTOMER: I'm sorry. I don't remember my username.
 AGENT: No problem I can recover that for you while we're at it.
 AGENT: For the username I'll need your zip code and phone number or email address.
-CUSTOMER: My zip code is 62446. My phone number is (434) 528 9367e number is (434) 528-e number is (434) 528-
+CUSTOMER: My zip code is [ZIP_1]. My phone number is ([ZIP_2]) [ZIP_3] 9367e number is ([ZIP_2]) [ZIP_3]-e number is ([ZIP_2]) [ZIP_3]-
 ACTION: [verify-identity] Identity verification in progess ...
-AGENT: Alright thanks for that, your username is safzal1
+AGENT: Alright thanks for that, your username is [USERNAME_1]
 CUSTOMER: thank you.
 AGENT: Now lets get back to adding the Calvin klein jeans to your order.
 AGENT: to validate the puchase I just need your email address now
-CUSTOMER: Safzal@gmail.com
+CUSTOMER: [EMAIL_1]
 ACTION: [validate-purchase] Purchase validation in progress ...
 AGENT: Alright on your status page does the shipping status say it's In transit out for delivery, order received or delivered?
 CUSTOMER: It just says order received. I just placed the order earlier today.
@@ -264,11 +264,11 @@ AGENT: hello, thank you for contacting AcmeBrands, how may i help you?
 CUSTOMER: Hi there the name on my account is wrong can someone change it?
 AGENT: Ah, ok
 AGENT: what is the name on there right now?
-CUSTOMER: It reals Hairy Pancakes
+CUSTOMER: It reals [NAME_1]
 CUSTOMER: should read Sanya Afzal
 CUSTOMER: no clue what happened
 CUSTOMER: XD
-AGENT: Hairy Pancakes, thats not right!
+AGENT: [NAME_1], thats not right!
 CUSTOMER: reads I mean
 AGENT: got it
 CUSTOMER: yeah can you fix it?
@@ -281,7 +281,7 @@ CUSTOMER: yeah and
 AGENT: let me verify your identity, do you have a phone number or order iD?
 CUSTOMER: can u fix it?
 AGENT: yes, i can fix it
-CUSTOMER: oh sure 5919 lincoln ave
+CUSTOMER: oh sure [ADDRESS_1]
 AGENT: but i need to gather some details first
 CUSTOMER: I bought some jeans for 84
 CUSTOMER: dont know my order id
@@ -290,7 +290,7 @@ AGENT: do you perhaps have a PIN number instead?
 AGENT: or email address?
 CUSTOMER: cause I spend that mturk monies
 CUSTOMER: nope no pin
-CUSTOMER: email is Onebadmofo@yahoo.com
+CUSTOMER: email is [EMAIL_1]
 AGENT: ok, this seems to check out
 CUSTOMER: oh thank you Jesus
 AGENT: Great, i have updated your account with the correct name
@@ -299,7 +299,7 @@ AGENT: is there anything else i can help you with?
 CUSTOMER: no you saved me
 AGENT: wonderful, have a great day!
 CUSTOMER: thank you
-ACTION: [pull-up-account] Account has been pulled up for Hairy Pancakes.
+ACTION: [pull-up-account] Account has been pulled up for [NAME_1].
 ACTION: [verify-identity] Identity verification in progess ...
 ACTION: [update-account] Account has been updated with Sanya Afzal.
 ```
@@ -314,10 +314,10 @@ AGENT: Hello, how may I help you?
 CUSTOMER: Hello, I would like to know what the refund policy is as I am looking to purchase something for my husband
 AGENT: Sure, I can tell you about that. Could I get your name, please?
 ACTION: [search-faq] Searching the FAQ pages ...
-CUSTOMER: Chloe Zhang
+CUSTOMER: [NAME_1]
 ACTION: [search-policy] System Action: search policy
 ACTION: [select-faq] FAQ answer related to policy (question2) was selected.
-AGENT: Hi, Chloe. We can only refund items that have not yet been shipped. But otherwise, we will refund you if you provide a valid Order ID, username, and email address.
+AGENT: Hi, [NAME_1]. We can only refund items that have not yet been shipped. But otherwise, we will refund you if you provide a valid Order ID, username, and email address.
 AGENT: Is there anything else I can do for you?
 CUSTOMER: That is all
 AGENT: Have a great day!
@@ -431,11 +431,11 @@ CUSTOMER: Is there anything you can do to offer a better price?
 AGENT: May I have your full name or your account ID?
 CUSTOMER: Because the current price on here is highway robbery
 CUSTOMER: yeah
-CUSTOMER: My name is Albert Sanders
-ACTION: [pull-up-account] Account has been pulled up for Albert Sanders.
+CUSTOMER: My name is [NAME_1]
+ACTION: [pull-up-account] Account has been pulled up for [NAME_1].
 AGENT: May I have your account ID and an order ID if you have it?
-CUSTOMER: My account ID is OWMVPZDUPW
-CUSTOMER: my order ID is 8460630705
+CUSTOMER: My account ID is [ACCOUNT_ID_1]
+CUSTOMER: my order ID is [ORDER_ID_1]
 ACTION: [verify-identity] Identity verification in progess ...
 AGENT: Our prices are dynamic and sometimes the algorithims that control prices change the price often.
 CUSTOMER: Yeah, so what does that mean?
@@ -446,7 +446,7 @@ AGENT: I cannot control the pricing but I can offer 20% off of the order.
 CUSTOMER: Hmm
 CUSTOMER: Okay, let's do it.
 ACTION: [promo-code] A promo code has been created.
-AGENT: Your promo code is AcmeShop2020
+AGENT: Your promo code is [USERNAME_1]
 CUSTOMER: Okay, got it.
 AGENT: Is there anything else I can assist you with?
 CUSTOMER: Do you guys sell food? I'm starving.

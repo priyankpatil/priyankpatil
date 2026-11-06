@@ -65,14 +65,99 @@ function M({ children }: { children: ReactNode }) {
   return <mark className="rounded bg-[color:var(--cx-bad-soft)] px-0.5 text-text ring-1 ring-[color:var(--cx-bad-line)]">{children}</mark>;
 }
 
-const fmt = (n: number) => n.toLocaleString("en-US");
+function Ph({ children }: { children: ReactNode }) {
+  return <span className="rounded bg-[color:var(--cx-good-soft)] px-0.5 text-text ring-1 ring-[color:var(--cx-good-line)]">{children}</span>;
+}
 
-export function RedactionReport() {
+const fmt = (n: number) => n.toLocaleString("en-US");
+const PLACEHOLDER = /(\[[A-Z_]+?(?:_\d+)?\])/;
+
+type Turn = { speaker: string; text: string; button?: string };
+
+/**
+ * Lines the redaction changed, with each original value next to its placeholder.
+ * Masking leaves the text between values untouched, so walking the masked line's
+ * literal pieces through the original recovers what each placeholder replaced.
+ */
+function pairs(before: string, after: string): { value: string; placeholder: string }[] | null {
+  const parts = after.split(PLACEHOLDER);
+  if (!before.startsWith(parts[0])) return null;
+  let pos = parts[0].length;
+  const out: { value: string; placeholder: string }[] = [];
+  for (let i = 1; i < parts.length; i += 2) {
+    const next = parts[i + 1];
+    const last = i + 2 >= parts.length;
+    const end = last && next === "" ? before.length : before.indexOf(next, pos + 1);
+    if (end === -1 || (last && !before.endsWith(next))) return null;
+    out.push({ value: before.slice(pos, end), placeholder: parts[i] });
+    pos = end + next.length;
+  }
+  return out;
+}
+
+function Highlighted({ text, marks, Tag }: { text: string; marks: string[]; Tag: typeof M }) {
+  const nodes: ReactNode[] = [];
+  let rest = text;
+  marks.forEach((m, i) => {
+    const at = rest.indexOf(m);
+    if (at === -1) return;
+    nodes.push(rest.slice(0, at), <Tag key={i}>{m}</Tag>);
+    rest = rest.slice(at + m.length);
+  });
+  nodes.push(rest);
+  return <>{nodes}</>;
+}
+
+function ThisChat({ delivered, masked }: { delivered: Turn[]; masked: Turn[] }) {
+  const changed = delivered.map((t, i) => ({ t, after: masked[i]?.text ?? t.text, i })).filter((x) => x.after !== x.t.text);
+  const values = changed.reduce((n, x) => n + (pairs(x.t.text, x.after)?.length ?? 0), 0);
+  if (!changed.length) return <p>Nothing in this chat needed masking.</p>;
+  return (
+    <div>
+      <p className="mb-3">
+        {fmt(values)} values masked in {changed.length} of {delivered.length} lines. Red is what the support system sent; green is what the database stores and the
+        judge reads.
+      </p>
+      <ol className="max-h-[26rem] space-y-2 overflow-auto rounded-xl border border-border bg-surface-muted p-3 font-mono text-xs leading-5" tabIndex={0} aria-label="Masked lines">
+        {changed.map(({ t, after, i }) => {
+          const p = pairs(t.text, after);
+          return (
+            <li key={i} className="text-text">
+              <div className="text-[0.65rem] uppercase tracking-[0.12em] text-soft">
+                {t.speaker === "action" ? `action · ${t.button}` : t.speaker} · line {i + 1}
+              </div>
+              <div>
+                <span className="sr-only">Before: </span>
+                {p ? <Highlighted text={t.text} marks={p.map((x) => x.value)} Tag={M} /> : t.text}
+              </div>
+              <div>
+                <span className="sr-only">After: </span>
+                {p ? <Highlighted text={after} marks={p.map((x) => x.placeholder)} Tag={Ph} /> : after}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+function H4({ children }: { children: ReactNode }) {
+  return <h4 className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-soft">{children}</h4>;
+}
+
+export function RedactionReport({ delivered, masked }: { delivered: Turn[]; masked: Turn[] }) {
   const { overall, recall, missesByReason } = report;
   const fields = [...recall].sort((a, b) => (a.recallPct ?? 0) - (b.recallPct ?? 0));
   return (
     <div className="space-y-6 text-sm leading-6 text-muted">
       <div>
+        <H4>This chat</H4>
+        <ThisChat delivered={delivered} masked={masked} />
+      </div>
+
+      <div>
+        <H4>Across all {fmt(report.conversations)} chats</H4>
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Fact label="Values removed">{overall.recallPct}%</Fact>
           <Fact label="Masks on personal data">{overall.precisionPct}%</Fact>
@@ -80,14 +165,14 @@ export function RedactionReport() {
           <Fact label="Missed">{fmt(overall.missed)}</Fact>
         </dl>
         <p className="mt-3">
-          Rules, not a model: patterns, the agent&apos;s question just before, known system lines, and spreading a value found once to the rest of the chat. Scored on
-          all {fmt(report.conversations)} chats against the profiles the crowdworkers role-played. The profiles are used only to score, never to redact, and no
+          Rules, not a model: patterns, the agent&apos;s question just before, known system lines, and spreading a value found once to the rest of the chat. Scored
+          against the profiles the crowdworkers role-played. The profiles are used only to score, never to redact, and no
           values are kept. Tuning stopped here on purpose: the misses below show where rules run out.
         </p>
       </div>
 
       <div>
-        <h4 className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-soft">Removed, by field</h4>
+        <H4>Removed, by field</H4>
         <ul className="grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
           {fields.map((f) => (
             <li key={f.type} className="grid grid-cols-[8.5rem_1fr_3.25rem] items-center gap-2 text-xs">
@@ -104,7 +189,7 @@ export function RedactionReport() {
       </div>
 
       <div>
-        <h4 className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-soft">Why the {fmt(overall.missed)} misses happen</h4>
+        <H4>Why the {fmt(overall.missed)} misses happen</H4>
         <ol className="space-y-3">
           {missesByReason.map((r) => {
             const ex = EXAMPLES[r.reason];

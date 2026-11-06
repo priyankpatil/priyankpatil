@@ -2,6 +2,8 @@
 //   lib/cx-eval/demo.json      curated chats with every pipeline artefact (raw record,
 //                              enrichment, prompt context, stored judge outputs per
 //                              model × rubric) and a precomputed "wrong contact reason" run
+//                              plus each chat's transcript as delivered (pre-redaction,
+//                              rebuilt from the public dataset, never from the database)
 //   lib/cx-eval/findings.json  the numbers and series behind the three findings and the
 //                              judge-accuracy strip
 //
@@ -16,6 +18,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { extractAbcd } from "../src/abcd.ts";
 import type { JudgeContext, JudgeOutput } from "../src/contract.ts";
 import { judgeConversation } from "../src/judge/judge.ts";
 import { NVIDIA_MODELS } from "../src/judge/nvidia.ts";
@@ -124,7 +127,20 @@ function sameTurns(a: unknown, b: unknown): boolean {
   return norm(a) === norm(b);
 }
 
-async function loadChat(c: (typeof CURATED)[number]): Promise<Omit<DemoChat, "alt"> & { altReason: string }> {
+/** Pre-redaction transcripts, built from the public dataset exactly as source-sim.ts delivers them. */
+async function deliveredTranscripts(): Promise<Map<string, DemoChat["delivered"]>> {
+  const data = await extractAbcd("pipelines/cx-eval/.data");
+  const wanted = new Set<string>(CURATED.map((c) => c.id));
+  const out = new Map<string, DemoChat["delivered"]>();
+  for (const c of data.conversations) {
+    const id = `abcd-${c.convo_id}`;
+    if (!wanted.has(id)) continue;
+    out.set(id, c.original.map(([speaker, text], i) => (speaker === "action" ? { speaker, text, button: c.delexed[i].targets[2] } : { speaker, text })));
+  }
+  return out;
+}
+
+async function loadChat(c: (typeof CURATED)[number], delivered: Map<string, DemoChat["delivered"]>): Promise<Omit<DemoChat, "alt"> & { altReason: string }> {
   const raw = await one<{ payload: RawRecord; batch_date: string }>(
     "select payload, batch_date::text from cx_eval.raw_conversations where convo_id = $1",
     [c.id]
@@ -224,6 +240,7 @@ async function loadChat(c: (typeof CURATED)[number]): Promise<Omit<DemoChat, "al
     blurb: c.blurb,
     batchDate: raw.batch_date,
     raw: raw.payload,
+    delivered: delivered.get(c.id) ?? (() => { throw new Error(`${c.id}: not in the dataset`); })(),
     context: {
       contactReason: prod.context.contactReason,
       policySteps: prod.context.policySteps,
@@ -550,7 +567,8 @@ async function findings(): Promise<Findings> {
 
 try {
   const loaded = [];
-  for (const c of CURATED) loaded.push(await loadChat(c));
+  const delivered = await deliveredTranscripts();
+  for (const c of CURATED) loaded.push(await loadChat(c, delivered));
   const chats = await altRuns(loaded);
   const knownReasons = (await q<{ subflow: string }>("select subflow from cx_eval.ref_subflows order by 1")).map((r) => r.subflow);
   const demo: DemoData = { generatedAt: new Date().toISOString(), knownReasons, chats };

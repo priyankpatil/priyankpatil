@@ -11,6 +11,7 @@ export const metadata = {
   title: "Customer Segment Classifier",
   description:
     "Customer segments learned from 776,577 real order lines: cleaning, feature engineering, k-means, a check against the next year's behaviour, and a classifier that runs in the browser.",
+  alternates: { canonical: "/projects/customer-segments" },
 };
 
 // Segment colours, light and dark (the colour-blind-checked steps used on the CX eval page).

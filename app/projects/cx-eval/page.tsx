@@ -10,6 +10,7 @@ export const metadata = {
   title: "Customer Support Evaluation using an LLM",
   description:
     "A framework for evaluating customer support conversations with an LLM: data pipelines, a rubric-based LLM judge validated against ground truth, and metrics for model accuracy and business processes.",
+  alternates: { canonical: "/projects/cx-eval" },
 };
 
 // A typical chat for the data card: short, several button clicks, a clear intent.

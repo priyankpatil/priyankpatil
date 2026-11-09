@@ -2,6 +2,10 @@ import Navigation from "@/components/Navigation";
 import HeroJourney from "@/components/HeroJourney";
 import { formatDate, getAllArticles } from "@/lib/writing";
 
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 export default function Home() {
   const latestArticles = getAllArticles().slice(0, 2);
 

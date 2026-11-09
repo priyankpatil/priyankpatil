@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 export const metadata = {
   title: "Contact",
   description: "Contact Priyank Patil for product and analytics leadership and data product collaborations.",
+  alternates: { canonical: "/contact" },
 };
 
 const contactLinks = [

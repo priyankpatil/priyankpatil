@@ -6,6 +6,7 @@ import { experienceItems } from "@/lib/portfolio-data";
 export const metadata = {
   title: "Experience",
   description: "Career timeline and capability evolution across Amazon, Clarke Power, and Mercedes.",
+  alternates: { canonical: "/experience" },
 };
 
 export default function ExperiencePage() {

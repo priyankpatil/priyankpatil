@@ -6,6 +6,7 @@ import { projectItems } from "@/lib/portfolio-data";
 export const metadata = {
   title: "Projects",
   description: "Selected product, analytics, and platform work delivered by Priyank Patil.",
+  alternates: { canonical: "/projects" },
 };
 
 export default function ProjectsPage() {

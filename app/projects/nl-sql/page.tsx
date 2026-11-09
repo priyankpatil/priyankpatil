@@ -4,6 +4,7 @@ import NLSQLDemo from "@/components/demos/NLSQLDemo";
 export const metadata = {
   title: "NL → SQL Demo",
   description: "Ask a business question; a RAG pipeline writes, validates and runs the SQL against live sample data.",
+  alternates: { canonical: "/projects/nl-sql" },
 };
 
 export default function NLSQLPage() {

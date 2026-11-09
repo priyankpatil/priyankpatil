@@ -5,6 +5,7 @@ import { formatDate, getAllArticles } from "@/lib/writing";
 export const metadata = {
   title: "Writing",
   description: "Thoughts on product management, analytics strategy, and data product execution.",
+  alternates: { canonical: "/writing" },
 };
 
 export default function WritingPage() {

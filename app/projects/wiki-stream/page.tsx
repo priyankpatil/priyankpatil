@@ -6,6 +6,7 @@ import WikiArchitecture from "@/components/wiki-stream/WikiArchitecture";
 export const metadata = {
   title: "Wikipedia Data Streaming using Apache Kafka",
   description: "A real-time data pipeline for processing Wikipedia edits with Apache Kafka: event capture, enrichment, aggregation, and a live dashboard with activity and processing metrics.",
+  alternates: { canonical: "/projects/wiki-stream" },
 };
 
 export default function WikiStreamPage() {

@@ -10,6 +10,9 @@ const editions: Record<string, string> = { en: "English", de: "German", fr: "Fre
 const language = (wiki: string) => { const code = wiki.replace(/wiki$/, ""); return editions[code] ?? code.toUpperCase(); };
 const number = (value: number) => value.toLocaleString("en-US");
 const time = (value: number) => new Date(value).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+// Months spelled out by hand: ICU versions disagree on "Sep" vs "Sept".
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const dateTime = (value: number) => { const d = new Date(value); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${time(value)}`; };
 const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 function Sparkline({ frame }: { frame: WikiFrame }) {
@@ -165,7 +168,7 @@ export default function WikiStream() {
     <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-3">
         <span className={`${styles.status} ${!recorded && !stale && !paused ? styles.live : ""}`}><span />{status}</span>
-        <span className="text-xs text-soft">{recorded ? `Captured ${previewCapturedAt.slice(0, 10)} · replaying recorded events` : `${now ? time(frame.at) : "Latest batch"} · refreshes every 5 seconds`}</span>
+        <span className="text-xs text-soft">{recorded ? `Captured ${previewCapturedAt.slice(0, 10)} · replaying recorded events` : `${now ? dateTime(frame.at) : "Latest batch"} · refreshes every 5 seconds`}</span>
       </div>
       <button type="button" className="pill-link text-xs" onClick={() => setPaused((p) => !p)}>{paused ? "▶ Resume display" : "Ⅱ Pause display"}</button>
     </div>
